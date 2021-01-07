@@ -66,11 +66,9 @@ namespace SQLite
     static std::string SQLiteVersion();
   private:
     template<typename... Arguments>
-    std::string FormatArgs(const std::string& fmt, const Arguments&... args)
+    std::string FormatArgs(const std::string& format, const Arguments&... args)
     {
-      boost::format f(fmt);
-      std::initializer_list<char> {(static_cast<void>(f% args), char{}) ...};
-      return boost::str(f);
+        return fmt::format(format, args...);
     }
 
     std::shared_ptr<State> m_state;

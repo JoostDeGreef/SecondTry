@@ -22,7 +22,7 @@ TEST_F(SQLiteTest, DB)
     db.Open(":memory:",false);
     db.ExecDML("CREATE TABLE a(a);");
     EXPECT_TRUE(db.TableExists("a"));
-    int count = db.ExecDML("INSERT INTO a VALUES(%1%);", 42);
+    int count = db.ExecDML("INSERT INTO a VALUES({0});", 42);
     EXPECT_EQ(1, count);
 }
 
@@ -31,9 +31,9 @@ TEST_F(SQLiteTest, Query)
     SQLite::DB db;
     db.Open(":memory:",false);
     db.ExecDML("CREATE TABLE a(a);");
-    int count = db.ExecDML("INSERT INTO a VALUES(%1%),(%2%);", 42, 3);
+    int count = db.ExecDML("INSERT INTO a VALUES({0}),({1});", 42, 3);
     EXPECT_EQ(2, count);
-    SQLite::Query q = db.ExecQuery("SELECT * FROM %1%","a");
+    SQLite::Query q = db.ExecQuery("SELECT * FROM {0}","a");
     int sum = 0;
     for (; !q.IsEOF(); q.NextRow())
     {
@@ -48,7 +48,7 @@ TEST_F(SQLiteTest, SingleInt64)
 	db.Open(":memory:", false);
 	db.ExecDML("CREATE TABLE a(a);");
 	EXPECT_TRUE(db.TableExists("a"));
-	int count = db.ExecDML("INSERT INTO a VALUES(%1%);", 42);
+	int count = db.ExecDML("INSERT INTO a VALUES({0});", 42);
 	EXPECT_EQ(1, count);
 	EXPECT_EQ(42, db.ExecSingleInt64("SELECT a FROM a;"));
 }

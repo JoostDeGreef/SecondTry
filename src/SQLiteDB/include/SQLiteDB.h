@@ -4,7 +4,7 @@
 #include <memory>
 #include <vector>
 
-#include "boost/format.hpp"
+#include "fmt/core.h"
 
 #include "internal/DataType.h"
 #include "internal/Query.h"

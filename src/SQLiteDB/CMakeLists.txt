@@ -1,11 +1,8 @@
-include(Common)
-
 project(SQLiteDB VERSION 1.0.0 DESCRIPTION "C++ wrapper for SQLite")
 
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
-link_libraries(SQLite
-               boost)
+link_libraries(SQLite3 fmt)
 
 add_library (${PROJECT_NAME} # SHARED 
              "src/SQLiteDB.cpp"

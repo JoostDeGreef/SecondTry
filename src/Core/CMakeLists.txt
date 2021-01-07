@@ -3,7 +3,7 @@ project(Core VERSION 1.0.0 DESCRIPTION "Core functions")
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
 add_library (${PROJECT_NAME}
-             "src/Core.cpp" "include/internal/Vector.h")
+             "src/Core.cpp")
 
 set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION})
 

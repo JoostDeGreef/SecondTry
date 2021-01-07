@@ -1,5 +1,3 @@
-include(Common)
-
 project(SQLiteTest)
 
 link_libraries(GoogleTest

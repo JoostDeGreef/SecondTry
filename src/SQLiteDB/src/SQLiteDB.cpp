@@ -4,9 +4,7 @@
 
 using namespace std;
 
-#include "boost/format.hpp"
-
-#include "sqlite/sqlite3.h"
+#include "sqlite3.h"
 #include "SQLiteDB.h"
 
 using namespace SQLite;
@@ -37,7 +35,7 @@ void DB::Close()
 
 bool DB::TableExists(const std::string& tableName)
 {
-    return 0 < ExecSingleInt64("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='%1%'",tableName);
+    return 0 < ExecSingleInt64("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='" + tableName + "';");
 }
 
 int DB::ExecDML(const std::string& sql)
