@@ -43,7 +43,8 @@ public:
         m_data[2] = other.m_data[2];
     }
 
-    void Set(const value_type& a0, const value_type& a1, const value_type& a2,
+    void Set(
+        const value_type& a0, const value_type& a1, const value_type& a2,
         const value_type& b0, const value_type& b1, const value_type& b2,
         const value_type& c0, const value_type& c1, const value_type& c2)
     {

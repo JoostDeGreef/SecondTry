@@ -1,7 +1,5 @@
 #pragma once
 
-#include "ColorValues.h"
-
 namespace OpenGL
 {
     template<typename VALUE_TYPE>
@@ -80,19 +78,6 @@ namespace OpenGL
             m_data[3] = Value::FromByte((color) & 255);
         }
 
-        //void Serialize(Common::Serializer& s) const
-        //{
-        //    s.Write(GetInt(), 32);
-        //}
-        //static this_type Deserialize(Common::Serializer& s)
-        //{
-        //    this_type res;
-        //    unsigned int v;
-        //    s.Read(v, 32);
-        //    res.SetInt(v);
-        //    return res;
-        //}
-
         bool operator == (const this_type& other) const
         {
             return
@@ -108,9 +93,6 @@ namespace OpenGL
         static constexpr this_type Green() { return this_type(Value::Lo(), Value::Hi(), Value::Lo(), Value::Hi()); }
         static constexpr this_type Red() { return this_type(Value::Hi(), Value::Lo(), Value::Lo(), Value::Hi()); }
         static constexpr this_type White() { return this_type(Value::Hi(), Value::Hi(), Value::Hi(), Value::Hi()); }
-    private:
-
-        using Value = TColorValue<value_type>;
     };
 
     template<typename VALUE_TYPE> class TRGBAColor;

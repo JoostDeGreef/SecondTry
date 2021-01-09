@@ -7,6 +7,7 @@ namespace implementation
     {
     private:
         std::array<T, ROWS*COLUMNS> m_data;
+        //T m_data[ROWS * COLUMNS];
     public:
         typedef DERIVED this_type;
         typedef T element_type;
@@ -48,6 +49,8 @@ namespace implementation
         constexpr size_t Rows() const { return ROWS; }
         constexpr size_t Columns() const { return COLUMNS; }
 
+        const element_type * const Raw() const { return m_data.data(); }
+        element_type * Raw() { return m_data.data(); }
         const auto & Data() const { return m_data; }
         auto & Data() { return m_data; }
         const element_type & Data(const size_t &i) const { return m_data[i]; }
@@ -309,6 +312,7 @@ using TVector2 = TVector<T, 2>;
 
 using Vector2d = TVector2<double>;
 using Vector2f = TVector2<float>;
+using Vector2i = TVector2<int>;
 
 //
 // Free functions

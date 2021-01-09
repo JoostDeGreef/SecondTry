@@ -1,10 +1,13 @@
 #pragma once
 
+#include <memory>
+#include <string>
+
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
+#include "fmt/core.h"
 
-#include "Data.h"
-#include "MathCore.h"
+#include "Core.h"
 
 namespace OpenGL
 {
@@ -30,14 +33,14 @@ namespace OpenGL
     using ColorPtr = Color*;
 }
 
-#include "internal/Shaders.h"
-
-#include "ft2build.h"
-#include FT_FREETYPE_H
-
-#include "internal/Freetype.h"
-#include "internal/CharacterMap.h"
-#include "internal/Font.h"
+//#include "internal/Shaders.h"
+//
+//#include "ft2build.h"
+//#include FT_FREETYPE_H
+//
+//#include "internal/Freetype.h"
+//#include "internal/CharacterMap.h"
+//#include "internal/Font.h"
 
 namespace OpenGL
 {
@@ -66,3 +69,4 @@ namespace OpenGL
     void glLoadMatrix(const Quat& quat);
 };
 
+#include "internal/Window.h"

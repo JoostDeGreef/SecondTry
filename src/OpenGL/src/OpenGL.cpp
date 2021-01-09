@@ -1,7 +1,5 @@
 #include "OpenGL.h"
 
-#include "glad/glad.h"
-
 void OpenGL::glColor(const RGBAColorf& color)
 {
     glColor4fv(color.GetRGBA());
@@ -22,11 +20,11 @@ void OpenGL::glColor(const RGBColord& color)
 
 void OpenGL::glVertex(const Vector3f& point)
 {
-    glVertex3fv(point.GetData());
+    glVertex3fv(point.Raw());
 }
 void OpenGL::glVertex(const Vector3d& point)
 {
-    glVertex3dv(point.GetData());
+    glVertex3dv(point.Raw());
 }
 
 void OpenGL::glVertex(const double& x, const double& y)
@@ -40,22 +38,22 @@ void OpenGL::glVertex(const float& x, const float& y)
 
 void OpenGL::glNormal(const Vector3f& normal)
 {
-    glNormal3fv(normal.GetData());
+    glNormal3fv(normal.Raw());
 }
 
 void OpenGL::glNormal(const Vector3d& normal)
 {
-    glNormal3dv(normal.GetData());
+    glNormal3dv(normal.Raw());
 }
 
 void OpenGL::glTextureCoord(const Vector2f& coord)
 {
-    glTexCoord2fv(coord.GetData());
+    glTexCoord2fv(coord.Raw());
 }
 
 void OpenGL::glTextureCoord(const Vector2d& coord)
 {
-    glTexCoord2dv(coord.GetData());
+    glTexCoord2dv(coord.Raw());
 }
 
 void OpenGL::glMultMatrix(const Quat& quat)

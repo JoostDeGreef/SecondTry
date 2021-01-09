@@ -43,14 +43,6 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-# 3rd party libraries    
-include(FetchContent)
-
-include(GoogleTest)
-include(sqlite3)
-include(fmt)
-
-
 # Include sub-projects.
 add_subdirectory ("src")
 
