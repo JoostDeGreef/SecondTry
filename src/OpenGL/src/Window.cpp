@@ -11,21 +11,38 @@
 #include <functional>
 #include <iostream>
 #include <deque>
+#include <set>
 
 #include "OpenGL.h"
-#include "Window.h"
 
 using namespace std;
 using namespace std::chrono_literals;
 
 class Window::WindowImp
 {
-public:
-    WindowImp(CallbackHandler & callbackHandler,const std::string & title);
+private:
+    class OpenGLState
+    {
+    public:
+        OpenGLState();
+        ~OpenGLState();
+        bool InitialisationSucceeded() const;
+        void AddWindow(Window::WindowImp* window);
+        void RemoveWindow(Window::WindowImp* window);
+        void EnterMessageLoop();
+    private:
+        bool m_initialisationSucceeded;
+        std::set<Window::WindowImp*> m_windows;
+        static void error_callback(int error, const char* description);
+    };
+    static OpenGLState state;
 
-    bool Init();
-    void Run();
-    void Cleanup();
+public:
+    WindowImp(const shared_ptr<Window> & owner, CallbackHandler & callbackHandler, const std::string & title);
+    ~WindowImp();
+
+    bool Initialize();
+    static void EnterMessageLoop();
 
     std::string GetTitle() const;
     void SetTitle(const std::string& title);
@@ -33,9 +50,11 @@ public:
     void Minimize();
     void Maximize();
     void Restore();
+    void Close();
 
 private:
     void SetCallbacks();
+    void PurgeCallbacks();
 
     static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
     static void char_callback(GLFWwindow* window, unsigned int c);
@@ -43,145 +62,218 @@ private:
     static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
     static void size_callback(GLFWwindow* window, int width, int height);
     static void scroll_callback(GLFWwindow* window, double x, double y);
-    static void refresh_callback(GLFWwindow* window);
     static void iconify_callback(GLFWwindow* window, int iconified);
     static void maximize_callback(GLFWwindow* window, int maximized);
     static void focus_callback(GLFWwindow* window, int focused);
+    static void pos_callback(GLFWwindow* window, int xpos, int ypos);
+    static void close_callback(GLFWwindow* window);
+    static void refresh_callback(GLFWwindow* window);
+    static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+    static void content_scale_callback(GLFWwindow* window, float xscale, float yscale);
+    static void error_callback(Window::WindowImp* window, int error, const char* description);
 
     void size_callback(int width, int height);
+    void close_callback();
 
+    void MainLoop();
     void Draw();
 private:
     CallbackHandler & m_callbackHandler;
     std::string m_title;
     std::mutex m_mutex;   // mutex for state sanity during callbacks
     GLFWwindow* m_window;
+    shared_ptr<Window> m_owner;
+    std::thread m_renderThread;
     int m_width;
     int m_height;
 };
-
-//
-// Callbacks
-//
-
-static void error_callback(int error, const char* description)
-{
-    std::cout << description << std::endl;
-}
 
 // 
 // Window
 //
 
-Window::Window(CallbackHandler & callbackHandler, const std::string& title)
-    : m_imp(new WindowImp(callbackHandler, title))
+Window::Window(CallbackHandler& callbackHandler, const std::string& title)
+    : m_imp(new WindowImp(shared_ptr<Window>(this, [](Window * window){}), callbackHandler, title))
 {}
 
 Window::~Window() = default;
 
-bool Window::Init() { return m_imp->Init(); }
-void Window::Run() { return m_imp->Run(); }
-void Window::Cleanup() { return m_imp->Cleanup(); }
+bool Window::Initialize() { return m_imp->Initialize(); }
+void Window::EnterMessageLoop() { Window::WindowImp::EnterMessageLoop(); }
 
-void Window::SetTitle(const std::string& title) { return m_imp->SetTitle(title); }
+void Window::SetTitle(const std::string & title) { return m_imp->SetTitle(title); }
 std::string Window::GetTitle() const { return m_imp->GetTitle(); }
 
 void Window::Minimize() { m_imp->Minimize(); }
 void Window::Maximize() { m_imp->Maximize(); }
 void Window::Restore() { m_imp->Restore(); }
+void Window::Close() { m_imp->Close(); }
+
+//
+// Global OpenGL state
+//
+
+Window::WindowImp::OpenGLState::OpenGLState()
+    : m_initialisationSucceeded(false)
+{
+    // setup glfw
+    glfwSetErrorCallback(error_callback);
+    m_initialisationSucceeded = glfwInit();
+}
+Window::WindowImp::OpenGLState::~OpenGLState()
+{
+    // todo: close all open windows
+
+    if (InitialisationSucceeded())
+    {
+        glfwTerminate();
+    }
+}
+
+bool Window::WindowImp::OpenGLState::InitialisationSucceeded() const
+{
+    return m_initialisationSucceeded;
+}
+
+void Window::WindowImp::OpenGLState::AddWindow(Window::WindowImp* window)
+{
+    m_windows.emplace(window);
+}
+
+void Window::WindowImp::OpenGLState::RemoveWindow(Window::WindowImp* window)
+{
+    m_windows.erase(window);
+}
+
+void Window::WindowImp::OpenGLState::error_callback(int error, const char* description)
+{
+    // global error reporting
+
+    // send error to all registered windows
+    for (auto window : state.m_windows)
+    {
+        Window::WindowImp::error_callback(window, error, description);
+    }
+}
+
+void Window::WindowImp::OpenGLState::EnterMessageLoop()
+{
+    while (!m_windows.empty())
+    {
+//      glfwPollEvents();
+        glfwWaitEventsTimeout(0.5);
+    }
+}
+
+Window::WindowImp::OpenGLState Window::WindowImp::state;
 
 // 
 // WindowImp
 //
 
-Window::WindowImp::WindowImp(CallbackHandler& callbackHandler, const std::string& title)
+Window::WindowImp::WindowImp(const shared_ptr<Window> & owner, CallbackHandler& callbackHandler, const std::string& title)
     : m_callbackHandler(callbackHandler)
     , m_title(title)
     , m_window(nullptr)
+    , m_owner(owner)
+    , m_renderThread()
     , m_width(800)
     , m_height(600)
-{}
-
-bool Window::WindowImp::Init()
 {
-    // setup glfw
-    glfwSetErrorCallback(error_callback);
-    return glfwInit();
+    state.AddWindow(this);
 }
 
-void Window::WindowImp::Run()
+Window::WindowImp::~WindowImp()
+{
+    m_renderThread.join();
+    state.RemoveWindow(this);
+}
+
+bool Window::WindowImp::Initialize()
+{
+    if (state.InitialisationSucceeded())
+    {
+        glfwWindowHint(GLFW_ALPHA_BITS, 8);
+        // load the background image from disk before showing the window
+        m_window = glfwCreateWindow(m_width, m_height, m_title.c_str(), NULL, NULL);
+        if (!m_window)
+        {
+            //Log::Error("Could not create OpenGL window");
+            return false;
+        }
+        glfwSetWindowUserPointer(m_window, this);
+        RemoveWindowDecorations(m_window);
+        glfwMakeContextCurrent(m_window);
+
+        if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+        {
+            //Log::Error("Could not load all required OpenGL functionality");
+            return false;
+        }
+
+        glfwSwapInterval(1);
+
+        SetCallbacks();
+
+        //    glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+
+        size_callback(m_width, m_height);
+
+        glfwMakeContextCurrent(nullptr);
+        m_renderThread = std::thread([this] 
+            { 
+                MainLoop(); 
+            });
+
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+void Window::WindowImp::EnterMessageLoop()
+{
+    state.EnterMessageLoop();
+}
+
+void Window::WindowImp::MainLoop()
 {
     using namespace std::placeholders;
 
-    glfwWindowHint(GLFW_ALPHA_BITS, 8);
-    // load the background image from disk before showing the window
-    m_window = glfwCreateWindow(m_width, m_height, m_title.c_str(), NULL, NULL);
-    if (!m_window)
-    {
-        glfwTerminate();
-        //Log::Error("Could not create OpenGL window");
-        exit(EXIT_FAILURE);
-    }
     glfwMakeContextCurrent(m_window);
-
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    {
-        //Log::Error("Could not load all required OpenGL functionality");
-        exit(EXIT_FAILURE);
-    }
-
-    glfwGetFramebufferSize(m_window, &m_width, &m_height);
-    size_callback(m_width, m_height);
-
-    glfwSwapInterval(1);
-
-    SetCallbacks();
-
-    glfwSetWindowUserPointer(m_window, this);
-
-    //    glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
-
-    auto render = [&]()
-    {
-        glfwMakeContextCurrent(m_window);
-        GLfloat light_position[] = { 4.0, 4.0, 4.0, 0.0 };
-        glClearColor(0.0, 0.0, 0.0, 1.0);
-        glShadeModel(GL_SMOOTH);
-        glLightfv(GL_LIGHT0, GL_POSITION, light_position);
-        glEnable(GL_LIGHT0);
-        glFrontFace(GL_CCW);
-        glEnable(GL_COLOR_MATERIAL);
-        glEnable(GL_LIGHTING);
-        glEnable(GL_CULL_FACE);
-        glEnable(GL_DEPTH_TEST);
-        glActiveTexture(GL_TEXTURE0);
-        glEnable(GL_TEXTURE_2D);
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glBlendEquation(GL_FUNC_ADD);
-        glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
-        glDisable(GL_STENCIL_TEST);
-        glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
-        glStencilMask(0x00);
-        glDepthFunc(GL_LESS);
-        //glDepthFunc(GL_GREATER);
-        while (!glfwWindowShouldClose(m_window))
-        {
-            Draw();
-        }
-    };
-
-    glfwMakeContextCurrent(nullptr);
-    thread renderThread(render);
+    GLfloat light_position[] = { 4.0, 4.0, 4.0, 0.0 };
+    glClearColor(0.0, 0.0, 0.0, 1.0);
+    glShadeModel(GL_SMOOTH);
+    glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+    glEnable(GL_LIGHT0);
+    glFrontFace(GL_CCW);
+    glEnable(GL_COLOR_MATERIAL);
+    glEnable(GL_LIGHTING);
+    glEnable(GL_CULL_FACE);
+    glEnable(GL_DEPTH_TEST);
+    glActiveTexture(GL_TEXTURE0);
+    glEnable(GL_TEXTURE_2D);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glBlendEquation(GL_FUNC_ADD);
+    glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
+    glDisable(GL_STENCIL_TEST);
+    glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+    glStencilMask(0x00);
+    glDepthFunc(GL_LESS);
+    //glDepthFunc(GL_GREATER);
     while (!glfwWindowShouldClose(m_window))
     {
-        glfwPollEvents();
+        Draw();
+        //std::this_thread::sleep_for(std::chrono::seconds(30));
     }
-    renderThread.join();
 
-    glfwSetKeyCallback(m_window, nullptr);
-    glfwSetWindowSizeCallback(m_window, nullptr);
-    glfwSetWindowRefreshCallback(m_window, nullptr);
+    PurgeCallbacks();
+    glfwDestroyWindow(m_window);
+    m_window = nullptr;
+    state.RemoveWindow(this);
 }
 
 void Window::WindowImp::Draw()
@@ -216,13 +308,6 @@ void Window::WindowImp::Draw()
     glfwSwapBuffers(m_window);
 }
 
-void Window::WindowImp::Cleanup()
-{
-    glfwDestroyWindow(m_window);
-    m_window = nullptr;
-    glfwTerminate();
-}
-
 void Window::WindowImp::SetCallbacks()
 {
     glfwSetKeyCallback(m_window, &WindowImp::key_callback);
@@ -235,23 +320,49 @@ void Window::WindowImp::SetCallbacks()
     glfwSetWindowIconifyCallback(m_window, &WindowImp::iconify_callback);
     glfwSetWindowMaximizeCallback(m_window, &WindowImp::maximize_callback);
     glfwSetWindowFocusCallback(m_window, &WindowImp::focus_callback);
+    glfwSetWindowPosCallback(m_window, &WindowImp::pos_callback);
+    glfwSetWindowCloseCallback(m_window, &WindowImp::close_callback);
+    glfwSetFramebufferSizeCallback(m_window, &WindowImp::framebuffer_size_callback);
+    glfwSetWindowContentScaleCallback(m_window, &WindowImp::content_scale_callback);
+}
+
+void Window::WindowImp::PurgeCallbacks()
+{
+    glfwSetKeyCallback(m_window, nullptr);
+    glfwSetWindowSizeCallback(m_window, nullptr);
+    glfwSetWindowRefreshCallback(m_window, nullptr);
+    glfwSetMouseButtonCallback(m_window, nullptr);
+    glfwSetCursorPosCallback(m_window, nullptr);
+    glfwSetCharCallback(m_window, nullptr);
+    glfwSetScrollCallback(m_window, nullptr);
+    glfwSetWindowIconifyCallback(m_window, nullptr);
+    glfwSetWindowMaximizeCallback(m_window, nullptr);
+    glfwSetWindowFocusCallback(m_window, nullptr);
+    glfwSetWindowPosCallback(m_window, nullptr);
+    glfwSetWindowCloseCallback(m_window, nullptr);
+    glfwSetFramebufferSizeCallback(m_window, nullptr);
+    glfwSetWindowContentScaleCallback(m_window, nullptr);
 }
 
 void Window::WindowImp::key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-    static_cast<WindowImp*>(glfwGetWindowUserPointer(window))->m_callbackHandler.key_callback(key, scancode, action, mods);
+    auto imp = static_cast<WindowImp*>(glfwGetWindowUserPointer(window));
+    imp->m_callbackHandler.key_callback(imp->m_owner, key, scancode, action, mods);
 }
 void Window::WindowImp::char_callback(GLFWwindow* window, unsigned int c)
 {
-    static_cast<WindowImp*>(glfwGetWindowUserPointer(window))->m_callbackHandler.char_callback(c);
+    auto imp = static_cast<WindowImp*>(glfwGetWindowUserPointer(window));
+    imp->m_callbackHandler.char_callback(imp->m_owner, c);
 }
 void Window::WindowImp::cursor_pos_callback(GLFWwindow* window, double xpos, double ypos)
 {
-    static_cast<WindowImp*>(glfwGetWindowUserPointer(window))->m_callbackHandler.cursor_pos_callback(xpos, ypos);
+    auto imp = static_cast<WindowImp*>(glfwGetWindowUserPointer(window));
+    imp->m_callbackHandler.cursor_pos_callback(imp->m_owner, xpos, ypos);
 }
 void Window::WindowImp::mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 {
-    static_cast<WindowImp*>(glfwGetWindowUserPointer(window))->m_callbackHandler.mouse_button_callback(button, action, mods);
+    auto imp = static_cast<WindowImp*>(glfwGetWindowUserPointer(window));
+    imp->m_callbackHandler.mouse_button_callback(imp->m_owner, button, action, mods);
 }
 void Window::WindowImp::size_callback(GLFWwindow* window, int width, int height)
 {
@@ -259,23 +370,51 @@ void Window::WindowImp::size_callback(GLFWwindow* window, int width, int height)
 }
 void Window::WindowImp::scroll_callback(GLFWwindow* window, double x, double y)
 {
-    static_cast<WindowImp*>(glfwGetWindowUserPointer(window))->m_callbackHandler.scroll_callback(x, y);
+    auto imp = static_cast<WindowImp*>(glfwGetWindowUserPointer(window));
+    imp->m_callbackHandler.scroll_callback(imp->m_owner, x, y);
 }
 void Window::WindowImp::refresh_callback(GLFWwindow* window)
 {
-    static_cast<WindowImp*>(glfwGetWindowUserPointer(window))->m_callbackHandler.refresh_callback();
+    auto imp = static_cast<WindowImp*>(glfwGetWindowUserPointer(window));
+    imp->m_callbackHandler.refresh_callback(imp->m_owner);
 }
 void Window::WindowImp::iconify_callback(GLFWwindow* window, int iconified)
 {
-    static_cast<WindowImp*>(glfwGetWindowUserPointer(window))->m_callbackHandler.iconify_callback(iconified);
+    auto imp = static_cast<WindowImp*>(glfwGetWindowUserPointer(window));
+    imp->m_callbackHandler.iconify_callback(imp->m_owner, iconified);
 }
 void Window::WindowImp::maximize_callback(GLFWwindow* window, int maximized)
 {
-    static_cast<WindowImp*>(glfwGetWindowUserPointer(window))->m_callbackHandler.maximize_callback(maximized);
+    auto imp = static_cast<WindowImp*>(glfwGetWindowUserPointer(window));
+    imp->m_callbackHandler.maximize_callback(imp->m_owner, maximized);
 }
 void Window::WindowImp::focus_callback(GLFWwindow* window, int focused)
 {
-    static_cast<WindowImp*>(glfwGetWindowUserPointer(window))->m_callbackHandler.focus_callback(focused);
+    auto imp = static_cast<WindowImp*>(glfwGetWindowUserPointer(window));
+    imp->m_callbackHandler.focus_callback(imp->m_owner, focused);
+}
+void Window::WindowImp::pos_callback(GLFWwindow* window, int xpos, int ypos)
+{
+    auto imp = static_cast<WindowImp*>(glfwGetWindowUserPointer(window));
+    imp->m_callbackHandler.pos_callback(imp->m_owner, xpos,ypos);
+}
+void Window::WindowImp::close_callback(GLFWwindow* window)
+{
+    static_cast<WindowImp*>(glfwGetWindowUserPointer(window))->close_callback();
+}
+void Window::WindowImp::framebuffer_size_callback(GLFWwindow* window, int width, int height)
+{
+    auto imp = static_cast<WindowImp*>(glfwGetWindowUserPointer(window));
+    imp->m_callbackHandler.framebuffer_size_callback(imp->m_owner, width,height);
+}
+void Window::WindowImp::content_scale_callback(GLFWwindow* window, float xscale, float yscale)
+{
+    auto imp = static_cast<WindowImp*>(glfwGetWindowUserPointer(window));
+    imp->m_callbackHandler.content_scale_callback(imp->m_owner, xscale, yscale);
+}
+void Window::WindowImp::error_callback(Window::WindowImp* window, int error, const char* description)
+{
+    window->m_callbackHandler.error_callback(window->m_owner, error, description);
 }
 
 
@@ -284,7 +423,13 @@ void Window::WindowImp::size_callback(int width, int height)
     std::lock_guard<std::mutex> lock(m_mutex);
     m_width = width;
     m_height = height;
-    m_callbackHandler.size_callback(width, height);
+    m_callbackHandler.size_callback(m_owner, width, height);
+}
+
+void Window::WindowImp::close_callback()
+{
+    CloseOwningWindow(m_window);
+    m_callbackHandler.close_callback(m_owner);
 }
 
 
@@ -310,6 +455,11 @@ void Window::WindowImp::Maximize()
 void Window::WindowImp::Restore()
 {
     glfwRestoreWindow(m_window);
+}
+void Window::WindowImp::Close()
+{
+    glfwSetWindowShouldClose(m_window, GLFW_TRUE);
+    close_callback();
 }
 
 

@@ -70,3 +70,4 @@ namespace OpenGL
 };
 
 #include "internal/Window.h"
+#include "internal/OSSpecific.h"

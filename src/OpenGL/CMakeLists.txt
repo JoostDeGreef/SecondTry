@@ -10,6 +10,7 @@ link_libraries(Core
 
 add_library (${PROJECT_NAME} # SHARED 
              "src/OpenGL.cpp"
+             "src/OSSpecific-win32.cpp"
              "src/Window.cpp")
 
 # directories where to search for header files

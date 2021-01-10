@@ -1,74 +1,61 @@
 #include <cstdlib>
+#include <thread>
 
 #include "OpenGL.h"
+
+using namespace std;
 
 class UI : public CallbackHandler
 {
 public:
     UI()
         : CallbackHandler()
-        , window(*this, "Test window")
+        , window1(*this, "Test window 1")
+        , window2(*this, "Test window 2")
     {}
 
-    void key_callback(int key, int scancode, int action, int mods) override;
-    void char_callback(unsigned int c) override;
-    void cursor_pos_callback(double xpos, double ypos) override;
-    void mouse_button_callback(int button, int action, int mods) override;
-    void size_callback(int width, int height) override;
-    void scroll_callback(double x, double y) override;
-    void refresh_callback() override;
-    void iconify_callback(int iconified) override;
-    void maximize_callback(int maximized) override;
-    void focus_callback(int focused) override;
+    void char_callback(const std::shared_ptr<Window>& window, unsigned int c) 
+    { 
+        window->SetTitle("char_callback(...,{0})",c); 
+        if (c == 'q')
+        {
+            window->Close();
+        }
+    };
+    void close_callback(const std::shared_ptr<Window>& window) { window->SetTitle("close_callback(...)"); };
+    void content_scale_callback(const std::shared_ptr<Window>& window, float xscale, float yscale) { window->SetTitle("content_scale_callback(...,{0},{1})", xscale, yscale); };
+    void cursor_pos_callback(const std::shared_ptr<Window>& window, double xpos, double ypos) { window->SetTitle("cursor_pos_callback(...,{0},{1})", xpos, ypos); };
+    void error_callback(const std::shared_ptr<Window>& window, int error, const char* description) { window->SetTitle("error_callback(...,{0},{1})", error, description); };
+    void focus_callback(const std::shared_ptr<Window>& window, int focused) { window->SetTitle("focus_callback(...,{0})", focused); };
+    void framebuffer_size_callback(const std::shared_ptr<Window>& window, int width, int height) { window->SetTitle("framebuffer_size_callback(...,{0},{1})", width, height); };
+    void iconify_callback(const std::shared_ptr<Window>& window, int iconified) { window->SetTitle("iconify_callback(...,{0})", iconified); };
+    void key_callback(const std::shared_ptr<Window>& window, int key, int scancode, int action, int mods) { window->SetTitle("key_callback(...,{0},{1},{2},{3})", key, scancode, action, mods); };
+    void maximize_callback(const std::shared_ptr<Window>& window, int maximized) { window->SetTitle("maximize_callback(...,{0})", maximized); };
+    void mouse_button_callback(const std::shared_ptr<Window>& window, int button, int action, int mods) { window->SetTitle("mouse_button_callback(...,{0},{1},{2})", button, action, mods); };
+    void pos_callback(const std::shared_ptr<Window>& window, int xpos, int ypos) { window->SetTitle("pos_callback(...,{0},{1})", xpos,ypos); };
+    void size_callback(const std::shared_ptr<Window>& window, int width, int height) { window->SetTitle("size_callback(...,{0},{1})", width, height); };
+    void scroll_callback(const std::shared_ptr<Window>& window, double x, double y) { window->SetTitle("scroll_callback(...,{0},{1})", x, y); };
+    void refresh_callback(const std::shared_ptr<Window>& window) { window->SetTitle("refresh_callback(...)"); };
 
     int Run();
 
 private:
-    Window window;
+    Window window1;
+    Window window2;
 };
-
-void UI::key_callback(int key, int scancode, int action, int mods)
-{}
-void UI::char_callback(unsigned int c)
-{
-    std::cout << (char)c;
-}
-void UI::cursor_pos_callback(double xpos, double ypos)
-{
-    std::cout << "cursor_pos_callback(" << xpos << "," << ypos << ")" << std::endl;
-}
-void UI::mouse_button_callback(int button, int action, int mods)
-{
-    window.SetTitle("mouse_button_callback({0},{1},{2})", button, action, mods);
-}
-void UI::size_callback(int width, int height)
-{
-    window.SetTitle("window_size_callback({0},{1})",width,height);
-}
-void UI::scroll_callback(double x, double y)
-{
-    window.SetTitle("scroll_callback({0},{1})", x, y);
-}
-void UI::refresh_callback()
-{}
-void UI::iconify_callback(int iconified)
-{}
-void UI::maximize_callback(int maximized)
-{}
-void UI::focus_callback(int focused)
-{}
-
 
 int UI::Run()
 {
-    if (!window.Init())
+    if (!window1.Initialize())
+    {
+        return EXIT_FAILURE;
+    }
+    if (!window2.Initialize())
     {
         return EXIT_FAILURE;
     }
 
-    // main loop
-    window.Run();
-    window.Cleanup();
+    Window::EnterMessageLoop();
 
     return EXIT_SUCCESS;
 }
