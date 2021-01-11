@@ -1,13 +1,17 @@
 # Include sub-projects.
 
 add_subdirectory ("3rdParty")
-add_subdirectory ("3rdPartyTest")
 add_subdirectory ("Core")
 add_subdirectory ("CoreTest")
 add_subdirectory ("SQLiteDB")
 add_subdirectory ("SQLiteDBTest")
 add_subdirectory ("OpenGL")
 add_subdirectory ("OpenGLTest")
+add_subdirectory ("GoogleTest")
+add_subdirectory ("GoogleTestTest")
+add_subdirectory ("ZLibWrapper")
+add_subdirectory ("ZLibWrapperTest")
+
 #add_subdirectory ("Data")
 #add_subdirectory ("DataTest")
 #add_subdirectory ("Utils")

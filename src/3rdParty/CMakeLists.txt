@@ -7,6 +7,8 @@ include(GoogleTest)
 include(sqlite3)
 include(fmt)
 include(glfw)
+include(zlib)
+include(png)
 
 # local code
 

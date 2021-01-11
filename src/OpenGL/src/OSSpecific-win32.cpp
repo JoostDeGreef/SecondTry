@@ -17,6 +17,7 @@ void CloseOwningWindow(GLFWwindow* window)
 
 void RemoveWindowDecorations(GLFWwindow* window)
 {
+    glfwSetWindowOpacity(window, 0.75f);
     HWND hwnd = glfwGetWin32Window(window);
     SetWindowLongPtr(hwnd, GWL_STYLE, GetWindowLongPtrA(hwnd, GWL_STYLE) & ~(WS_MAXIMIZEBOX | WS_MINIMIZEBOX | WS_SIZEBOX | WS_SYSMENU));
 }
