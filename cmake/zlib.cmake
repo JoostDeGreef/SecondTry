@@ -9,9 +9,7 @@ FetchContent_Declare(
   GIT_TAG        master
 )
 
-FetchContent_MakeAvailable(zlib)
+set(SKIP_INSTALL_ALL ON CACHE BOOL "Don't install anything" FORCE)
 
-#add_library(ZLIB INTERFACE)
-#target_include_directories(ZLIB INTERFACE ${zlib_SOURCE_DIR} ${zlib_BINARY_DIR})
-#target_link_libraries(ZLIB INTERFACE zlib)
+FetchContent_MakeAvailable(zlib)
 
