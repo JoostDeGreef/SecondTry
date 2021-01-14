@@ -1,5 +1,6 @@
 #
-# SQLite3
+# includes the sqlite library as 'SQLite3'
+# should only be used through the wrapper project 'SQLiteDB'
 #
 
 FetchContent_Declare(

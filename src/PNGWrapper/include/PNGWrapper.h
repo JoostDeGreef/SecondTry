@@ -8,6 +8,7 @@
 class RGBAImage
 {
 public:
+    // todo: make this hack work on different endianesses.
     class Pixel
     {
     public:
@@ -17,8 +18,36 @@ public:
             , B(b)
             , A(a)
         {}
+        Pixel(const unsigned int& rgba)
+            : RGBA(rgba)
+        {}
+        Pixel()
+            : RGBA(0)
+        {}
+        Pixel(const Pixel& other)
+            : RGBA(other.RGBA)
+        {}
 
-        union 
+        bool operator == (const Pixel& other) const
+        {
+            return RGBA == other.RGBA;
+        }
+
+        Pixel& Set(const unsigned char& r, const unsigned char& g, const unsigned char& b, const unsigned char& a)
+        {
+            R = r;
+            G = g;
+            B = b;
+            A = a;
+            return *this;
+        }
+        Pixel& Set(const unsigned char& rgba)
+        {
+            RGBA = rgba;
+            return *this;
+        }
+
+        union
         {
             unsigned int RGBA;
             struct
@@ -29,27 +58,6 @@ public:
                 unsigned char A;
             };
         };
-    };
-    class PixelProxy
-    {
-    public:
-        PixelProxy(const unsigned char * rgba)
-            : RGBA(rgba)
-        {}
-
-        PixelProxy& operator = (const Pixel & pixel)
-        {
-            memcpy((unsigned char*)RGBA,(unsigned char*)(&pixel.RGBA),4);
-            return *this;
-        }
-
-        operator Pixel () const 
-        {
-            return Pixel(RGBA[0],RGBA[1],RGBA[2],RGBA[3]);
-        }
-
-    private:
-        const unsigned char * RGBA;
     };
 
     RGBAImage(const RGBAImage& other);
@@ -71,13 +79,13 @@ public:
     }
     bool hasData() const { return nullptr != m_data; }
 
-    PixelProxy operator [] (const size_t & index) 
+    Pixel & operator [] (const size_t & index) 
     {
-        return PixelProxy(m_data + index * 4);
+        return *(Pixel*)(m_data + index * 4);
     }
-    const PixelProxy operator [] (const size_t& index) const
+    const Pixel & operator [] (const size_t& index) const
     {
-        return PixelProxy(m_data + index * 4);
+        return *(Pixel*)(m_data + index * 4);
     }
 
     auto Width() const { return m_width; }
@@ -104,6 +112,11 @@ private:
 
 // for Google Test mainly
 inline
+std::ostream& operator<<(std::ostream& stream, const RGBAImage::Pixel & pixel)
+{
+    return stream << "(" << (int)pixel.R << "," << (int)pixel.G << "," << (int)pixel.B << "," << (int)pixel.A << ")";
+}
+inline
 std::ostream& operator<<(std::ostream& stream, RGBAImage const& image)
 {
     stream << "RGBAImage(" << image.Width() << "," << image.Height();
@@ -111,8 +124,7 @@ std::ostream& operator<<(std::ostream& stream, RGBAImage const& image)
     {
         for (int i = 0; i < image.Width() * image.Height(); ++i)
         {
-            RGBAImage::Pixel pixel = image[i];
-            stream << ",(" << (int)pixel.R << "," << (int)pixel.G << "," << (int)pixel.B << "," << (int)pixel.A << ")";
+            stream << "," << image[i];
         }
     }
     else
