@@ -69,6 +69,7 @@ public:
             m_height == other.m_height &&
             0 == memcmp(m_data, other.m_data, m_width * m_height * 4);
     }
+    bool hasData() const { return nullptr != m_data; }
 
     PixelProxy operator [] (const size_t & index) 
     {
@@ -88,6 +89,14 @@ public:
 
     std::vector<char> StorePNG();
 private:
+    class IBlobReader
+    {
+    public:
+        virtual size_t Read(unsigned char* blobData, const size_t blobSize) = 0;
+    };
+    RGBAImage& ReadPNG(IBlobReader * reader);
+    unsigned char* Row(const unsigned int index) const;
+
     unsigned char* m_data;
     int m_width;
     int m_height;
@@ -98,11 +107,19 @@ inline
 std::ostream& operator<<(std::ostream& stream, RGBAImage const& image)
 {
     stream << "RGBAImage(" << image.Width() << "," << image.Height();
-    for (int i = 0; i < image.Width() * image.Height(); ++i)
+    if (image.hasData())
     {
-        RGBAImage::Pixel pixel = image[i];
-        stream << ",(" << (int)pixel.R << "," << (int)pixel.G << "," << (int)pixel.B << "," << (int)pixel.A << ")";
+        for (int i = 0; i < image.Width() * image.Height(); ++i)
+        {
+            RGBAImage::Pixel pixel = image[i];
+            stream << ",(" << (int)pixel.R << "," << (int)pixel.G << "," << (int)pixel.B << "," << (int)pixel.A << ")";
+        }
     }
+    else
+    {
+        stream << ",(null)";
+    }
+    stream << ")";
     return stream;
 }
 
