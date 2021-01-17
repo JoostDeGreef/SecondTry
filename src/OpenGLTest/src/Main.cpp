@@ -10,16 +10,30 @@ class UI : public CallbackHandler
 public:
     UI()
         : CallbackHandler()
-        , window1(*this, "Test window 1")
+        , window1(*this, "Test window 1", Window::Option::HasCloseButton)
         , window2(*this, "Test window 2")
     {}
 
     void char_callback(const std::shared_ptr<Window>& window, unsigned int c) 
     { 
         window->SetTitle("char_callback(...,{0})",c); 
-        if (c == 'q')
+        switch (c)
         {
+        case 'f':
+            window->ToggleOption(Window::Option::FullScreen);
+            break;
+        case 's':
+            window->ToggleOption(Window::Option::StayOnTop);
+            break;
+        case 't':
+            window->ToggleOption(Window::Option::ToolWindow);
+            break;
+        case 'x':
+            window->ToggleOption(Window::Option::HasCloseButton);
+            break;
+        case 'q':
             window->Close();
+            break;
         }
     };
     void close_callback(const std::shared_ptr<Window>& window) { window->SetTitle("close_callback(...)"); };

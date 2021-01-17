@@ -38,7 +38,7 @@ private:
     static OpenGLState state;
 
 public:
-    WindowImp(const shared_ptr<Window> & owner, CallbackHandler & callbackHandler, const std::string & title);
+    WindowImp(const shared_ptr<Window> & owner, CallbackHandler & callbackHandler, const std::string & title, const Options & options);
     ~WindowImp();
 
     bool Initialize();
@@ -46,6 +46,11 @@ public:
 
     std::string GetTitle() const;
     void SetTitle(const std::string& title);
+
+    void HandleOption(const Option& option, const bool& value = true);
+    bool GetOption(const Option& option);
+    bool SetOption(const Option& option, const bool & value);
+    bool ToggleOption(const Option& option);
 
     void Minimize();
     void Maximize();
@@ -80,6 +85,7 @@ private:
 private:
     CallbackHandler & m_callbackHandler;
     std::string m_title;
+    Options m_options;
     std::mutex m_mutex;   // mutex for state sanity during callbacks
     GLFWwindow* m_window;
     shared_ptr<Window> m_owner;
@@ -92,8 +98,8 @@ private:
 // Window
 //
 
-Window::Window(CallbackHandler& callbackHandler, const std::string& title)
-    : m_imp(new WindowImp(shared_ptr<Window>(this, [](Window * window){}), callbackHandler, title))
+Window::Window(CallbackHandler& callbackHandler, const std::string& title, const Options& options)
+    : m_imp(new WindowImp(shared_ptr<Window>(this, [](Window * window){}), callbackHandler, title, options))
 {}
 
 Window::~Window() = default;
@@ -103,6 +109,10 @@ void Window::EnterMessageLoop() { Window::WindowImp::EnterMessageLoop(); }
 
 void Window::SetTitle(const std::string & title) { return m_imp->SetTitle(title); }
 std::string Window::GetTitle() const { return m_imp->GetTitle(); }
+
+bool Window::GetOption(const Option& option) { return m_imp->GetOption(option); }
+bool Window::SetOption(const Option& option, const bool& value) { return m_imp->SetOption(option, value); }
+bool Window::ToggleOption(const Option& option) { return m_imp->ToggleOption(option); }
 
 void Window::Minimize() { m_imp->Minimize(); }
 void Window::Maximize() { m_imp->Maximize(); }
@@ -171,9 +181,10 @@ Window::WindowImp::OpenGLState Window::WindowImp::state;
 // WindowImp
 //
 
-Window::WindowImp::WindowImp(const shared_ptr<Window> & owner, CallbackHandler& callbackHandler, const std::string& title)
+Window::WindowImp::WindowImp(const shared_ptr<Window>& owner, CallbackHandler& callbackHandler, const std::string& title, const Options& options)
     : m_callbackHandler(callbackHandler)
     , m_title(title)
+    , m_options(options)
     , m_window(nullptr)
     , m_owner(owner)
     , m_renderThread()
@@ -202,7 +213,14 @@ bool Window::WindowImp::Initialize()
             return false;
         }
         glfwSetWindowUserPointer(m_window, this);
-        RemoveWindowDecorations(m_window);
+        OSSpecific::RemoveWindowDecorations(m_window);
+        for (std::size_t i = 0; i < m_options.size(); ++i)
+        {
+            if (m_options.test(i))
+            {
+                HandleOption((Option)i);
+            }
+        }
         glfwMakeContextCurrent(m_window);
 
         if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
@@ -428,7 +446,7 @@ void Window::WindowImp::size_callback(int width, int height)
 
 void Window::WindowImp::close_callback()
 {
-    CloseOwningWindow(m_window);
+    OSSpecific::CloseOwningWindow(m_window);
     m_callbackHandler.close_callback(m_owner);
 }
 
@@ -441,6 +459,54 @@ void Window::WindowImp::SetTitle(const std::string& title)
 std::string Window::WindowImp::GetTitle() const
 {
     return m_title;
+}
+
+
+void Window::WindowImp::HandleOption(const Option& option, const bool& value)
+{
+    switch (option)
+    {
+    case Option::FullScreen:
+        {
+            GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+            const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+            glfwSetWindowMonitor(m_window, value?monitor:NULL, 0, 0, mode->width, mode->height, mode->refreshRate);
+        }
+        break;
+    case Option::HasCloseButton:
+        OSSpecific::EnableCloseButton(m_window, value);
+        break;
+    case Option::StayOnTop:
+        OSSpecific::StayOnTop(m_window, value);
+        break;
+    case Option::ToolWindow:
+        OSSpecific::MakeToolWindow(m_window, value);
+        break;
+    default:
+        // unhandled option!
+        break;
+    }
+}
+bool Window::WindowImp::GetOption(const Option& option)
+{
+    return m_options.test(static_cast<std::underlying_type<Option>::type>(option));
+}
+bool Window::WindowImp::SetOption(const Option& option, const bool & value)
+{
+    bool prev = m_options.test(static_cast<std::underlying_type<Option>::type>(option));
+    m_options.set(static_cast<std::underlying_type<Option>::type>(option),value);
+    if (prev != value)
+    {
+        HandleOption(option, value);
+    }
+    return prev;
+}
+bool Window::WindowImp::ToggleOption(const Option& option)
+{
+    bool prev = m_options.test(static_cast<std::underlying_type<Option>::type>(option));
+    m_options.set(static_cast<std::underlying_type<Option>::type>(option), !prev);
+    HandleOption(option, !prev);
+    return prev;
 }
 
 

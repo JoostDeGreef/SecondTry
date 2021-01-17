@@ -24,10 +24,57 @@ public:
 
 class Window : std::enable_shared_from_this<Window>
 {
+private:
+    typedef std::bitset<16> Options;
+
 public:
+    enum class Option
+    {
+        FullScreen = 0,
+        HasCloseButton = 1,
+        StayOnTop = 2,
+        ToolWindow = 4,
+    };
+
+    /*
+    ** Create an OpenGL window.
+    ** arguments:
+    **    callbackHandler : respond to window events
+    **    title           : window title
+    **    option 0..n     : window options
+    */
+    template<typename... Args>
     Window(
         CallbackHandler& callbackHandler,
-        const std::string& title);
+        const std::string& title,
+        Option option_1, Args... options)
+        : Window(callbackHandler, title, PackOptions(option_1,options...))
+    {}
+    Window(
+        CallbackHandler& callbackHandler,
+        const std::string& title)
+        : Window(callbackHandler, title, Options{})
+    {}
+
+private:
+    Window(
+        CallbackHandler& callbackHandler,
+        const std::string& title,
+        const Options& options);
+
+    Options PackOptions(
+        Option option_1)
+    {
+        return Options().set(static_cast<std::underlying_type<Option>::type>(option_1));
+    }
+    template<typename... Args>
+    Options PackOptions(
+        Option option_1, Args... options)
+    {
+        return PackOptions(options...).set(static_cast<std::underlying_type<Option>::type>(option_1));
+    }
+
+public:    
 
     ~Window();
 
@@ -43,12 +90,18 @@ public:
         SetTitle(fmt::format(title, t0, tn...));
     }
 
+    // get/set window options
+    bool GetOption(const Option& option); // get current option value
+    bool SetOption(const Option& option, const bool& value = true); // set option, return previous value
+    bool ToggleOption(const Option& option); // invert the option, return previous value
+    bool ClearOption(const Option& option) { return SetOption(option, false); }; // clear option, return previous value
+
     // Window sizing/pos/events
     void Minimize();
     void Maximize();
     void Restore();
     void Close();
-    
+
 private:
     class WindowImp;
     std::unique_ptr<WindowImp> m_imp;

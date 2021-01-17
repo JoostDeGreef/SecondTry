@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <string>
+#include <bitset>
 
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
