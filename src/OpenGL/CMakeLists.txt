@@ -6,7 +6,8 @@ set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 link_libraries(Core
                fmt
                glad
-               glfw)
+               glfw
+               freetype)
 
 add_library (${PROJECT_NAME} # SHARED 
              "src/OpenGL.cpp"

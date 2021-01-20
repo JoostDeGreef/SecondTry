@@ -10,8 +10,7 @@ class UI : public CallbackHandler
 public:
     UI()
         : CallbackHandler()
-        , window1(*this, "Test window 1", Window::Option::HasCloseButton)
-        , window2(*this, "Test window 2")
+        , mainWindow(*this, "Test window 1", Window::Option::HasCloseButton)
     {}
 
     void char_callback(const std::shared_ptr<Window>& window, unsigned int c) 
@@ -54,17 +53,12 @@ public:
     int Run();
 
 private:
-    Window window1;
-    Window window2;
+    Window mainWindow;
 };
 
 int UI::Run()
 {
-    if (!window1.Initialize())
-    {
-        return EXIT_FAILURE;
-    }
-    if (!window2.Initialize())
+    if (!mainWindow.Initialize())
     {
         return EXIT_FAILURE;
     }

@@ -9,6 +9,7 @@ include(fmt)
 include(glfw)
 include(zlib)
 include(png)
+include(freetype2)
 
 # local code
 
