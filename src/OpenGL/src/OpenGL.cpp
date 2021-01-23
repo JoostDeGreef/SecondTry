@@ -2,20 +2,20 @@
 
 void OpenGL::glColor(const RGBAColorf& color)
 {
-    glColor4fv(color.GetRGBA());
+    glColor4fv(color.RGBA);
 }
 void OpenGL::glColor(const RGBAColord& color)
 {
-    glColor4dv(color.GetRGBA());
+    glColor4dv(color.RGBA);
 }
 
 void OpenGL::glColor(const RGBColorf& color)
 {
-    glColor3fv(color.GetRGB());
+    glColor3fv(color.RGB);
 }
 void OpenGL::glColor(const RGBColord& color)
 {
-    glColor3dv(color.GetRGB());
+    glColor3dv(color.RGB);
 }
 
 void OpenGL::glVertex(const Vector3f& point)

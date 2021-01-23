@@ -3,6 +3,7 @@
 #include <memory>
 #include <string>
 #include <bitset>
+#include <map>
 
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
@@ -34,14 +35,8 @@ namespace OpenGL
     using ColorPtr = Color*;
 }
 
-//#include "internal/Shaders.h"
-//
-//#include "ft2build.h"
-//#include FT_FREETYPE_H
-//
-//#include "internal/Freetype.h"
-//#include "internal/CharacterMap.h"
-//#include "internal/Font.h"
+#include "internal/Shader.h"
+#include "internal/Font.h"
 
 namespace OpenGL
 {

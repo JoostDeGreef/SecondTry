@@ -12,7 +12,9 @@ link_libraries(Core
 add_library (${PROJECT_NAME} # SHARED 
              "src/OpenGL.cpp"
              "src/OSSpecific-win32.cpp"
-             "src/Window.cpp")
+             "src/Window.cpp"
+             "src/Font.cpp" 
+             "src/Shader.cpp")
 
 # directories where to search for header files
 target_include_directories(${PROJECT_NAME}

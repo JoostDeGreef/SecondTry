@@ -9,10 +9,19 @@ namespace OpenGL
         typedef TRGBAColor<VALUE_TYPE> this_type;
         typedef VALUE_TYPE value_type;
 
-    private:
-        value_type m_data[4];
-
     public:
+        union
+        {
+            value_type RGBA[3];
+            struct
+            {
+                value_type R;
+                value_type G;
+                value_type B;
+                value_type A;
+            };
+        };
+
         TRGBAColor()
         {}
         TRGBAColor(const this_type& other)
@@ -28,63 +37,53 @@ namespace OpenGL
             SetInt(color);
         }
 
-        void SetR(const value_type& r) { m_data[0] = r; }
-        void SetG(const value_type& g) { m_data[1] = g; }
-        void SetB(const value_type& b) { m_data[2] = b; }
-        void SetA(const value_type& a) { m_data[3] = a; }
         void Set(const value_type& r, const value_type& g, const value_type& b, const value_type& a)
         {
-            m_data[0] = r;
-            m_data[1] = g;
-            m_data[2] = b;
-            m_data[3] = a;
+            R = r;
+            G = g;
+            B = b;
+            A = a;
         }
 
         void Copy(const this_type& other)
         {
-            m_data[0] = other.m_data[0];
-            m_data[1] = other.m_data[1];
-            m_data[2] = other.m_data[2];
-            m_data[3] = other.m_data[3];
+            R = other.R;
+            G = other.G;
+            B = other.B;
+            A = other.A;
         }
 
         this_type Mix(const this_type& other)
         {
             return this_type(
-                (value_type)0.5 * (m_data[0] + other.m_data[0]),
-                (value_type)0.5 * (m_data[1] + other.m_data[1]),
-                (value_type)0.5 * (m_data[2] + other.m_data[2]),
-                (value_type)0.5 * (m_data[3] + other.m_data[3]));
+                (value_type)0.5 * (R + other.R),
+                (value_type)0.5 * (G + other.G),
+                (value_type)0.5 * (B + other.B),
+                (value_type)0.5 * (A + other.A));
         }
-
-        const value_type& GetR() const { return m_data[0]; }
-        const value_type& GetG() const { return m_data[1]; }
-        const value_type& GetB() const { return m_data[2]; }
-        const value_type& GetA() const { return m_data[3]; }
-        const value_type* GetRGBA() const { return m_data; }
 
         const unsigned int GetInt() const
         {
-            return (Value::ToByte(m_data[0]) << 24)
-                + (Value::ToByte(m_data[1]) << 16)
-                + (Value::ToByte(m_data[2]) << 8)
-                + (Value::ToByte(m_data[3]));
+            return (Value::ToByte(R) << 24)
+                 + (Value::ToByte(G) << 16)
+                 + (Value::ToByte(B) << 8)
+                 + (Value::ToByte(A));
         }
         void SetInt(unsigned int color)
         {
-            m_data[0] = Value::FromByte((color >> 24) & 255);
-            m_data[1] = Value::FromByte((color >> 16) & 255);
-            m_data[2] = Value::FromByte((color >> 8) & 255);
-            m_data[3] = Value::FromByte((color) & 255);
+            R = Value::FromByte((color >> 24) & 255);
+            G = Value::FromByte((color >> 16) & 255);
+            B = Value::FromByte((color >> 8) & 255);
+            A = Value::FromByte((color) & 255);
         }
 
         bool operator == (const this_type& other) const
         {
             return
-                m_data[0] == other.m_data[0] &&
-                m_data[1] == other.m_data[1] &&
-                m_data[2] == other.m_data[2] &&
-                m_data[3] == other.m_data[3];
+                R == other.R &&
+                G == other.G &&
+                B == other.B &&
+                A == other.A;
         }
 
         static           this_type Random() { return this_type(Value::Rnd(), Value::Rnd(), Value::Rnd(), Value::Hi()); }

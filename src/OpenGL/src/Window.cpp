@@ -298,16 +298,16 @@ void Window::WindowImp::Draw()
 {
     std::unique_lock<std::mutex> lock(m_mutex);
     
-    float ratio = m_width / (float)m_height;
-    glViewport(0, 0, m_width, m_height);
-    glStencilMask(0xFF);
+    //float ratio = m_width / (float)m_height;
+    //glViewport(0, 0, m_width, m_height);
+    //glStencilMask(0xFF);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-    glStencilMask(0x00);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(-ratio, ratio, -1.0, 1.0, -1.1, 1.1);
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
+    //glStencilMask(0x00);
+    //glMatrixMode(GL_PROJECTION);
+    //glLoadIdentity();
+    //glOrtho(-ratio, ratio, -1.0, 1.0, -1.1, 1.1);
+    //glMatrixMode(GL_MODELVIEW);
+    //glLoadIdentity();
 
 //    DrawShapes();
 
@@ -316,6 +316,11 @@ void Window::WindowImp::Draw()
     glDepthMask(GL_FALSE);
 
 //    DrawFPS();
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(0.0f, m_width, 0.0f, m_height, 0.0f, 1.0f);
+    static OpenGL::Font font("C:/Src/SecondTry/Data/CHILLER.TTF");
+    font.RenderText("This is sample text", 25.0f, 25.0f, 1.0f, OpenGL::RGBColorf(0.5, 0.8f, 0.2f));
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_LIGHTING);

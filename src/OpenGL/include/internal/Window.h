@@ -22,7 +22,7 @@ public:
     virtual void refresh_callback(const std::shared_ptr<Window>& window) {};
 };
 
-class Window : std::enable_shared_from_this<Window>
+class Window // : std::enable_shared_from_this<Window>
 {
 private:
     typedef std::bitset<16> Options;
