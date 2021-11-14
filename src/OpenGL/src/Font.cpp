@@ -6,7 +6,7 @@
 //#include "ft2build.h"
 //#include FT_FREETYPE_H
 //
-#include "freetype/Freetype.h"
+#include "freetype/freetype.h"
 //#include "freetype/CharacterMap.h"
 //#include "freetype/Font.h"
 

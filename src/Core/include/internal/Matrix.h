@@ -7,7 +7,7 @@ namespace implementation
     {
     private:
         std::array<T, ROWS*COLUMNS> m_data;
-        //T m_data[ROWS * COLUMNS];
+
     public:
         typedef DERIVED this_type;
         typedef T element_type;
@@ -94,38 +94,24 @@ namespace implementation
             _Set<0>(e0, args...);
         }
 
-    private:
-        template<size_t INDEX = 0>
-        void _Fill(const element_type& value)
-        {
-            m_data[INDEX] = value;
-            _Fill<INDEX + 1>(value);
-        }
-        template<>
-        void _Fill<ROWS * COLUMNS>(const element_type& value)
-        {}
     public:
         template<typename ...Args>
         void Fill(const element_type& value)
         {
-            _Fill(value);
+            m_data.fill(value);
         }
 
-    private:
-        template<size_t INDEX = ROWS * COLUMNS>
-        bool _Equal(const this_type& other) const
-        {
-            return _Equal<INDEX-1>(other) && Numerics::Equal(m_data[INDEX-1],other.m_data[INDEX-1]);
-        }
-        template<>
-        bool _Equal<0>(const this_type& other) const
-        {
-            return true;
-        }
     public:
         bool Equal(const this_type& other) const
         {
-            return _Equal(other);
+            for(size_t i=0;i<ROWS*COLUMNS;++i)
+            {
+                if(!Numerics::Equal(m_data[i],other.m_data[i]))
+                {
+                    return false;
+                }
+            }
+            return true;
         }
 
     private:
@@ -238,9 +224,25 @@ public:
     typedef implementation::TMatrixData<this_type, T, FIELDS, 1> base_type;
     typedef T element_type;
 
-    using base_type::base_type;
+public:    
+    TVector()
+    {}
+    // TVector(const this_type& other)
+    // {
+    //     Copy(other);
+    // }
+    // TVector(this_type&& other)
+    // {
+    //     Swap(other);
+    // }
 
-    size_t Dimension() const { return Elements(); }
+    template<typename ...Args>
+    TVector(const element_type& e0, Args... args)
+    {
+        base_type::Set(e0, args...);
+    }
+
+    size_t Dimension() const { return base_type::Elements(); }
 
     element_type Length() const
     {
@@ -249,7 +251,7 @@ public:
     element_type LengthSquared() const
     {
         element_type res = 0;
-        for (const auto& element : Data())
+        for (const auto& element : base_type::Data())
         {
             res += pow(element, 2);
         }
@@ -270,9 +272,9 @@ public:
     element_type InnerProduct(const this_type& other) const
     {
         element_type res = 0;
-        for (size_t i = 0; i < Elements(); ++i)
+        for (size_t i = 0; i < base_type::Elements(); ++i)
         {
-            res += Data(i) * other.Data(i);
+            res += base_type::Data(i) * other.Data(i);
         }
         return res;
     }
@@ -280,9 +282,9 @@ public:
     element_type OuterProduct(const this_type& other) const
     {
         this_type res;
-        for (size_t i = 0; i < Elements(); ++i)
+        for (size_t i = 0; i < base_type::Elements(); ++i)
         {
-            res[i] = Data(i) * other.Data(i);
+            res[i] = base_type::Data(i) * other.Data(i);
         }
         return res;
     }
@@ -291,9 +293,9 @@ public:
     typename std::enable_if<FIELDS == 3, RET>::type Cross(const this_type& other) const
     {
         return this_type(
-            Data(1) * other[2] - Data(2) * other[1],
-            Data(2) * other[0] - Data(0) * other[2],
-            Data(0) * other[1] - Data(1) * other[0]);
+            base_type::Data(1) * other[2] - base_type::Data(2) * other[1],
+            base_type::Data(2) * other[0] - base_type::Data(0) * other[2],
+            base_type::Data(0) * other[1] - base_type::Data(1) * other[0]);
     }
 };
 

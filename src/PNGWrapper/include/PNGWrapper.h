@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <sstream>
 #include <vector>
+#include <string.h>
 
 class RGBAImage
 {

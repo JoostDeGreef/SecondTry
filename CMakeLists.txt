@@ -3,8 +3,9 @@ cmake_minimum_required (VERSION 3.14)
 # These are just toy projects, make that clear
 project ("SecondTry" VERSION 0.0.1)
 
-SET( CMAKE_CXX_STANDARD 17 )
-SET( CMAKE_CXX_STANDARD_REQUIRED ON )
+set(CMAKE_CXX_STANDARD 17 CACHE STRING "The C++ standard to use")
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 set(CMAKE_DISABLE_SOURCE_CHANGES  ON)
