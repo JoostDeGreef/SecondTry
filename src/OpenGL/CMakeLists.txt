@@ -9,6 +9,10 @@ link_libraries(Core
                glfw
                freetype)
 
+if(UNIX AND NOT APPLE)
+    set(LINUX TRUE)
+endif()
+
 if (APPLE)
     message(STATUS "${Green} # - This Is an Apple Machine - # ${ColourReset}")
     set(OSSPECIFIC "src/OSSpecific-apple.cpp")
@@ -16,11 +20,11 @@ endif()
 if (LINUX)
     message(STATUS "${Green} # - This Is a Linux Machine - # ${ColourReset}")
     set(OSSPECIFIC "src/OSSpecific-X11.cpp")
-    endif()
+endif()
 if (WIN32)
     message(STATUS "${Green} # - This Is a Windows Machine - # ${ColourReset}")
     set(OSSPECIFIC "src/OSSpecific-win32.cpp")
-    endif()
+endif()
 
 add_library (${PROJECT_NAME} # SHARED 
              "src/OpenGL.cpp"

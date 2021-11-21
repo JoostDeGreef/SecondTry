@@ -34,6 +34,4 @@
 *.out
 *.app
 /.vs
-/out/build/x64-Debug (default)
-/Data/CHILLER.TTF
 /build

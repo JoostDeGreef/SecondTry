@@ -319,7 +319,7 @@ void Window::WindowImp::Draw()
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glOrtho(0.0f, m_width, 0.0f, m_height, 0.0f, 1.0f);
-    static OpenGL::Font font("C:/Src/SecondTry/Data/CHILLER.TTF");
+    static OpenGL::Font font(/*"C:/Src/SecondTry/Data/CHILLER.TTF"*/ "/home/joost/src/SecondTry/Data/CHILLER.TTF");
     font.RenderText("This is sample text", 25.0f, 25.0f, 1.0f, OpenGL::RGBColorf(0.5, 0.8f, 0.2f));
 
     glEnable(GL_DEPTH_TEST);

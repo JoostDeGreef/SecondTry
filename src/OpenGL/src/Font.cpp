@@ -3,8 +3,8 @@
 // see https://learnopengl.com/In-Practice/Text-Rendering
 
 //
-//#include "ft2build.h"
-//#include FT_FREETYPE_H
+// #include "ft2build.h"
+// #include FT_FREETYPE_H
 //
 #include "freetype/freetype.h"
 //#include "freetype/CharacterMap.h"
@@ -49,7 +49,7 @@ namespace OpenGL
             if (FT_Init_FreeType(&m_ft))
             {
                 // log error: std::cout << "ERROR::FREETYPE: Could not init FreeType Library" << std::endl;
-                // throw
+                throw;
             }
         }
 
@@ -57,7 +57,7 @@ namespace OpenGL
         {
             if (FT_Done_FreeType(m_ft))
             {
-                // log error on shutdown? no, just debug
+                // log error on shutdown? no, just debug                
             }
         }
 
@@ -79,10 +79,10 @@ namespace OpenGL
     class Character
     {
     public:
-        Character(const unsigned int textureID, Vector2i& size, Vector2i& bearing, const int advance)
+        Character(const unsigned int textureID, const Vector2i& size, const Vector2i& bearing, const int advance)
             : TextureID(textureID)
-            , Size(std::move(size))
-            , Bearing(std::move(bearing))
+            , Size(size)
+            , Bearing(bearing)
             , Advance(advance)
         {}
 
@@ -103,7 +103,7 @@ namespace OpenGL
             if (FT_New_Face(m_ft, filename.c_str(), 0, &m_face))
             {
                 // log error: std::cout << "ERROR::FREETYPE: Failed to load font" << std::endl;
-                // throw
+                throw;
             }
             FT_Set_Pixel_Sizes(m_face, 0, m_height);
 
