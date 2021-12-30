@@ -1,9 +1,26 @@
 #include "OpenGL.h"
 
+namespace Shaders
+{
+    const auto GetCompiledShaders()
+    {
+        std::map<std::string,std::tuple<std::string,std::string>> shaders;
+
+#include "Shaders/2d.cpp"
+
+        return shaders;
+    }
+
+}
+
 namespace OpenGL
 {
+    Shader::Shader()
+      : Program(0)
+    {}
+
     Shader::Shader(const std::string& vertexShaderSource, const std::string& fragmentShaderSource)
-        : Program(0)
+      : Shader()
     {
         auto loadShader = [](unsigned int shaderType, const std::string& source)
         {
@@ -66,5 +83,17 @@ namespace OpenGL
     void Shader::Use()
     {
         glUseProgram(Program);
+    }
+
+    Shader Shader::LoadFromResource(const std::string & name)
+    {
+       static auto compiledShaders = Shaders::GetCompiledShaders();
+       auto iter = compiledShaders.find(name);
+       if(iter!=compiledShaders.end())
+       {
+           return Shader(std::get<0>(iter->second),std::get<1>(iter->second));
+       }
+       // TODO: Log something about shader not being found
+       return Shader();
     }
 }

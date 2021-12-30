@@ -1,22 +1,23 @@
 
+
+#define GLFW_EXPOSE_NATIVE_X11 1
+
 #include "OpenGL.h"
 
 #if defined(APIENTRY)
   #undef APIENTRY
 #endif
 
+namespace OS
+{
 #include "GLFW/glfw3native.h"
+}
 
 namespace OSSpecific
 {
-    void CloseOwningWindow(GLFWwindow* window)
-    {
-        // HWND hwnd = glfwGetWin32Window(window);
-        // CloseWindow(hwnd);
-    }
-
     void RemoveWindowDecorations(GLFWwindow* window)
     {
+        OS::Window wnd = OS::glfwGetX11Window(window);
         // glfwSetWindowOpacity(window, 0.75f);
         // HWND hwnd = glfwGetWin32Window(window);
         // SetWindowLongPtr(hwnd, GWL_STYLE, GetWindowLongPtr(hwnd, GWL_STYLE) & ~(WS_MAXIMIZEBOX | WS_MINIMIZEBOX | WS_SIZEBOX | WS_SYSMENU));

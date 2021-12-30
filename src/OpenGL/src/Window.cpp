@@ -82,6 +82,8 @@ private:
 
     void MainLoop();
     void Draw();
+    void Draw2D();
+    void Draw3D();
 private:
     CallbackHandler & m_callbackHandler;
     std::string m_title;
@@ -173,6 +175,7 @@ void Window::WindowImp::OpenGLState::EnterMessageLoop()
 //      glfwPollEvents();
         glfwWaitEventsTimeout(0.5);
     }
+    std::cout << "All windows closed.\n";
 }
 
 Window::WindowImp::OpenGLState Window::WindowImp::state;
@@ -282,40 +285,46 @@ void Window::WindowImp::MainLoop()
     glStencilMask(0x00);
     glDepthFunc(GL_LESS);
     //glDepthFunc(GL_GREATER);
+
+    //todo: store this in a map?
+    OpenGL::Shader shader = OpenGL::Shader::LoadFromResource("2d");
+
     while (!glfwWindowShouldClose(m_window))
     {
+        shader.Use();
         Draw();
         //std::this_thread::sleep_for(std::chrono::seconds(30));
     }
 
     PurgeCallbacks();
+    state.RemoveWindow(this);
     glfwDestroyWindow(m_window);
     m_window = nullptr;
-    state.RemoveWindow(this);
 }
 
 void Window::WindowImp::Draw()
 {
     std::unique_lock<std::mutex> lock(m_mutex);
     
-    //float ratio = m_width / (float)m_height;
-    //glViewport(0, 0, m_width, m_height);
-    //glStencilMask(0xFF);
+    float ratio = m_width / (float)m_height;
+    glViewport(0, 0, m_width, m_height);
+    glStencilMask(0xFF);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-    //glStencilMask(0x00);
-    //glMatrixMode(GL_PROJECTION);
-    //glLoadIdentity();
-    //glOrtho(-ratio, ratio, -1.0, 1.0, -1.1, 1.1);
-    //glMatrixMode(GL_MODELVIEW);
-    //glLoadIdentity();
+    glStencilMask(0x00);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(-ratio, ratio, -1.0, 1.0, -1.1, 1.1);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
 
-//    DrawShapes();
+    Draw3D();
 
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_LIGHTING);
     glDepthMask(GL_FALSE);
 
-//    DrawFPS();
+    Draw2D();
+
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glOrtho(0.0f, m_width, 0.0f, m_height, 0.0f, 1.0f);
@@ -329,6 +338,14 @@ void Window::WindowImp::Draw()
     lock.unlock();
 
     glfwSwapBuffers(m_window);
+}
+
+void Window::WindowImp::Draw2D()
+{
+}
+
+void Window::WindowImp::Draw3D()
+{
 }
 
 void Window::WindowImp::SetCallbacks()
@@ -451,7 +468,6 @@ void Window::WindowImp::size_callback(int width, int height)
 
 void Window::WindowImp::close_callback()
 {
-    OSSpecific::CloseOwningWindow(m_window);
     m_callbackHandler.close_callback(m_owner);
 }
 
