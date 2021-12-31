@@ -17,6 +17,7 @@
 
 using namespace std;
 using namespace std::chrono_literals;
+using namespace OpenGL;
 
 class Window::WindowImp
 {
@@ -82,8 +83,6 @@ private:
 
     void MainLoop();
     void Draw();
-    void Draw2D();
-    void Draw3D();
 private:
     CallbackHandler & m_callbackHandler;
     std::string m_title;
@@ -263,40 +262,23 @@ void Window::WindowImp::MainLoop()
 {
     using namespace std::placeholders;
 
-    glfwMakeContextCurrent(m_window);
-    GLfloat light_position[] = { 4.0, 4.0, 4.0, 0.0 };
-    glClearColor(0.0, 0.0, 0.0, 1.0);
-    glShadeModel(GL_SMOOTH);
-    glLightfv(GL_LIGHT0, GL_POSITION, light_position);
-    glEnable(GL_LIGHT0);
-    glFrontFace(GL_CCW);
-    glEnable(GL_COLOR_MATERIAL);
-    glEnable(GL_LIGHTING);
-    glEnable(GL_CULL_FACE);
-    glEnable(GL_DEPTH_TEST);
-    glActiveTexture(GL_TEXTURE0);
-    glEnable(GL_TEXTURE_2D);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glBlendEquation(GL_FUNC_ADD);
-    glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
-    glDisable(GL_STENCIL_TEST);
-    glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
-    glStencilMask(0x00);
-    glDepthFunc(GL_LESS);
-    //glDepthFunc(GL_GREATER);
+    auto imp = static_cast<WindowImp*>(glfwGetWindowUserPointer(m_window));
 
-    //todo: store this in a map?
-    OpenGL::Shader shader = OpenGL::Shader::LoadFromResource("2d");
+    glfwMakeContextCurrent(m_window);
+
+    m_callbackHandler.ContextInit(imp->m_owner);
 
     while (!glfwWindowShouldClose(m_window))
     {
-        shader.Use();
         Draw();
+        // todo: ratelimit update
         //std::this_thread::sleep_for(std::chrono::seconds(30));
     }
 
     PurgeCallbacks();
+
+    m_callbackHandler.ContextFree(imp->m_owner);
+
     state.RemoveWindow(this);
     glfwDestroyWindow(m_window);
     m_window = nullptr;
@@ -305,7 +287,8 @@ void Window::WindowImp::MainLoop()
 void Window::WindowImp::Draw()
 {
     std::unique_lock<std::mutex> lock(m_mutex);
-    
+    auto imp = static_cast<WindowImp*>(glfwGetWindowUserPointer(m_window));
+
     float ratio = m_width / (float)m_height;
     glViewport(0, 0, m_width, m_height);
     glStencilMask(0xFF);
@@ -317,19 +300,19 @@ void Window::WindowImp::Draw()
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
-    Draw3D();
+    m_callbackHandler.Draw3D(imp->m_owner);
 
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_LIGHTING);
     glDepthMask(GL_FALSE);
 
-    Draw2D();
+    m_callbackHandler.Draw2D(imp->m_owner,m_width,m_height); 
 
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(0.0f, m_width, 0.0f, m_height, 0.0f, 1.0f);
-    static OpenGL::Font font(/*"C:/Src/SecondTry/Data/CHILLER.TTF"*/ "/home/joost/src/SecondTry/Data/CHILLER.TTF");
-    font.RenderText("This is sample text", 25.0f, 25.0f, 1.0f, OpenGL::RGBColorf(0.5, 0.8f, 0.2f));
+    // glMatrixMode(GL_PROJECTION);
+    // glLoadIdentity();
+    // glOrtho(0.0f, m_width, 0.0f, m_height, 0.0f, 1.0f);
+    // static OpenGL::Font font(/*"C:/Src/SecondTry/Data/CHILLER.TTF"*/ "/home/joost/src/SecondTry/Data/CHILLER.TTF");
+    // font.RenderText("This is sample text", 25.0f, 25.0f, 1.0f, OpenGL::RGBColorf(0.5, 0.8f, 0.2f));
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_LIGHTING);
@@ -338,14 +321,6 @@ void Window::WindowImp::Draw()
     lock.unlock();
 
     glfwSwapBuffers(m_window);
-}
-
-void Window::WindowImp::Draw2D()
-{
-}
-
-void Window::WindowImp::Draw3D()
-{
 }
 
 void Window::WindowImp::SetCallbacks()

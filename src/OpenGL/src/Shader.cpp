@@ -4,9 +4,10 @@ namespace Shaders
 {
     const auto GetCompiledShaders()
     {
-        std::map<std::string,std::tuple<std::string,std::string>> shaders;
+        std::map<std::string,std::tuple<std::string,std::string,std::vector<std::string>>> shaders;
 
 #include "Shaders/2d.cpp"
+#include "Shaders/text.cpp"
 
         return shaders;
     }
@@ -16,10 +17,18 @@ namespace Shaders
 namespace OpenGL
 {
     Shader::Shader()
-      : Program(0)
+      : m_program(0)
+      , m_attributes()
     {}
 
-    Shader::Shader(const std::string& vertexShaderSource, const std::string& fragmentShaderSource)
+    Shader::Shader(const std::string & resourceName)
+    {
+        *this = LoadFromResource(resourceName);
+    }
+
+    Shader::Shader(const std::string& vertexShaderSource, 
+                   const std::string& fragmentShaderSource, 
+                   const std::vector<std::string> & attributes)
       : Shader()
     {
         auto loadShader = [](unsigned int shaderType, const std::string& source)
@@ -38,7 +47,7 @@ namespace OpenGL
                 glGetShaderInfoLog(shader, length, &length, buffer);
                 glDeleteShader(shader);
                 shader = 0;
-                //Log::Error("Error while loading shader: \n{0}", buffer);
+                //TODO: Log::Error("Error while loading shader: \n{0}", buffer);
                 delete[] buffer;
             }
             return shader;
@@ -53,36 +62,60 @@ namespace OpenGL
         }
         else
         {
-            Program = glCreateProgram();
+            m_program = glCreateProgram();
 
-            glAttachShader(Program, vertexShaderObject);
-            glAttachShader(Program, fragmentShaderObject);
+            glAttachShader(m_program, vertexShaderObject);
+            glAttachShader(m_program, fragmentShaderObject);
 
-            glLinkProgram(Program);
+            glLinkProgram(m_program);
 
             GLint linked;
-            glGetProgramiv(Program, GL_LINK_STATUS, &linked);
+            glGetProgramiv(m_program, GL_LINK_STATUS, &linked);
             if (!linked)
             {
                 GLint length = 0;
-                glGetProgramiv(Program, GL_INFO_LOG_LENGTH, &length);
+                glGetProgramiv(m_program, GL_INFO_LOG_LENGTH, &length);
                 char* buffer = new char[length + 1];
-                glGetProgramInfoLog(Program, length, &length, buffer);
-                //Log::Error("Error while linking shader: \n{0}", buffer);
+                glGetProgramInfoLog(m_program, length, &length, buffer);
+                //TODO: Log::Error("Error while linking shader: \n{0}", buffer);
                 delete[] buffer;
-
-                glDeleteProgram(Program);
+            }
+            else            
+            {
+                m_attributes.reserve(attributes.size());
+                for(const std::string & attributeName : attributes)
+                {
+                    GLint attributeLocation = glGetAttribLocation(m_program, attributeName.c_str());
+       	            if (attributeLocation == -1) 
+                    {
+                        linked = false;
+                        //TODO: Log error binding attribute to shader
+                    }
+                    m_attributes.emplace_back(attributeLocation);
+                }
+            }
+            if(!linked)
+            {
+                glDeleteProgram(m_program);
                 glDeleteShader(fragmentShaderObject);
                 glDeleteShader(vertexShaderObject);
-                Program = 0;
+                m_program = 0;
+                m_attributes.clear();
             }
         }
 
     }
 
-    void Shader::Use()
+    Shader::~Shader()
     {
-        glUseProgram(Program);
+        glDeleteProgram(m_program);
+        m_program = 0;
+    }
+
+    const std::vector<GLint> & Shader::Use()
+    {
+        glUseProgram(m_program);
+        return m_attributes;
     }
 
     Shader Shader::LoadFromResource(const std::string & name)
@@ -91,7 +124,7 @@ namespace OpenGL
        auto iter = compiledShaders.find(name);
        if(iter!=compiledShaders.end())
        {
-           return Shader(std::get<0>(iter->second),std::get<1>(iter->second));
+           return Shader(std::get<0>(iter->second),std::get<1>(iter->second),std::get<2>(iter->second));
        }
        // TODO: Log something about shader not being found
        return Shader();

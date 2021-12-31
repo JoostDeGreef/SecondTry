@@ -10,35 +10,6 @@
 //#include "freetype/CharacterMap.h"
 //#include "freetype/Font.h"
 
-// todo: move this to the data container
-static const std::string vertexShaderSource = R"SRC(
-#version 330 core
-layout (location = 0) in vec4 vertex; // <vec2 pos, vec2 tex>
-out vec2 TexCoords;
-
-uniform mat4 projection;
-
-void main()
-{
-    gl_Position = projection * vec4(vertex.xy, 0.0, 1.0);
-    TexCoords = vertex.zw;
-}
-)SRC";
-static const std::string fragmentShaderSource = R"SRC(
-#version 330 core
-in vec2 TexCoords;
-out vec4 color;
-
-uniform sampler2D text;
-uniform vec3 textColor;
-
-void main()
-{    
-    vec4 sampled = vec4(1.0, 1.0, 1.0, texture(text, TexCoords).r);
-    color = vec4(textColor, 1.0) * sampled;
-}
-)SRC";
-
 namespace OpenGL
 {
     class FreetypeLibrary
@@ -98,7 +69,7 @@ namespace OpenGL
         FontImp(const std::string& filename)
             : m_ft(FreetypeLibrary::Instance())
             , m_height(48)
-            , m_shader(vertexShaderSource,fragmentShaderSource)
+            , m_shader("text")
         {
             if (FT_New_Face(m_ft, filename.c_str(), 0, &m_face))
             {
@@ -129,8 +100,8 @@ namespace OpenGL
         void RenderText(const std::string& text, float x, float y, float scale, RGBColorf color)
         {
             // activate corresponding render state	
-            m_shader.Use();
-            glUniform3f(glGetUniformLocation(m_shader.Program, "textColor"), color.R, color.G, color.B);
+            auto attributes = m_shader.Use();
+            glUniform3f(attributes.at(0), color.R, color.G, color.B);
             glActiveTexture(GL_TEXTURE0);
             glBindVertexArray(m_VAO);
 
