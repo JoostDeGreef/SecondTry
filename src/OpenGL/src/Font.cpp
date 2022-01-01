@@ -75,7 +75,7 @@ namespace OpenGL
         {
             if (FT_New_Face(m_ft, filename.c_str(), 0, &m_face))
             {
-                LogError("Failed to load font \"{}\"",filename);
+                LogError("Failed to load font \"{}\"\n",filename);
                 throw;
             }
             FT_Set_Pixel_Sizes(m_face, 0, m_height);

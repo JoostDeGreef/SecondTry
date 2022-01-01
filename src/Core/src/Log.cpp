@@ -17,7 +17,7 @@ void Logger::SyncCOut::Output(
             const int line,
             const std::string & message)
 {
-    std::cout << message << std::endl;
+    std::cout << message;
 }
 
 void Logger::SyncCErr::Output(
@@ -26,5 +26,5 @@ void Logger::SyncCErr::Output(
             const int line,
             const std::string & message)
 {
-    std::cerr << message << std::endl;
+    std::cerr << message;
 }

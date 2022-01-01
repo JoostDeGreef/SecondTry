@@ -91,7 +91,7 @@ namespace OpenGL
                     GLint attributeLocation = glGetAttribLocation(m_program, attributeName.c_str());
        	            if (attributeLocation == -1) 
                     {
-                        linked = false;
+                        linked = 0;
                         LogError("binding attribute \"{}\" to shader failed\n",attributeName);
                     }
                     m_attributes.emplace_back(attributeLocation);
@@ -102,7 +102,7 @@ namespace OpenGL
                     GLint uniformLocation = glGetUniformLocation(m_program, uniformName.c_str());
        	            if (uniformLocation == -1) 
                     {
-                        linked = false;
+                        linked = 0;
                         LogError("binding uniform \"{}\" to shader failed\n",uniformName);
                     }
                     m_uniforms.emplace_back(uniformLocation);
@@ -133,13 +133,28 @@ namespace OpenGL
         return std::make_tuple(m_attributes,m_uniforms);
     }
 
+    const GLuint Shader::GetProgram()
+    {
+        return m_program;
+    }
+
+    const std::vector<GLint> Shader::GetAttributes()
+    {
+        return m_attributes;
+    }
+
+    const std::vector<GLint> Shader::GetUniforms()
+    {
+        return m_uniforms;
+    }
+
     Shader Shader::LoadFromResource(const std::string & name)
     {
        static auto compiledShaders = Shaders::GetCompiledShaders();
        auto iter = compiledShaders.find(name);
        if(iter!=compiledShaders.end())
        {
-           Shader shader(std::get<0>(iter->second),std::get<1>(iter->second),std::get<2>(iter->second));
+           Shader shader(std::get<0>(iter->second),std::get<1>(iter->second),std::get<2>(iter->second),std::get<3>(iter->second));
            if(shader.GetProgram() == 0)
            {
                LogError("Requested compile-time shader \"{}\" not loaded succesfully\n",name);

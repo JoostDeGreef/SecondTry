@@ -134,6 +134,7 @@ int main(int argc, char* argv[])
     Logger::AddSync<Logger::SyncCOut>(Logger::Level::Info);
     Logger::AddSync<Logger::SyncCErr>(Logger::Level::Warning);
     Logger::AddSync<Logger::SyncCErr>(Logger::Level::Error);
+    LogInfo("Logger Initialized\n");
 
     UI ui;
     return ui.Run();
