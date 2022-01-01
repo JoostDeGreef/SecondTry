@@ -30,7 +30,11 @@ void main()
 
 const std::vector<std::string> attributes_text = 
 {
+};
+
+const std::vector<std::string> uniforms_text = 
+{
   "textColor"
 };
 
-shaders["text"] = std::make_tuple(vertex_text,fragment_text,attributes_text);
+shaders["text"] = std::make_tuple(vertex_text,fragment_text,attributes_text,uniforms_text);

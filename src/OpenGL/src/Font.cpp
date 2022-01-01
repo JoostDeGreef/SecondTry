@@ -10,6 +10,8 @@
 //#include "freetype/CharacterMap.h"
 //#include "freetype/Font.h"
 
+#include "Log.h"
+
 namespace OpenGL
 {
     class FreetypeLibrary
@@ -19,7 +21,7 @@ namespace OpenGL
         {
             if (FT_Init_FreeType(&m_ft))
             {
-                // log error: std::cout << "ERROR::FREETYPE: Could not init FreeType Library" << std::endl;
+                LogError("Could not init FreeType Library\n");
                 throw;
             }
         }
@@ -73,7 +75,7 @@ namespace OpenGL
         {
             if (FT_New_Face(m_ft, filename.c_str(), 0, &m_face))
             {
-                // log error: std::cout << "ERROR::FREETYPE: Failed to load font" << std::endl;
+                LogError("Failed to load font \"{}\"",filename);
                 throw;
             }
             FT_Set_Pixel_Sizes(m_face, 0, m_height);
@@ -100,8 +102,8 @@ namespace OpenGL
         void RenderText(const std::string& text, float x, float y, float scale, RGBColorf color)
         {
             // activate corresponding render state	
-            auto attributes = m_shader.Use();
-            glUniform3f(attributes.at(0), color.R, color.G, color.B);
+            auto [attributes,uniforms] = m_shader.Use();
+            glUniform3f(uniforms.at(0), color.R, color.G, color.B);
             glActiveTexture(GL_TEXTURE0);
             glBindVertexArray(m_VAO);
 

@@ -1,10 +1,11 @@
 #include "OpenGL.h"
+#include "Log.h"
 
 namespace Shaders
 {
     const auto GetCompiledShaders()
     {
-        std::map<std::string,std::tuple<std::string,std::string,std::vector<std::string>>> shaders;
+        std::map<std::string,std::tuple<std::string,std::string,std::vector<std::string>,std::vector<std::string>>> shaders;
 
 #include "Shaders/2d.cpp"
 #include "Shaders/text.cpp"
@@ -19,6 +20,7 @@ namespace OpenGL
     Shader::Shader()
       : m_program(0)
       , m_attributes()
+      , m_uniforms()
     {}
 
     Shader::Shader(const std::string & resourceName)
@@ -28,7 +30,8 @@ namespace OpenGL
 
     Shader::Shader(const std::string& vertexShaderSource, 
                    const std::string& fragmentShaderSource, 
-                   const std::vector<std::string> & attributes)
+                   const std::vector<std::string> & attributes,
+                   const std::vector<std::string> & uniforms)
       : Shader()
     {
         auto loadShader = [](unsigned int shaderType, const std::string& source)
@@ -47,7 +50,7 @@ namespace OpenGL
                 glGetShaderInfoLog(shader, length, &length, buffer);
                 glDeleteShader(shader);
                 shader = 0;
-                //TODO: Log::Error("Error while loading shader: \n{0}", buffer);
+                LogError("Error while loading shader: \n{0}\n", buffer);
                 delete[] buffer;
             }
             return shader;
@@ -77,7 +80,7 @@ namespace OpenGL
                 glGetProgramiv(m_program, GL_INFO_LOG_LENGTH, &length);
                 char* buffer = new char[length + 1];
                 glGetProgramInfoLog(m_program, length, &length, buffer);
-                //TODO: Log::Error("Error while linking shader: \n{0}", buffer);
+                LogError("Error while linking shader: \n{0}\n", buffer);
                 delete[] buffer;
             }
             else            
@@ -89,9 +92,20 @@ namespace OpenGL
        	            if (attributeLocation == -1) 
                     {
                         linked = false;
-                        //TODO: Log error binding attribute to shader
+                        LogError("binding attribute \"{}\" to shader failed\n",attributeName);
                     }
                     m_attributes.emplace_back(attributeLocation);
+                }
+                m_uniforms.reserve(uniforms.size());
+                for(const std::string & uniformName : uniforms)
+                {
+                    GLint uniformLocation = glGetUniformLocation(m_program, uniformName.c_str());
+       	            if (uniformLocation == -1) 
+                    {
+                        linked = false;
+                        LogError("binding uniform \"{}\" to shader failed\n",uniformName);
+                    }
+                    m_uniforms.emplace_back(uniformLocation);
                 }
             }
             if(!linked)
@@ -101,6 +115,7 @@ namespace OpenGL
                 glDeleteShader(vertexShaderObject);
                 m_program = 0;
                 m_attributes.clear();
+                m_uniforms.clear();
             }
         }
 
@@ -112,10 +127,10 @@ namespace OpenGL
         m_program = 0;
     }
 
-    const std::vector<GLint> & Shader::Use()
+    const std::tuple<std::vector<GLint>,std::vector<GLint>> Shader::Use()
     {
         glUseProgram(m_program);
-        return m_attributes;
+        return std::make_tuple(m_attributes,m_uniforms);
     }
 
     Shader Shader::LoadFromResource(const std::string & name)
@@ -124,9 +139,14 @@ namespace OpenGL
        auto iter = compiledShaders.find(name);
        if(iter!=compiledShaders.end())
        {
-           return Shader(std::get<0>(iter->second),std::get<1>(iter->second),std::get<2>(iter->second));
+           Shader shader(std::get<0>(iter->second),std::get<1>(iter->second),std::get<2>(iter->second));
+           if(shader.GetProgram() == 0)
+           {
+               LogError("Requested compile-time shader \"{}\" not loaded succesfully\n",name);
+           }
+           return shader;
        }
-       // TODO: Log something about shader not being found
+       LogError("Requested shader \"{}\" not found\n",name);
        return Shader();
     }
 }

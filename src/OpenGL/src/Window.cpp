@@ -14,6 +14,7 @@
 #include <set>
 
 #include "OpenGL.h"
+#include "Log.h"
 
 using namespace std;
 using namespace std::chrono_literals;
@@ -174,7 +175,7 @@ void Window::WindowImp::OpenGLState::EnterMessageLoop()
 //      glfwPollEvents();
         glfwWaitEventsTimeout(0.5);
     }
-    std::cout << "All windows closed.\n";
+    LogInfo("All windows closed.\n");
 }
 
 Window::WindowImp::OpenGLState Window::WindowImp::state;
@@ -211,7 +212,7 @@ bool Window::WindowImp::Initialize()
         m_window = glfwCreateWindow(m_width, m_height, m_title.c_str(), NULL, NULL);
         if (!m_window)
         {
-            //Log::Error("Could not create OpenGL window");
+            LogError("Could not create OpenGL window");
             return false;
         }
         glfwSetWindowUserPointer(m_window, this);
@@ -227,7 +228,7 @@ bool Window::WindowImp::Initialize()
 
         if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
         {
-            //Log::Error("Could not load all required OpenGL functionality");
+            LogError("Could not load all required OpenGL functionality");
             return false;
         }
 

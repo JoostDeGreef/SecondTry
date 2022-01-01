@@ -1,6 +1,7 @@
 #include <cstdlib>
 #include <thread>
 
+#include "Log.h"
 #include "OpenGL.h"
 
 using namespace std;
@@ -129,6 +130,11 @@ void UI::Draw3D(const std::shared_ptr<OpenGL::Window>& window)
 
 int main(int argc, char* argv[])
 {
+    Logger::AddSync<Logger::SyncCOut>(Logger::Level::Debug);
+    Logger::AddSync<Logger::SyncCOut>(Logger::Level::Info);
+    Logger::AddSync<Logger::SyncCErr>(Logger::Level::Warning);
+    Logger::AddSync<Logger::SyncCErr>(Logger::Level::Error);
+
     UI ui;
     return ui.Run();
 }

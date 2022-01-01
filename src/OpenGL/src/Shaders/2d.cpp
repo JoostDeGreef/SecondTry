@@ -21,4 +21,8 @@ const std::vector<std::string> attributes_2d =
   "coord2d"
 };
 
-shaders["2d"] = std::make_tuple(vertex_2d,fragment_2d,attributes_2d);
+const std::vector<std::string> uniforms_2d = 
+{
+};
+
+shaders["2d"] = std::make_tuple(vertex_2d,fragment_2d,attributes_2d,uniforms_2d);

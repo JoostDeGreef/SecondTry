@@ -3,6 +3,7 @@ cmake_minimum_required (VERSION 3.14)
 # These are just toy projects, make that clear
 project ("SecondTry" VERSION 0.0.1)
 
+# C++-20 would be nice, but not all libraries compile cleanly.
 set(CMAKE_CXX_STANDARD 17 CACHE STRING "The C++ standard to use")
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
