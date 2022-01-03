@@ -5,7 +5,7 @@ namespace Shaders
 {
     const auto GetCompiledShaders()
     {
-        std::map<std::string,std::tuple<std::string,std::string,std::vector<std::string>,std::vector<std::string>>> shaders;
+        std::map<std::string,std::tuple<std::string,std::string>> shaders;
 
 #include "Shaders/2d.cpp"
 #include "Shaders/text.cpp"
@@ -18,20 +18,11 @@ namespace Shaders
 namespace OpenGL
 {
     Shader::Shader()
-      : m_program(0)
-      , m_attributes()
-      , m_uniforms()
+      : m_state(std::make_shared<State>())
     {}
 
-    Shader::Shader(const std::string & resourceName)
-    {
-        *this = LoadFromResource(resourceName);
-    }
-
     Shader::Shader(const std::string& vertexShaderSource, 
-                   const std::string& fragmentShaderSource, 
-                   const std::vector<std::string> & attributes,
-                   const std::vector<std::string> & uniforms)
+                   const std::string& fragmentShaderSource)
       : Shader()
     {
         auto loadShader = [](unsigned int shaderType, const std::string& source)
@@ -39,16 +30,16 @@ namespace OpenGL
             GLuint shader = glCreateShader(shaderType);
             const char* sourcePtr = source.c_str();
             GLint length = (GLint)source.size();
-            glShaderSource(shader, 1, &sourcePtr, &length);
-            glCompileShader(shader);
+            GLCHECK(glShaderSource(shader, 1, &sourcePtr, &length));
+            GLCHECK(glCompileShader(shader));
             GLint compiled;
-            glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
+            GLCHECK(glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled));
             if (!compiled)
             {
-                glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &length);
+                GLCHECK(glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &length));
                 char* buffer = new char[length + 1];
-                glGetShaderInfoLog(shader, length, &length, buffer);
-                glDeleteShader(shader);
+                GLCHECK(glGetShaderInfoLog(shader, length, &length, buffer));
+                GLCHECK(glDeleteShader(shader));
                 shader = 0;
                 LogError("Error while loading shader: \n{0}\n", buffer);
                 delete[] buffer;
@@ -60,92 +51,84 @@ namespace OpenGL
         auto fragmentShaderObject = loadShader(GL_FRAGMENT_SHADER, fragmentShaderSource);
         if (0 == vertexShaderObject || 0 == fragmentShaderObject)
         {
-            glDeleteShader(fragmentShaderObject);
-            glDeleteShader(vertexShaderObject);
+            GLCHECK(glDeleteShader(fragmentShaderObject));
+            GLCHECK(glDeleteShader(vertexShaderObject));
         }
         else
         {
-            m_program = glCreateProgram();
+            GLuint program = glCreateProgram();
 
-            glAttachShader(m_program, vertexShaderObject);
-            glAttachShader(m_program, fragmentShaderObject);
+            GLCHECK(glAttachShader(program, vertexShaderObject));
+            GLCHECK(glAttachShader(program, fragmentShaderObject));
 
-            glLinkProgram(m_program);
+            GLCHECK(glLinkProgram(program));
 
             GLint linked;
-            glGetProgramiv(m_program, GL_LINK_STATUS, &linked);
+            GLCHECK(glGetProgramiv(program, GL_LINK_STATUS, &linked));
             if (!linked)
             {
                 GLint length = 0;
-                glGetProgramiv(m_program, GL_INFO_LOG_LENGTH, &length);
+                GLCHECK(glGetProgramiv(program, GL_INFO_LOG_LENGTH, &length));
                 char* buffer = new char[length + 1];
-                glGetProgramInfoLog(m_program, length, &length, buffer);
+                GLCHECK(glGetProgramInfoLog(program, length, &length, buffer));
                 LogError("Error while linking shader: \n{0}\n", buffer);
                 delete[] buffer;
-            }
-            else            
-            {
-                m_attributes.reserve(attributes.size());
-                for(const std::string & attributeName : attributes)
-                {
-                    GLint attributeLocation = glGetAttribLocation(m_program, attributeName.c_str());
-       	            if (attributeLocation == -1) 
-                    {
-                        linked = 0;
-                        LogError("binding attribute \"{}\" to shader failed\n",attributeName);
-                    }
-                    m_attributes.emplace_back(attributeLocation);
-                }
-                m_uniforms.reserve(uniforms.size());
-                for(const std::string & uniformName : uniforms)
-                {
-                    GLint uniformLocation = glGetUniformLocation(m_program, uniformName.c_str());
-       	            if (uniformLocation == -1) 
-                    {
-                        linked = 0;
-                        LogError("binding uniform \"{}\" to shader failed\n",uniformName);
-                    }
-                    m_uniforms.emplace_back(uniformLocation);
-                }
-            }
-            if(!linked)
-            {
-                glDeleteProgram(m_program);
+                glDeleteProgram(program);
                 glDeleteShader(fragmentShaderObject);
                 glDeleteShader(vertexShaderObject);
-                m_program = 0;
-                m_attributes.clear();
-                m_uniforms.clear();
+                program = 0;
+            }
+            else
+            {
+                m_state->SetProgram(program);
             }
         }
-
+        glCheck();
     }
 
     Shader::~Shader()
+    {
+    }
+
+    Shader::State::~State()
     {
         glDeleteProgram(m_program);
         m_program = 0;
     }
 
-    const std::tuple<std::vector<GLint>,std::vector<GLint>> Shader::Use()
+    Shader::State::State()
+        : m_program(0)
+    {}
+
+    const GLuint Shader::State::GetProgram()
     {
-        glUseProgram(m_program);
-        return std::make_tuple(m_attributes,m_uniforms);
+        return m_program;
+    }
+    void Shader::State::SetProgram(const GLuint program)
+    {
+        m_program = program;
+    }
+
+    std::vector<GLuint> Shader::Use(const std::vector<std::string> & uniforms)
+    {
+        std::vector<GLuint> res;
+        GLCHECK(glUseProgram(GetProgram()));
+        for(auto & uniformName:uniforms)
+        {
+            GLint uniformLocation = glGetUniformLocation(GetProgram(), uniformName.c_str());
+       	    if (uniformLocation == -1) 
+            {
+                LogError("binding uniform \"{}\" to shader failed\n",uniformName);
+                throw;
+            }
+            res.emplace_back(uniformLocation);
+        }
+        return res;
     }
 
     const GLuint Shader::GetProgram()
     {
-        return m_program;
-    }
-
-    const std::vector<GLint> Shader::GetAttributes()
-    {
-        return m_attributes;
-    }
-
-    const std::vector<GLint> Shader::GetUniforms()
-    {
-        return m_uniforms;
+        return m_state->GetProgram();
     }
 
     Shader Shader::LoadFromResource(const std::string & name)
@@ -154,7 +137,7 @@ namespace OpenGL
        auto iter = compiledShaders.find(name);
        if(iter!=compiledShaders.end())
        {
-           Shader shader(std::get<0>(iter->second),std::get<1>(iter->second),std::get<2>(iter->second),std::get<3>(iter->second));
+           Shader shader(std::get<0>(iter->second),std::get<1>(iter->second));
            if(shader.GetProgram() == 0)
            {
                LogError("Requested compile-time shader \"{}\" not loaded succesfully\n",name);

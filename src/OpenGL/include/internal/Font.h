@@ -8,7 +8,7 @@ namespace OpenGL
         Font(const std::string& filename);
         ~Font();
 
-        void RenderText(const std::string& text, float x, float y, float scale, RGBColorf color);
+        void RenderText(const std::string& text, float x, float y, float scale, RGBColorf color, float width, float height);
 
     private:
         class FontImp;

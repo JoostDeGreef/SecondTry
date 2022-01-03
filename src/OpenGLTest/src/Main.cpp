@@ -40,7 +40,10 @@ public:
     void close_callback(const std::shared_ptr<OpenGL::Window>& window) { window->SetTitle("close_callback(...)"); };
     void content_scale_callback(const std::shared_ptr<OpenGL::Window>& window, float xscale, float yscale) { window->SetTitle("content_scale_callback(...,{0},{1})", xscale, yscale); };
     void cursor_pos_callback(const std::shared_ptr<OpenGL::Window>& window, double xpos, double ypos) { window->SetTitle("cursor_pos_callback(...,{0},{1})", xpos, ypos); };
-    void error_callback(const std::shared_ptr<OpenGL::Window>& window, int error, const char* description) { window->SetTitle("error_callback(...,{0},{1})", error, description); };
+    void error_callback(const std::shared_ptr<OpenGL::Window>& window, int error, const char* description) 
+    { 
+        LogError("error_callback(...,{0},{1})", error, description); 
+    };
     void focus_callback(const std::shared_ptr<OpenGL::Window>& window, int focused) { window->SetTitle("focus_callback(...,{0})", focused); };
     void framebuffer_size_callback(const std::shared_ptr<OpenGL::Window>& window, int width, int height) { window->SetTitle("framebuffer_size_callback(...,{0},{1})", width, height); };
     void iconify_callback(const std::shared_ptr<OpenGL::Window>& window, int iconified) { window->SetTitle("iconify_callback(...,{0})", iconified); };
@@ -64,7 +67,7 @@ public:
 private:
     enum class ShaderId
     {
-        text = 1,
+        two_d = 1,
     };
 
     OpenGL::Window mainWindow;
@@ -85,32 +88,29 @@ int UI::Run()
 
 void UI::AddShaders()
 {
-    m_shaders.emplace(ShaderId::text, OpenGL::Shader::LoadFromResource("2d"));
+    m_shaders.emplace(ShaderId::two_d, OpenGL::Shader::LoadFromResource("2d"));
 }
 
 void UI::ContextInit(const std::shared_ptr<OpenGL::Window>& window)
 {
     AddShaders();
     GLfloat light_position[] = { 4.0, 4.0, 4.0, 0.0 };
-    glClearColor(0.0, 0.0, 0.0, 1.0);
-    glShadeModel(GL_SMOOTH);
-    glLightfv(GL_LIGHT0, GL_POSITION, light_position);
-    glEnable(GL_LIGHT0);
-    glFrontFace(GL_CCW);
-    glEnable(GL_COLOR_MATERIAL);
-    glEnable(GL_LIGHTING);
-    glEnable(GL_CULL_FACE);
-    glEnable(GL_DEPTH_TEST);
-    glActiveTexture(GL_TEXTURE0);
-    glEnable(GL_TEXTURE_2D);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glBlendEquation(GL_FUNC_ADD);
-    glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
-    glDisable(GL_STENCIL_TEST);
-    glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
-    glStencilMask(0x00);
-    glDepthFunc(GL_LESS);
+    GLCHECK(glClearColor(0.1, 0.1, 0.1, 1.0));
+
+    GLCHECK(glFrontFace(GL_CCW));
+    // glEnable(GL_COLOR_MATERIAL);
+    // glEnable(GL_LIGHTING);
+    // glEnable(GL_CULL_FACE);
+    // glEnable(GL_DEPTH_TEST);
+    GLCHECK(glActiveTexture(GL_TEXTURE0));
+    GLCHECK(glEnable(GL_BLEND));
+    GLCHECK(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+    GLCHECK(glBlendEquation(GL_FUNC_ADD));
+    // glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
+    // glDisable(GL_STENCIL_TEST);
+    // glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+    // glStencilMask(0x00);
+    // glDepthFunc(GL_LESS);
     //glDepthFunc(GL_GREATER);
 }
 
@@ -121,21 +121,69 @@ void UI::ContextFree(const std::shared_ptr<OpenGL::Window>& window)
 
 void UI::Draw2D(const std::shared_ptr<OpenGL::Window>& window, const int width, const int height)
 {
-    m_shaders[ShaderId::text].Use();
+    static OpenGL::Font font(/*"C:/Src/SecondTry/Data/CHILLER.TTF"*/ "/home/joost/src/SecondTry/Data/CHILLER.TTF");
+    font.RenderText("This is sample text", 25.0f, 25.0f, 1.0f, OpenGL::RGBColorf(0.5, 0.8f, 0.2f), width, height);
+
+    float vertices[] = {
+        100, 100, 0.0, // left  
+        200, 100, 0, // right 
+        0,   0,   0  // top   
+    }; 
+
+    GLuint VBO, VAO;
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+    // bind the Vertex Array Object first, then bind and set vertex buffer(s), and then configure vertex attributes(s).
+    GLCHECK(glBindVertexArray(VAO));
+    GLCHECK(glBindBuffer(GL_ARRAY_BUFFER, VBO));
+    GLCHECK(glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW));
+
+    GLCHECK(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0));
+    GLCHECK(glEnableVertexAttribArray(0));
+
+    // note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
+    GLCHECK(glBindBuffer(GL_ARRAY_BUFFER, 0)); 
+
+    // You can unbind the VAO afterwards so other VAO calls won't accidentally modify this VAO, but this rarely happens. Modifying other
+    // VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
+    GLCHECK(glBindVertexArray(0)); 
+
+    auto uniforms = m_shaders[ShaderId::two_d].Use("model","projection","color");
+    auto model = OpenGL::Mat4::Identity();
+    auto projection = OpenGL::Mat4::Ortho(0,width,height,0,-1,1);
+    RGBColorf color(0xFF0000);
+    GLCHECK(glUniformMatrix4fv(uniforms.at(0), 1, true, model.data())); // model
+    GLCHECK(glUniformMatrix4fv(uniforms.at(1), 1, true, projection.data())); // projection
+    GLCHECK(glUniform3f(uniforms.at(2), color.R, color.G, color.B)); // color
+
+    GLCHECK(glBindVertexArray(VAO)); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
+    GLCHECK(glDrawArrays(GL_TRIANGLES, 0, 3));
+
+    GLCHECK(glDeleteVertexArrays(1, &VAO));
+    GLCHECK(glDeleteBuffers(1, &VBO));
 }
 
 void UI::Draw3D(const std::shared_ptr<OpenGL::Window>& window)
 {
 }
 
-int main(int argc, char* argv[])
+void InitializeLogger()
 {
     Logger::AddSync<Logger::SyncCOut>(Logger::Level::Debug);
     Logger::AddSync<Logger::SyncCOut>(Logger::Level::Info);
     Logger::AddSync<Logger::SyncCErr>(Logger::Level::Warning);
     Logger::AddSync<Logger::SyncCErr>(Logger::Level::Error);
     LogInfo("Logger Initialized\n");
+}
 
+int RunUILoop()
+{
     UI ui;
     return ui.Run();
+}
+
+int main(int argc, char* argv[])
+{
+    InitializeLogger();
+    return RunUILoop();
 }

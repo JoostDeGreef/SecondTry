@@ -1,28 +1,28 @@
 
 const std::string vertex_2d = R"SRC(
-#version 120
-attribute vec2 coord2d;
-void main(void) {
-  gl_Position = vec4(coord2d, 0.0, 1.0);
+#version 330 core
+
+layout (location = 0) in vec3 aPos;
+
+uniform mat4 model;
+uniform mat4 projection;
+
+void main()
+{
+  gl_Position = projection * model * vec4(aPos.x, aPos.y, aPos.z, 1.0);
 }
 )SRC";
 
 const std::string fragment_2d = R"SRC(
-#version 120
-void main(void) {
-  gl_FragColor[0] = 0.0;
-  gl_FragColor[1] = 0.0;
-  gl_FragColor[2] = 1.0;
+#version 330 core
+
+uniform vec3 color;
+out vec4 FragColor;
+
+void main()
+{
+  FragColor = vec4(color.rgb, 1.0f);
 }
 )SRC";
 
-const std::vector<std::string> attributes_2d = 
-{
-  "coord2d"
-};
-
-const std::vector<std::string> uniforms_2d = 
-{
-};
-
-shaders["2d"] = std::make_tuple(vertex_2d,fragment_2d,attributes_2d,uniforms_2d);
+shaders["2d"] = std::make_tuple(vertex_2d,fragment_2d);

@@ -1,4 +1,5 @@
 #include "OpenGL.h"
+#include "Log.h"
 
 void OpenGL::glColor(const RGBAColorf& color)
 {
@@ -56,17 +57,94 @@ void OpenGL::glTextureCoord(const Vector2d& coord)
     glTexCoord2dv(coord.Raw());
 }
 
-void OpenGL::glMultMatrix(const Quat& quat)
+std::array<float,16> OpenGL::Mat4::Ortho(
+    float const & left, 
+    float const & right, 
+    float const & bottom, 
+    float const & top, 
+    float const & zNear, 
+    float const & zFar)
 {
-    double r[16];
-    quat.GetRotationMatrix4(r);
-    glMultMatrixd(r);
+    std::array<float,16> res = {
+         2.0f / (right - left), 0.0f,                  0.0f,                   -(right + left) / (right - left),
+         0.0f,                  2.0f / (top - bottom), 0.0f,                   -(top + bottom) / (top - bottom),
+         0.0f,                  0.0f,                  2.0f / (zNear - zFar),  -(zFar + zNear) / (zFar - zNear),
+         0.0f,                  0.0f,                  0.0f,                   1.0f};
+    return res;
 }
 
-void OpenGL::glLoadMatrix(const Quat& quat)
+std::array<float,16> OpenGL::Mat4::Identity()
 {
-    double r[16];
-    quat.GetRotationMatrix4(r);
-    glLoadMatrixd(r);
+    static std::array<float,16> res = {
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0,
+        0, 0, 0, 1
+    };
+    return res;
 }
 
+namespace
+{
+  std::string glGetErrorMessage()
+  {
+    auto value = glGetError();
+    std::string msg;
+    switch(value)
+    {
+        case GL_NO_ERROR:
+          break;
+        case GL_INVALID_ENUM:
+          msg = "glGetError returned GL_INVALID_ENUM\n";
+          break;
+        case GL_INVALID_VALUE:
+          msg = "glGetError returned GL_INVALID_VALUE\n";
+          break;
+        case GL_INVALID_OPERATION:
+          msg = "glGetError returned GL_INVALID_OPERATION\n";
+          break;
+        case GL_INVALID_FRAMEBUFFER_OPERATION:
+          msg = "glGetError returned GL_INVALID_FRAMEBUFFER_OPERATION\n";
+          break;
+        case GL_OUT_OF_MEMORY:
+          msg = "glGetError returned GL_OUT_OF_MEMORY\n";
+          break;
+        case GL_STACK_UNDERFLOW:
+          msg = "glGetError returned GL_STACK_UNDERFLOW\n";
+          break;
+        case GL_STACK_OVERFLOW:
+          msg = "glGetError returned GL_STACK_OVERFLOW\n";
+          break;
+        default:
+          msg = fmt::format("glGetError returned {}\n",value);
+          break;
+    }
+    return msg;
+  }  
+}
+
+void OpenGL::glCheck()
+{
+   auto msg = glGetErrorMessage();
+   if(!msg.empty())
+   {
+#ifdef NDEBUG
+     LogWarning("{}",msg);
+#else  
+     throw std::runtime_error(msg);
+#endif
+   }
+}
+void OpenGL::glCheck(const std::string & file, const int line, const std::string func)
+{
+   auto msg = glGetErrorMessage();
+   if(!msg.empty())
+   {
+     msg = fmt::format("{}:{} \"{}\"\n{}", file, line, func, msg);
+#ifdef NDEBUG
+     LogWarning("{}",msg);
+#else  
+     throw std::runtime_error(msg);
+#endif
+   }
+}

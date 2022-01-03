@@ -60,10 +60,38 @@ namespace OpenGL
     void glTextureCoord(const Vector2d& coord);
     inline void glTextureCoord(const TextureCoordPtr& coord) { glTextureCoord(*coord); }
 
-    void glMultMatrix(const Quat& quat);
+    namespace Mat4
+    {
+      std::array<float,16> Identity();
+      std::array<float,16> Ortho(
+          float const & left, 
+          float const & right, 
+          float const & bottom, 
+          float const & top, 
+          float const & zNear, 
+          float const & zFar);
+    }
 
-    void glLoadMatrix(const Quat& quat);
+    void glCheck();    
+    void glCheck(const std::string & file, const int line, const std::string func);
 };
+
+#ifdef NDEBUG
+#define GLCHECK(f) {  \
+  f;                  \
+}
+#else
+// Short version of __FILE__ without path requires runtime parsing
+#ifdef WIN32
+#define __SFILE__ (strrchr(__FILE__, '\\') ? strrchr(__FILE__, '\\') + 1 : __FILE__)
+#else
+#define __SFILE__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
+#endif
+#define GLCHECK(f) {  \
+  f;                  \
+  OpenGL::glCheck(__SFILE__,__LINE__,#f);  \
+}
+#endif
 
 #include "internal/Window.h"
 #include "internal/OSSpecific.h"
