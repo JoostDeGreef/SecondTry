@@ -98,10 +98,8 @@ void UI::ContextInit(const std::shared_ptr<OpenGL::Window>& window)
     GLCHECK(glClearColor(0.1, 0.1, 0.1, 1.0));
 
     GLCHECK(glFrontFace(GL_CCW));
-    // glEnable(GL_COLOR_MATERIAL);
-    // glEnable(GL_LIGHTING);
-    // glEnable(GL_CULL_FACE);
-    // glEnable(GL_DEPTH_TEST);
+    GLCHECK(glEnable(GL_CULL_FACE));
+    GLCHECK(glEnable(GL_DEPTH_TEST));
     GLCHECK(glActiveTexture(GL_TEXTURE0));
     GLCHECK(glEnable(GL_BLEND));
     GLCHECK(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
@@ -110,8 +108,7 @@ void UI::ContextInit(const std::shared_ptr<OpenGL::Window>& window)
     // glDisable(GL_STENCIL_TEST);
     // glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
     // glStencilMask(0x00);
-    // glDepthFunc(GL_LESS);
-    //glDepthFunc(GL_GREATER);
+    GLCHECK(glDepthFunc(GL_LESS));
 }
 
 void UI::ContextFree(const std::shared_ptr<OpenGL::Window>& window)
@@ -121,13 +118,22 @@ void UI::ContextFree(const std::shared_ptr<OpenGL::Window>& window)
 
 void UI::Draw2D(const std::shared_ptr<OpenGL::Window>& window, const int width, const int height)
 {
-    static OpenGL::Font font(/*"C:/Src/SecondTry/Data/CHILLER.TTF"*/ "/home/joost/src/SecondTry/Data/CHILLER.TTF");
-    font.RenderText("This is sample text", 25.0f, 25.0f, 1.0f, OpenGL::RGBColorf(0.5, 0.8f, 0.2f), width, height);
+    static OpenGL::Font font(/*"C:/Src/SecondTry/Data/fonts/CHILLER.TTF"*/ "/home/joost/src/SecondTry/Data/fonts/CHILLER.TTF");
+    std::string text = "This is sample text";
 
+    // measure the text
+    auto sizes = font.CalcTextSize(text,1.0f);
+    Vector2f pos(25,25);
+
+    auto box = sizes.GetSize() + pos;
     float vertices[] = {
-        100, 100, 0.0, // left  
-        200, 100, 0, // right 
-        0,   0,   0  // top   
+        pos[0], pos[1], 0.0,
+        box[0], pos[1], 0.0,
+        pos[0], box[1], 0.0,
+
+        pos[0], box[1], 0.0,
+        box[0], pos[1], 0.0,
+        box[0], box[1], 0.0,
     }; 
 
     GLuint VBO, VAO;
@@ -138,7 +144,7 @@ void UI::Draw2D(const std::shared_ptr<OpenGL::Window>& window, const int width, 
     GLCHECK(glBindBuffer(GL_ARRAY_BUFFER, VBO));
     GLCHECK(glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW));
 
-    GLCHECK(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0));
+    GLCHECK(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0));
     GLCHECK(glEnableVertexAttribArray(0));
 
     // note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
@@ -150,17 +156,28 @@ void UI::Draw2D(const std::shared_ptr<OpenGL::Window>& window, const int width, 
 
     auto uniforms = m_shaders[ShaderId::two_d].Use("model","projection","color");
     auto model = OpenGL::Mat4::Identity();
-    auto projection = OpenGL::Mat4::Ortho(0,width,height,0,-1,1);
+    auto projection = OpenGL::Mat4::Ortho(0,width,0,height,-1,1);
     RGBColorf color(0xFF0000);
     GLCHECK(glUniformMatrix4fv(uniforms.at(0), 1, true, model.data())); // model
     GLCHECK(glUniformMatrix4fv(uniforms.at(1), 1, true, projection.data())); // projection
     GLCHECK(glUniform3f(uniforms.at(2), color.R, color.G, color.B)); // color
 
     GLCHECK(glBindVertexArray(VAO)); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
-    GLCHECK(glDrawArrays(GL_TRIANGLES, 0, 3));
+    GLCHECK(glDrawArrays(GL_TRIANGLES, 0, 6));
 
     GLCHECK(glDeleteVertexArrays(1, &VAO));
     GLCHECK(glDeleteBuffers(1, &VBO));
+
+    // draw the actual text
+    GLCHECK(glDisable(GL_DEPTH_TEST));
+    font.RenderText(text, pos[0], pos[1], 1.0f, OpenGL::RGBColorf(0.5, 0.8f, 0.2f), width, height);
+    GLCHECK(glEnable(GL_DEPTH_TEST));
+
+    // draw the text scaled 
+    GLCHECK(glDisable(GL_DEPTH_TEST));
+    font.RenderText(text, pos[0], box[1]+10, 0.75f, OpenGL::RGBColorf(0.9, 0.2f, 0.2f), width, height);
+    GLCHECK(glEnable(GL_DEPTH_TEST));
+
 }
 
 void UI::Draw3D(const std::shared_ptr<OpenGL::Window>& window)

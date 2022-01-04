@@ -44,7 +44,7 @@ namespace OpenGL
     class Character
     {
     public:
-        Character(const unsigned int textureID, const Vector2i& size, const Vector2i& bearing, const int advance)
+        Character(const unsigned int textureID, const Vector2i& size, const Vector2i& bearing, const Vector2i& advance)
             : TextureID(textureID)
             , Size(size)
             , Bearing(bearing)
@@ -54,7 +54,7 @@ namespace OpenGL
         unsigned int TextureID;  // ID handle of the glyph texture
         Vector2i     Size;       // Size of glyph
         Vector2i     Bearing;    // Offset from baseline to left/top of glyph
-        int          Advance;    // Offset to advance to next glyph
+        Vector2i     Advance;    // Offset to advance to next glyph
     };
 
     class Font::FontImp
@@ -62,7 +62,7 @@ namespace OpenGL
     public:
         FontImp(const std::string& filename)
             : m_ft(FreetypeLibrary::Instance())
-            , m_height(48)
+            , m_height(72)
             , m_shader(OpenGL::Shader::LoadFromResource("text"))
         {
             if (FT_New_Face(m_ft, filename.c_str(), 0, &m_face))
@@ -132,14 +132,45 @@ namespace OpenGL
                 // render quad
                 GLCHECK(glDrawArrays(GL_TRIANGLES, 0, 6));
                 // now advance cursors for next glyph (note that advance is number of 1/64 pixels)
-                x += (ch.Advance >> 6) * scale; // bitshift by 6 to get value in pixels (2^6 = 64)
+                x += (ch.Advance[0] >> 6) * scale; // bitshift by 6 to get value in pixels (2^6 = 64)
 
                 GLCHECK(glBindBuffer(GL_ARRAY_BUFFER, 0));
             }
             GLCHECK(glBindVertexArray(0));
             GLCHECK(glBindTexture(GL_TEXTURE_2D, 0));
         }
+        RenderSize CalcTextSize(const std::string& text, float scale)
+        {
+            Vector2f pos(0.0,0.0);
+            Vector2f offset(0.0,0.0);
+            Vector2f size(0.0,0.0);
+            Vector2f overflow(0.0,0.0);
+            GLCHECK(glActiveTexture(GL_TEXTURE0));
+            // iterate through all characters
+            for (auto c = text.cbegin(); c != text.cend(); c++)
+            {
+                Character ch = LoadCharacter(*c);
 
+                float xpos = pos[0] + ch.Bearing[0] * scale;
+                float ypos = pos[1] - (ch.Size[1] - ch.Bearing[1]) * scale;
+                
+                if(xpos<pos[0]) pos[0] = xpos;
+                if(ypos<pos[1]) pos[1] = ypos;
+
+                xpos += ch.Size[0] * scale;
+                ypos += ch.Size[1] * scale;
+
+                if(xpos>size[0]) size[0] = xpos;
+                if(ypos>size[1]) size[1] = ypos;
+
+                // now advance cursors for next glyph (note that advance is number of 1/64 pixels)
+                pos[0] += (ch.Advance[0] >> 6) * scale; 
+                float y = (ch.Advance[1] >> 6) * scale; 
+                if(y>overflow[1]) overflow[1]=y;
+            }
+            overflow[0] = pos[0];
+            return RenderSize(offset,size,overflow);
+        }
     protected:
         Character& LoadCharacter(int c)
         {
@@ -181,7 +212,7 @@ namespace OpenGL
                     texture,
                     Vector2i(m_face->glyph->bitmap.width, m_face->glyph->bitmap.rows),
                     Vector2i(m_face->glyph->bitmap_left, m_face->glyph->bitmap_top),
-                    (int)m_face->glyph->advance.x
+                    Vector2i((int)m_face->glyph->advance.x, (int)m_face->glyph->advance.y)
                 ))).first;
                 // unload texture
                 GLCHECK(glBindTexture(GL_TEXTURE_2D, 0));
@@ -207,4 +238,38 @@ namespace OpenGL
     {
         m_imp->RenderText(text, x, y, scale, color, width, height);
     }
+    void Font::RenderText(const std::string& text, const Vector2f & pos, float scale, RGBColorf color, const Vector2f & screenSize)
+    {
+        RenderText(text,pos[0],pos[1],scale,color,screenSize[0],screenSize[1]);
+    }
+
+    RenderSize Font::CalcTextSize(const std::string& text, float scale)
+    {
+        return m_imp->CalcTextSize(text,scale);
+    }
+
+    RenderSize::RenderSize(const Vector2f & size)
+        : RenderSize(Vector2f(0,0),size,size)
+    {}
+    RenderSize::RenderSize(const Vector2f & offset,const Vector2f & size,const Vector2f & overflow)
+        : m_offset(offset)
+        , m_size(size)
+        , m_overflow(overflow)
+    {}
+
+    const Vector2f & RenderSize::GetOffset() const
+    {
+        return m_offset;
+    }
+
+    const Vector2f & RenderSize::GetSize() const
+    {
+        return m_size;
+    }
+
+    const Vector2f & RenderSize::GetOverflow() const
+    {
+        return m_overflow;
+    }
 }
+
