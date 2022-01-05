@@ -26,7 +26,7 @@ public:
 
     virtual void ContextInit(const std::shared_ptr<Window>& window) {};
     virtual void Draw3D(const std::shared_ptr<Window>& window) {};
-    virtual void Draw2D(const std::shared_ptr<Window>& window, const int width, const int height) {};
+    virtual void Draw2D(const std::shared_ptr<Window>& window) {};
     virtual void ContextFree(const std::shared_ptr<Window>& window) {};
 };
 
@@ -109,6 +109,10 @@ public:
     void Maximize();
     void Restore();
     void Close();
+
+    // 2d/3d window state
+    OpenGL::State & GetState2d();
+    OpenGL::State & GetState3d();
 
 private:
     class WindowImp;

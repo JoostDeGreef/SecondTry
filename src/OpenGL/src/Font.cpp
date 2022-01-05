@@ -91,14 +91,12 @@ namespace OpenGL
             }
         }
 
-        void RenderText(const std::string& text, float x, float y, float scale, RGBColorf color, float width, float height)
+        void RenderText(const std::string& text, float x, float y, float scale, RGBColorf color, const OpenGL::State & state2d)
         {
             // activate corresponding render state	
             auto uniforms = m_shader.Use("model","projection","color","text");
-            auto model = OpenGL::Mat4::Identity();
-            auto projection = OpenGL::Mat4::Ortho(0,width,0,height,-1,1);
-            GLCHECK(glUniformMatrix4fv(uniforms.at(0), 1, true, model.data())); // model
-            GLCHECK(glUniformMatrix4fv(uniforms.at(1), 1, true, projection.data())); // projection
+            state2d.Model().ApplyAsUniform(uniforms.at(0));
+            state2d.Projection().ApplyAsUniform(uniforms.at(1));
             GLCHECK(glUniform3f(uniforms.at(2), color.R, color.G, color.B)); // color
             GLCHECK(glActiveTexture(GL_TEXTURE0));
             GLCHECK(glBindVertexArray(m_VAO));
@@ -234,13 +232,13 @@ namespace OpenGL
 
     Font::~Font() = default;
 
-    void Font::RenderText(const std::string& text, float x, float y, float scale, RGBColorf color, float width, float height) 
+    void Font::RenderText(const std::string& text, float x, float y, float scale, RGBColorf color, const OpenGL::State & state2d)
     {
-        m_imp->RenderText(text, x, y, scale, color, width, height);
+        m_imp->RenderText(text, x, y, scale, color, state2d);
     }
-    void Font::RenderText(const std::string& text, const Vector2f & pos, float scale, RGBColorf color, const Vector2f & screenSize)
+    void Font::RenderText(const std::string& text, const Vector2f & pos, float scale, RGBColorf color, const OpenGL::State & state2d)
     {
-        RenderText(text,pos[0],pos[1],scale,color,screenSize[0],screenSize[1]);
+        RenderText(text, pos[0], pos[1], scale, color, state2d);
     }
 
     RenderSize Font::CalcTextSize(const std::string& text, float scale)

@@ -27,9 +27,8 @@ namespace OpenGL
         ~Font();
 
         RenderSize CalcTextSize(const std::string& text, float scale);
-        void RenderText(const std::string& text, float x, float y, float scale, RGBColorf color, float screenWidth, float screenHeight);
-        void RenderText(const std::string& text, const Vector2f & pos, float scale, RGBColorf color, const Vector2f & screenSize);
-
+        void RenderText(const std::string& text, float x, float y, float scale, RGBColorf color, const OpenGL::State & state2d);
+        void RenderText(const std::string& text, const Vector2f & pos, float scale, RGBColorf color, const OpenGL::State & state2d);
     private:
         class FontImp;
         std::unique_ptr<FontImp> m_imp;

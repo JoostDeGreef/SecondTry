@@ -13,4 +13,8 @@ FetchContent_Declare(
   GIT_TAG        main
 )
 
+SET(BUILD_TESTING OFF)
+
 FetchContent_MakeAvailable(sqlite)
+
+SET(BUILD_TESTING ON)

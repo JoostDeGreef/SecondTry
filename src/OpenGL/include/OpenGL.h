@@ -36,62 +36,69 @@ namespace OpenGL
 }
 
 #include "internal/Shader.h"
-#include "internal/Font.h"
 
 namespace OpenGL
 {
-	void glColor(const RGBAColorf& color);
-    void glColor(const RGBAColord& color);
-    void glColor(const RGBColorf& color);
-    void glColor(const RGBColord& color);
-    inline void glColor(const ColorPtr& color) { glColor(*color); }
-
-    void glVertex(const Vector3f& point);
-    void glVertex(const Vector3d& point);
-    inline void glVertex(const VertexPtr& point) { glVertex(*point); }
-    void glVertex(const double& x, const double& y);
-    void glVertex(const float& x, const float& y);
-
-    void glNormal(const Vector3f& normal);
-    void glNormal(const Vector3d& normal);
-    inline void glNormal(const NormalPtr& normal) { glNormal(*normal); }
-
-    void glTextureCoord(const Vector2f& coord);
-    void glTextureCoord(const Vector2d& coord);
-    inline void glTextureCoord(const TextureCoordPtr& coord) { glTextureCoord(*coord); }
-
-    namespace Mat4
-    {
-      std::array<float,16> Identity();
-      std::array<float,16> Ortho(
-          float const & left, 
-          float const & right, 
-          float const & bottom, 
-          float const & top, 
-          float const & zNear, 
-          float const & zFar);
-    }
-
     void glCheck();    
     void glCheck(const std::string & file, const int line, const std::string func);
+
+    class Mat4 : public TMatrix<float,4,4>
+    {
+    public:
+        using TMatrix::TMatrix;
+
+        const float * glData() const;
+
+        Mat4 & SetIdentity();
+        static Mat4 Identity();
+
+        Mat4 & SetOrtho(
+            float const & left, 
+            float const & right, 
+            float const & bottom, 
+            float const & top, 
+            float const & zNear, 
+            float const & zFar);
+        static Mat4 Ortho(
+            float const & left, 
+            float const & right, 
+            float const & bottom, 
+            float const & top, 
+            float const & zNear, 
+            float const & zFar);
+
+        void ApplyAsUniform(GLuint uniform) const;
+    };
+
+    class State
+    {
+    public:
+        const Mat4 & Model() const { return m_model; }
+        const Mat4 & View() const { return m_view; }
+        const Mat4 & Projection() const { return m_projection; }
+        const Vector2f & Size() const { return m_size; }
+
+        Mat4 & Model() { return m_model; }
+        Mat4 & View() { return m_view; }
+        Mat4 & Projection() { return m_projection; }
+        Vector2f & Size() { return m_size; }
+
+    private:
+        Mat4 m_model;
+        Mat4 m_view;
+        Mat4 m_projection;
+        Vector2f m_size;
+    };
 };
 
 #ifdef NDEBUG
-#define GLCHECK(f) {  \
-  f;                  \
-}
+#define GLCHECK(f) f
 #else
-// Short version of __FILE__ without path requires runtime parsing
-#ifdef WIN32
-#define __SFILE__ (strrchr(__FILE__, '\\') ? strrchr(__FILE__, '\\') + 1 : __FILE__)
-#else
-#define __SFILE__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
-#endif
-#define GLCHECK(f) {  \
+#define GLCHECK(f)    \
   f;                  \
-  OpenGL::glCheck(__SFILE__,__LINE__,#f);  \
-}
+  OpenGL::glCheck(__FILE__,__LINE__,#f); 
 #endif
 
+#include "internal/Font.h"
 #include "internal/Window.h"
 #include "internal/OSSpecific.h"

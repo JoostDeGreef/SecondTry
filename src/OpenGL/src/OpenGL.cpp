@@ -1,63 +1,7 @@
 #include "OpenGL.h"
 #include "Log.h"
 
-void OpenGL::glColor(const RGBAColorf& color)
-{
-    glColor4fv(color.RGBA);
-}
-void OpenGL::glColor(const RGBAColord& color)
-{
-    glColor4dv(color.RGBA);
-}
-
-void OpenGL::glColor(const RGBColorf& color)
-{
-    glColor3fv(color.RGB);
-}
-void OpenGL::glColor(const RGBColord& color)
-{
-    glColor3dv(color.RGB);
-}
-
-void OpenGL::glVertex(const Vector3f& point)
-{
-    glVertex3fv(point.Raw());
-}
-void OpenGL::glVertex(const Vector3d& point)
-{
-    glVertex3dv(point.Raw());
-}
-
-void OpenGL::glVertex(const double& x, const double& y)
-{
-    glVertex2d(x, y);
-}
-void OpenGL::glVertex(const float& x, const float& y)
-{
-    glVertex2f(x, y);
-}
-
-void OpenGL::glNormal(const Vector3f& normal)
-{
-    glNormal3fv(normal.Raw());
-}
-
-void OpenGL::glNormal(const Vector3d& normal)
-{
-    glNormal3dv(normal.Raw());
-}
-
-void OpenGL::glTextureCoord(const Vector2f& coord)
-{
-    glTexCoord2fv(coord.Raw());
-}
-
-void OpenGL::glTextureCoord(const Vector2d& coord)
-{
-    glTexCoord2dv(coord.Raw());
-}
-
-std::array<float,16> OpenGL::Mat4::Ortho(
+OpenGL::Mat4 & OpenGL::Mat4::SetOrtho(
     float const & left, 
     float const & right, 
     float const & bottom, 
@@ -65,23 +9,51 @@ std::array<float,16> OpenGL::Mat4::Ortho(
     float const & zNear, 
     float const & zFar)
 {
-    std::array<float,16> res = {
+    *this = Ortho(left,right,bottom,top,zNear,zFar);
+    return *this;
+}
+
+OpenGL::Mat4 OpenGL::Mat4::Ortho(
+    float const & left, 
+    float const & right, 
+    float const & bottom, 
+    float const & top, 
+    float const & zNear, 
+    float const & zFar)
+{
+    Mat4 res(
          2.0f / (right - left), 0.0f,                  0.0f,                   -(right + left) / (right - left),
          0.0f,                  2.0f / (top - bottom), 0.0f,                   -(top + bottom) / (top - bottom),
          0.0f,                  0.0f,                  2.0f / (zNear - zFar),  -(zFar + zNear) / (zFar - zNear),
-         0.0f,                  0.0f,                  0.0f,                   1.0f};
+         0.0f,                  0.0f,                  0.0f,                   1.0f);
     return res;
 }
 
-std::array<float,16> OpenGL::Mat4::Identity()
+OpenGL::Mat4 & OpenGL::Mat4::SetIdentity()
 {
-    static std::array<float,16> res = {
+    *this = Identity();
+    return *this;
+}
+
+OpenGL::Mat4 OpenGL::Mat4::Identity()
+{
+    static Mat4 res(
         1, 0, 0, 0,
         0, 1, 0, 0,
         0, 0, 1, 0,
         0, 0, 0, 1
-    };
+    );
     return res;
+}
+
+const float * OpenGL::Mat4::glData() const
+{
+    return Raw();
+}
+
+void OpenGL::Mat4::ApplyAsUniform(GLuint uniform) const
+{
+    GLCHECK(glUniformMatrix4fv(uniform, 1, true, glData())); 
 }
 
 namespace
@@ -140,7 +112,17 @@ void OpenGL::glCheck(const std::string & file, const int line, const std::string
    auto msg = glGetErrorMessage();
    if(!msg.empty())
    {
-     msg = fmt::format("{}:{} \"{}\"\n{}", file, line, func, msg);
+     // Short version of __FILE__ without path requires runtime parsing
+     auto sfile = [file]()
+     {
+#ifdef WIN32
+        return (strrchr(file.c_str(), '\\') ? strrchr(file.c_str(), '\\') + 1 : file.c_str());
+#else
+        return (strrchr(file.c_str(), '/') ? strrchr(file.c_str(), '/') + 1 : file.c_str());
+#endif
+     };
+
+     msg = fmt::format("{}:{} \"{}\"\n{}", sfile(), line, func, msg);
 #ifdef NDEBUG
      LogWarning("{}",msg);
 #else  

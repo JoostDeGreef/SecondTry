@@ -48,6 +48,10 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
+# all non-interactive unit tests will be run
+list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure" "-V")
+enable_testing()
+
 # Include sub-projects.
 add_subdirectory ("src")
 

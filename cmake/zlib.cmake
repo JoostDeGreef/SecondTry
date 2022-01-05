@@ -12,17 +12,16 @@ FetchContent_Declare(
 
   SOURCE_DIR zlib-build
   BINARY_DIR zlib-build
+
+  PATCH_COMMAND  git restore . && git apply --ignore-space-change --ignore-whitespace ${CMAKE_CURRENT_SOURCE_DIR}/zlib.patch
 )
 
 set(SKIP_INSTALL_ALL ON CACHE BOOL "Don't install anything" FORCE)
+SET(BUILD_TESTING OFF)
 
 FetchContent_MakeAvailable(zlib)
 
-#include_directories(${zlib_SOURCE_DIR})
-#include_directories(${zlib_BINARY_DIR})
-#if(NOT zlib_POPULATED)
-#	FetchContent_Populate(zlib)
-#	add_subdirectory(${zlib_SOURCE_DIR} ${zlib_BINARY_DIR})
-#endif()
+SET(BUILD_TESTING ON)
+
 
 

@@ -202,6 +202,8 @@ template<typename T,int ROWS,int COLUMNS>
 class TMatrix : public implementation::TMatrixData<TMatrix<T, ROWS, COLUMNS>,T,ROWS,COLUMNS>
 {
 public:
+    using implementation::TMatrixData<TMatrix<T, ROWS, COLUMNS>,T,ROWS,COLUMNS>::TMatrixData;
+
     const T& operator()(const size_t &row,const size_t &column) const 
     {
         return this->operator[](row*COLUMNS+column);
@@ -225,22 +227,7 @@ public:
     typedef T element_type;
 
 public:    
-    TVector()
-    {}
-    // TVector(const this_type& other)
-    // {
-    //     Copy(other);
-    // }
-    // TVector(this_type&& other)
-    // {
-    //     Swap(other);
-    // }
-
-    template<typename ...Args>
-    TVector(const element_type& e0, Args... args)
-    {
-        base_type::Set(e0, args...);
-    }
+    using implementation::TMatrixData<TVector<T, FIELDS>, T, FIELDS, 1>::TMatrixData;
 
     size_t Dimension() const { return base_type::Elements(); }
 

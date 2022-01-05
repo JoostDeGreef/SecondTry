@@ -59,6 +59,8 @@ public:
     void Restore();
     void Close();
 
+    OpenGL::State & GetState2d() { return m_state2d; }
+    OpenGL::State & GetState3d() { return m_state3d; }
 private:
     void SetCallbacks();
     void PurgeCallbacks();
@@ -94,6 +96,8 @@ private:
     std::thread m_renderThread;
     int m_width;
     int m_height;
+    OpenGL::State m_state2d;
+    OpenGL::State m_state3d;
 };
 
 // 
@@ -120,6 +124,9 @@ void Window::Minimize() { m_imp->Minimize(); }
 void Window::Maximize() { m_imp->Maximize(); }
 void Window::Restore() { m_imp->Restore(); }
 void Window::Close() { m_imp->Close(); }
+
+OpenGL::State & Window::GetState2d() { return m_imp->GetState2d(); }
+OpenGL::State & Window::GetState3d() { return m_imp->GetState3d(); }
 
 //
 // Global OpenGL state
@@ -245,6 +252,16 @@ bool Window::WindowImp::Initialize()
 
         // glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 
+        m_state2d.Model().SetIdentity();
+        m_state2d.View().SetIdentity();
+        m_state2d.Projection().SetIdentity();
+        m_state2d.Size().Set(m_width, m_height);
+
+        m_state3d.Model().SetIdentity();
+        m_state3d.View().SetIdentity();
+        m_state3d.Projection().SetIdentity();
+        m_state3d.Size().Set(m_width, m_height);
+
         size_callback(m_width, m_height);
 
         glfwMakeContextCurrent(nullptr);
@@ -317,7 +334,7 @@ void Window::WindowImp::Draw()
     // glDisable(GL_LIGHTING);
     // glDepthMask(GL_FALSE);
 
-    m_callbackHandler.Draw2D(imp->m_owner,m_width,m_height); 
+    m_callbackHandler.Draw2D(imp->m_owner); 
 
     lock.unlock();
 
