@@ -101,4 +101,5 @@ namespace OpenGL
 
 #include "internal/Font.h"
 #include "internal/Window.h"
+#include "internal/Menu.h"
 #include "internal/OSSpecific.h"

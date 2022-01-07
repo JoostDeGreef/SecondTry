@@ -27,12 +27,13 @@ if (WIN32)
     set(OSSPECIFIC "src/OSSpecific-win32.cpp")
 endif()
 
-add_library (${PROJECT_NAME} # SHARED 
-             "src/OpenGL.cpp"
-             "src/Window.cpp"
-             ${OSSPECIFIC}
+add_library (${PROJECT_NAME}
              "src/Font.cpp" 
-             "src/Shader.cpp")
+             "src/Menu.cpp"             
+             "src/OpenGL.cpp"
+             "src/Shader.cpp"
+             "src/Window.cpp"
+             ${OSSPECIFIC})
 
 
 # directories where to search for header files

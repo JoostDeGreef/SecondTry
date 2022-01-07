@@ -8,6 +8,7 @@ include(sqlite3)
 include(fmt)
 include(glfw)
 include(zlib)
+include(bzip2)
 include(png)
 include(freetype2)
 
