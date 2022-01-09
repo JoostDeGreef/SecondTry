@@ -16,6 +16,15 @@ FetchContent_Declare(
   PATCH_COMMAND  git restore . && git apply --ignore-space-change --ignore-whitespace ${CMAKE_CURRENT_SOURCE_DIR}/zlib.patch
 )
 
+MESSAGE(STATUS "
+*************************************
+*** 
+***  zlib
+*** 
+*************************************")
+
+#include(DebugVariables)
+
 set(SKIP_INSTALL_ALL ON CACHE BOOL "Don't install anything" FORCE)
 SET(BUILD_TESTING OFF)
 

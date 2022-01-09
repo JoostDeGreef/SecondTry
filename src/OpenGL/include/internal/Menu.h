@@ -24,9 +24,23 @@ protected:
        , m_id(id)
     {}
 
+    // return the number of submenus
+    virtual int Count() const
+    {
+        return 0;
+    }
+
+    // remove submenu-item from the tree if it exists
+    // return true if removed
+    virtual bool Remove(const int id)
+    {
+        return false;
+    }
+
     virtual int GenerateID()
     {
-        return m_parentItem->GenerateID();
+        return m_parentItem->
+        GenerateID();
     }
 private:
     MenuItem * m_parentItem;
@@ -45,10 +59,47 @@ public:
         return static_cast<MENUITEM *>(m_items.back());
     }
 
-    // clear all submenus
+    // clear all items from this (sub)menu
     void Clear()
     {
+        for(MenuItem * item:m_items)
+        {
+            delete item;
+        }
         m_items.clear();
+    }
+
+    // remove submenu-item from the tree if it exists
+    // return true if removed
+    bool Remove(const int id) override
+    {
+        for(auto iter = m_items.begin();iter != m_items.end();++iter)
+        {
+            if((*iter)->GetID() == id)
+            {
+                delete *iter;
+                m_items.erase(iter);
+                return true;
+            }
+            else
+            {
+                if((*iter)->Remove(id))
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    int Count() const override
+    {
+        int res = 0;
+        for(auto iter = m_items.begin();iter != m_items.end();++iter)
+        {
+            res += 1 + (*iter)->Count();
+        }
+        return res;
     }
 
 protected:
@@ -59,10 +110,7 @@ protected:
     {}
     ~SubMenuItem()
     {
-        for(MenuItem * item:m_items)
-        {
-            delete item;
-        }
+        Clear();
     }
 
 private:

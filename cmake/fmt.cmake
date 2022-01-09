@@ -9,6 +9,15 @@ FetchContent_Declare(
   GIT_TAG        master
 )
 
+MESSAGE(STATUS "
+*************************************
+*** 
+***  fmt 
+*** 
+*************************************")
+
+#include(DebugVariables)
+
 FetchContent_MakeAvailable(fmt)
 
 

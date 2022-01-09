@@ -9,16 +9,23 @@ FetchContent_Declare(
   GIT_TAG        master
 )
 
-set(ZLIB_LIBRARY zlibstatic)
-set(ZLIB_INCLUDE_DIR ${zlib_SOURCE_DIR} ${zlib_BINARY_DIR})
+MESSAGE(STATUS "
+*************************************
+*** 
+***  freetype2
+*** 
+*************************************")
+
+#include(DebugVariables)
+
 set(ZLIB_LIBRARIES zlibstatic)
 set(ZLIB_INCLUDE_DIRS ${zlib_SOURCE_DIR} ${zlib_BINARY_DIR})
 
+set(BZIP2_INCLUDE_DIR ${bzip2_SOURCE_DIR} ${bzip2_BINARY_DIR})
+set(BZIP2_LIBRARIES bz2_static)
+
 set(PNG_LIBRARY png_static)
 set(PNG_PNG_INCLUDE_DIR ${libpng_SOURCE_DIR} ${libpng_BINARY_DIR})
-
-#BZIP2_LIBRARIES
-#BZIP2_INCLUDE_DIR
 
 set(SKIP_INSTALL_ALL ON CACHE BOOL "Don't install anything" FORCE)
 

@@ -13,6 +13,15 @@ FetchContent_Declare(
   GIT_TAG        main
 )
 
+MESSAGE(STATUS "
+*************************************
+*** 
+***  sqlite3
+*** 
+*************************************")
+
+#include(DebugVariables)
+
 SET(BUILD_TESTING OFF)
 
 FetchContent_MakeAvailable(sqlite)
