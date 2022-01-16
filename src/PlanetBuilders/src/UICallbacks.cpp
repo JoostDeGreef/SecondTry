@@ -6,6 +6,7 @@
 
 using namespace std;
 using namespace OpenGL;
+using namespace Core;
 
 void UI::char_callback(
     const std::shared_ptr<Window>& window, 

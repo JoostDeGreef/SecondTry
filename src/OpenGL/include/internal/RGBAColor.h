@@ -63,8 +63,8 @@ namespace OpenGL
         }
 
     private:
-        unsigned int ToByte(const double& value) { return Numerics::Clamp((unsigned int)(value*255),0u,255u); }
-        unsigned int ToByte(const float& value) { return Numerics::Clamp((unsigned int)(value*255),0u,255u); }
+        unsigned int ToByte(const double& value) { return Core::Numerics::Clamp((unsigned int)(value*255),0u,255u); }
+        unsigned int ToByte(const float& value) { return Core::Numerics::Clamp((unsigned int)(value*255),0u,255u); }
         unsigned int ToByte(const unsigned char& value) { return value; }
 
         void FromByte(const unsigned int value, double& res) { res = value/255.0; }
@@ -97,7 +97,7 @@ namespace OpenGL
                 A == other.A;
         }
 
-        static           this_type Random() { return SetInt((Numerics::NormalizedRandomNumber(0xFFFFFFu)<<8) + 0xFF); }
+        static           this_type Random() { return SetInt((Core::Numerics::NormalizedRandomNumber(0xFFFFFFu)<<8) + 0xFF); }
         static constexpr this_type Black() { return SetInt(0); }
         static constexpr this_type Blue() { return SetInt(0x0000FFFF); }
         static constexpr this_type Green() { return SetInt(0x00FF00FFF); }

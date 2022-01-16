@@ -4,6 +4,8 @@
 
 #include "Log.h"
 
+using namespace Core;
+
 namespace OpenGL
 {
     class FreetypeLibrary

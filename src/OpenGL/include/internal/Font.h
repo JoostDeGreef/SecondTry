@@ -5,19 +5,19 @@ namespace OpenGL
     class RenderSize
     {
     public:
-        RenderSize(const Vector2f & size);
-        RenderSize(const Vector2f & offset,const Vector2f & size,const Vector2f & overflow);
+        RenderSize(const Core::Vector2f & size);
+        RenderSize(const Core::Vector2f & offset,const Core::Vector2f & size,const Core::Vector2f & overflow);
 
         // rendering space below/left of text origin (<=origin)
-        const Vector2f & GetOffset() const;
+        const Core::Vector2f & GetOffset() const;
         // redering width/height of core text
-        const Vector2f & GetSize() const;
+        const Core::Vector2f & GetSize() const;
         // rendering space above/right of text (>=size)
-        const Vector2f & GetOverflow() const;
+        const Core::Vector2f & GetOverflow() const;
     private:
-        Vector2f m_offset;
-        Vector2f m_size;
-        Vector2f m_overflow;
+        Core::Vector2f m_offset;
+        Core::Vector2f m_size;
+        Core::Vector2f m_overflow;
     };
 
     class Font
@@ -28,7 +28,7 @@ namespace OpenGL
 
         RenderSize CalcTextSize(const std::string& text, float scale);
         void RenderText(const std::string& text, float x, float y, float scale, RGBColorf color, const OpenGL::State & state2d);
-        void RenderText(const std::string& text, const Vector2f & pos, float scale, RGBColorf color, const OpenGL::State & state2d);
+        void RenderText(const std::string& text, const Core::Vector2f & pos, float scale, RGBColorf color, const OpenGL::State & state2d);
     private:
         class FontImp;
         std::unique_ptr<FontImp> m_imp;

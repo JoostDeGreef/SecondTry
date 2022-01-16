@@ -13,16 +13,16 @@
 
 namespace OpenGL
 {
-    using TextureCoord = Vector2d;
+    using TextureCoord = Core::Vector2d;
     using TextureCoordPtr = TextureCoord*;
 
-    using Vertex = Vector3d;
+    using Vertex = Core::Vector3d;
     using VertexPtr = Vertex*;
 
-    using Size = Vector2d;
-    using PixelSize = Vector2i;
+    using Size = Core::Vector2d;
+    using PixelSize = Core::Vector2i;
 
-    using Normal = Vector3d;
+    using Normal = Core::Vector3d;
     using NormalPtr = Normal*;
 }
 
@@ -42,7 +42,7 @@ namespace OpenGL
     void glCheck();    
     void glCheck(const std::string & file, const int line, const std::string func);
 
-    class Mat4 : public TMatrix<float,4,4>
+    class Mat4 : public Core::TMatrix<float,4,4>
     {
     public:
         using TMatrix::TMatrix;
@@ -76,18 +76,18 @@ namespace OpenGL
         const Mat4 & Model() const { return m_model; }
         const Mat4 & View() const { return m_view; }
         const Mat4 & Projection() const { return m_projection; }
-        const Vector2f & Size() const { return m_size; }
+        const Core::Vector2f & Size() const { return m_size; }
 
         Mat4 & Model() { return m_model; }
         Mat4 & View() { return m_view; }
         Mat4 & Projection() { return m_projection; }
-        Vector2f & Size() { return m_size; }
+        Core::Vector2f & Size() { return m_size; }
 
     private:
         Mat4 m_model;
         Mat4 m_view;
         Mat4 m_projection;
-        Vector2f m_size;
+        Core::Vector2f m_size;
     };
 };
 

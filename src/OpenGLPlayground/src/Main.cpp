@@ -6,6 +6,7 @@
 
 using namespace std;
 using namespace OpenGL;
+using namespace Core;
 
 class UI : public CallbackHandler
 {

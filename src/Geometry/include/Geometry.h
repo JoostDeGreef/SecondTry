@@ -8,13 +8,8 @@
 #include <array>
 #include <iostream>
 
-namespace Core
+namespace Geometry
 {
 #include "internal/Constants.h"
-#include "internal/Limits.h"
-#include "internal/Numerics.h"
-#include "internal/Matrix.h"
-#include "internal/Quaternion.h"
-#include "internal/RotationMatrix.h"
 }
 

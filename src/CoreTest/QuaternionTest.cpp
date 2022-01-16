@@ -4,6 +4,7 @@
 
 using namespace std;
 using namespace testing;
+using namespace Core;
 
 class QuaternionTest : public Test
 {

@@ -1,11 +1,11 @@
 ﻿#include "gtest/gtest.h"
-#include "Core.h"
+#include "Geometry.h"
 
 using namespace std;
 using namespace testing;
-using namespace Core;
+using namespace Geometry;
 
-class CoreTest : public Test
+class GeometryTest : public Test
 {
 protected:
 
@@ -18,6 +18,6 @@ protected:
     }
 };
 
-TEST_F(CoreTest, Init)
+TEST_F(GeometryTest, Init)
 {
 }
