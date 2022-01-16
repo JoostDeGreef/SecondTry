@@ -7,9 +7,16 @@
 #include <vector>
 #include <array>
 #include <iostream>
+#include <cstdint>
+#include <vector>
+#include <unordered_map>
 
 namespace Geometry
 {
 #include "internal/Constants.h"
+#include "internal/Node.h"
+#include "internal/Edge.h"
+#include "internal/Face.h"
+#include "internal/Shape.h"
 }
 
