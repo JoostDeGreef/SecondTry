@@ -10,10 +10,12 @@
 #include <cstdint>
 #include <vector>
 #include <unordered_map>
+#include <unordered_set>
 
 namespace Geometry
 {
 #include "internal/Constants.h"
+#include "internal/PODPtrStore.h"
 #include "internal/Node.h"
 #include "internal/Edge.h"
 #include "internal/Face.h"

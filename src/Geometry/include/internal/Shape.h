@@ -14,9 +14,7 @@ public:
     void Clear();
 
 private:
-    std::unordered_map<Node*,int> m_nodes;
-    std::unordered_map<Edge*,int> m_edges;
-    std::unordered_map<Face*,int> m_faces;
-
-    std::vector<Face*> m_surface;
+    PODPtrStore<Node> m_nodes;
+    PODPtrStore<Edge> m_edges;
+    PODPtrStore<Face> m_faces;
 };
