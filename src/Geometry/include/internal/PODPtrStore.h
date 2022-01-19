@@ -95,7 +95,7 @@ public:
     // copy the storage from 'other', and provide a mapping for the pointers.
     // this is a shallow copy, item contents are untouched, reference count is duplicated.
     // a map with other to this pointer mapping is returned to facilitate deep copy.
-    auto Copy(const this_type & other)
+    auto ShallowCopy(const this_type & other)
     {
         std::unordered_map<pod_ptr_type,pod_ptr_type> mapping;
         size_t used = other.UsedSlots();
@@ -141,6 +141,17 @@ public:
            m_free.push_back(&this_block[i]);
         }
         return mapping;
+    }
+    // 
+    auto DeepCopy(const this_type & other)
+    {
+        // todo
+        auto podMap = ShallowCopy(other);
+        for(auto m:podMap)
+        {
+            *(m.first) = *(m.second);
+        }
+        return podMap;
     }
 
     size_t UsedSlots() const

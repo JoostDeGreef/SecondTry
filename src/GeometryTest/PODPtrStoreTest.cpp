@@ -53,3 +53,4 @@ TEST_F(PODPtrStoreTest, Emplace)
     EXPECT_STREQ("test",a->c_str());
 }
 
+// TODO: test DeepCopy
