@@ -3,11 +3,15 @@
 // create a store (memory pool) for POD items,
 // POD: pod type
 // SIZE: number of pods per allocation block
+// Note: this store only calls constructors/destructors for 'special' cases,
+//       do not use it for anything else but PODs (Plain Old Data type)
 template<typename POD,int SIZE = 128>
 class PODPtrStore
 {
+    static_assert(std::is_pod<POD>::value, "PODPtrStore only supports PODs");
+
 public:
-    typedef PODPtrStore<POD> this_type;
+    typedef PODPtrStore<POD,SIZE> this_type;
     typedef POD pod_type;
     typedef POD * pod_ptr_type;
 
@@ -46,6 +50,7 @@ public:
         return Convert(new (pc) pod_type_counted(args...));
     }
     // Does not call any constructor!
+    // Use Emplace without arguments to call the default constructor
     pod_ptr_type Alloc()
     {
         if(!m_free.empty())
@@ -95,6 +100,7 @@ public:
     // copy the storage from 'other', and provide a mapping for the pointers.
     // this is a shallow copy, item contents are untouched, reference count is duplicated.
     // a map with other to this pointer mapping is returned to facilitate deep copy.
+    // note: not even a constructor is called.
     auto ShallowCopy(const this_type & other)
     {
         std::unordered_map<pod_ptr_type,pod_ptr_type> mapping;
@@ -121,7 +127,7 @@ public:
             for(size_t i = 0;i<pods_per_block;++i)
             {
                 pod_ptr_type_counted other_pod = &other_block[i];                
-                if(freeInOther.find(other_block) == freeInOther.end())
+                if(freeInOther.find(other_pod) == freeInOther.end())
                 {
                     pod_ptr_type_counted this_pod = &this_block[j];
                     this_pod->m_count = other_pod->m_count;
@@ -142,14 +148,13 @@ public:
         }
         return mapping;
     }
-    // 
+    // calls the copy constructor for each pod
     auto DeepCopy(const this_type & other)
     {
-        // todo
         auto podMap = ShallowCopy(other);
         for(auto m:podMap)
         {
-            *(m.first) = *(m.second);
+            new (m.second) pod_type_counted(*(m.first));
         }
         return podMap;
     }

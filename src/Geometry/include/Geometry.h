@@ -12,6 +12,8 @@
 #include <unordered_map>
 #include <unordered_set>
 
+#include "Core.h"
+
 namespace Geometry
 {
 #include "internal/Constants.h"

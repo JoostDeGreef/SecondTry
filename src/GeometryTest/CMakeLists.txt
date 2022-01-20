@@ -1,7 +1,7 @@
 project(GeometryTest)
 
 add_executable (${PROJECT_NAME}
-                "PODPtrStoreTest.cpp"
+                "ShapeTest.cpp"
                 "GeometryTest.cpp")
 
 target_link_libraries(${PROJECT_NAME} GoogleTest Geometry)

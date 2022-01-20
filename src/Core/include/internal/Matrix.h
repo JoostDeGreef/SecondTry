@@ -19,30 +19,12 @@ namespace implementation
         }
     public:
 
-        TMatrixData()
-        {}
-        TMatrixData(const this_type& other)
-        {
-            Copy(other);
-        }
-        TMatrixData(this_type&& other)
-        {
-            Swap(other);
-        }
+        TMatrixData() = default;
 
         template<typename ...Args>
         TMatrixData(const element_type& e0, Args... args)
         {
             Set(e0, args...);
-        }
-
-        this_type& operator = (const this_type& other)
-        {
-            return Copy(other);
-        }
-        this_type& operator = (this_type&& other)
-        {
-            return Swap(other);
         }
 
         constexpr size_t Elements() const { return ROWS * COLUMNS; }
@@ -65,11 +47,6 @@ namespace implementation
             return m_data[element];
         }
 
-        this_type & Copy(const this_type& other)
-        {
-            m_data = other.m_data;
-            return Ref();
-        }
         this_type & Swap(this_type&& other)
         {
             other.m_data.swap(m_data);

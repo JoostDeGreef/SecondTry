@@ -5,8 +5,7 @@ class Shape;
 class Face
 {
 public:
-    Face()
-    {}
+    Face() = default;
 
     void MappedAssign(Face * other,
                       Shape * shape,
@@ -20,8 +19,11 @@ public:
         m_facegroup = other->m_facegroup;
     }
 
+    void SetShape(Shape * shape) { m_shape = shape; }
+    void SetEdges(const std::array<Edge*,3> & edges) { m_edges = edges; }
+    void SetFacegroup(const uint64_t facegroup) { m_facegroup = facegroup; }
 private:
     Shape * m_shape;
-    Geometry::Edge * m_edges[3]; // owned by the face, refcount store in shape
+    std::array<Edge *,3> m_edges; // owned by the face, refcount store in shape
     uint64_t m_facegroup;
 };

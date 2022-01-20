@@ -6,7 +6,10 @@
 #include <initializer_list>
 #include <vector>
 #include <array>
+#include <cassert>
 #include <iostream>
+#include <unordered_map>
+#include <unordered_set>
 
 namespace Core
 {
@@ -16,5 +19,6 @@ namespace Core
 #include "internal/Matrix.h"
 #include "internal/Quaternion.h"
 #include "internal/RotationMatrix.h"
+#include "internal/PODPtrStore.h"
 }
 
