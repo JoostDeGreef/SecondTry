@@ -7,6 +7,8 @@ link_libraries(Core)
 add_library (${PROJECT_NAME}
              "src/Geometry.cpp"
              "src/Shape.cpp"
+             "src/Face.cpp"
+             "src/Edge.cpp"
              "src/Constants.cpp")
 
 set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION})

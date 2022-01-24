@@ -2,50 +2,67 @@
 
 class Shape
 {
+    friend Face;
 public:
     Shape();
-    Shape(Shape && other);
     Shape(const Shape & other);
 
     ~Shape();
 
     Shape & Copy(const Shape & other);
-    Shape & Swap(Shape && other);
     void Clear();
    
+    double CalculateVolume() const;
 private:
-    Core::PODPtrStore<Node> m_nodes;
-    Core::PODPtrStore<Edge> m_edges;
-    Core::PODPtrStore<Face> m_faces;
+    // The shape owns the memory stores for all the objects which define it
+    Core::SmartPtrStore<Core::Vector3d> m_normals;
+    Core::SmartPtrStore<Node> m_nodes;
+    Core::SmartPtrStore<Edge> m_edges;
+    Core::SmartPtrStore<Face> m_faces;
 
-    std::vector<Face*> m_surface; // faces are owned by the shape
+    // The shape consists out of faces
+    std::vector<Core::OwnedPtr<Face>> m_surface; 
 
+protected:
     template<typename ... ARGS>
-    Node * AddNode(ARGS ... args)
+    Core::OwnedPtr<Node> AddNormal(ARGS ... args)
     {
-        return m_nodes.Emplace(args...);
+        return m_normals.Create(args...);
     }
     template<typename ... ARGS>
-    Edge * AddEdge(ARGS ... args)
+    Core::OwnedPtr<Node> AddNode(ARGS ... args)
     {
-        return m_edges.Emplace(args...);
+        return m_nodes.Create(args...);
     }
-    auto AddEdgePair(Node * n0,Node * n1)
+    template<typename ... ARGS>
+    Core::OwnedPtr<Edge> AddEdge(ARGS ... args)
     {
-        Edge * edge0 = AddEdge();
-        Edge * edge1 = AddEdge();
+        return m_edges.Create(args...);
+    }
+    auto AddEdgePair(
+        const Core::OwnedPtr<Node> & n0,
+        const Core::OwnedPtr<Node> & n1)
+    {
+        auto edge0 = AddEdge();
+        auto edge1 = AddEdge();
         edge0->SetTwin(edge1);
         edge1->SetTwin(edge0);
-        edge0->SetStart(m_nodes.Attach(n0));
-        edge1->SetStart(m_nodes.Attach(n1));
+        edge0->SetStart(n0);
+        edge1->SetStart(n1);
         return std::make_tuple(edge0,edge1);
     }
-    Face * AddFace(Edge * e0,Edge * e1,Edge * e2,uint64_t facegroup)
+    auto AddFace(
+        Core::OwnedPtr<Edge> & e0,
+        Core::OwnedPtr<Edge> & e1,
+        Core::OwnedPtr<Edge> & e2,
+        uint64_t facegroup,
+        Core::OwnedPtr<Core::Vector3d> normal = Core::OwnedPtr<Core::Vector3d>())
     {
-        Face * face = m_faces.Emplace();
+        auto face = m_faces.Create();
         face->SetShape(this);
         face->SetEdges({e0,e1,e2});
         face->SetFacegroup(facegroup);
+        face->SetNormal(normal);
         e0->SetFace(face);
         e1->SetFace(face);
         e2->SetFace(face);

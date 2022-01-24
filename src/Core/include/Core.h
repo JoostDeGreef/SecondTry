@@ -19,6 +19,6 @@ namespace Core
 #include "internal/Matrix.h"
 #include "internal/Quaternion.h"
 #include "internal/RotationMatrix.h"
-#include "internal/PODPtrStore.h"
+#include "internal/SmartPtrStore.h"
 }
 

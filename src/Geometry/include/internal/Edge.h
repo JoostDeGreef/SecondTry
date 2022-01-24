@@ -7,27 +7,31 @@ class Edge
 public:
     Edge() = default;
 
-    void MappedAssign(Edge * other,
-                      std::unordered_map<Node *,Node *> nodeMap,
-                      std::unordered_map<Edge *,Edge *> edgeMap,
-                      std::unordered_map<Face *,Face *> faceMap)
+    template<typename NODEMAP,typename EDGEMAP,typename FACEMAP>
+    void MapPtrsAfterStoreCopy(NODEMAP & nodeMap,EDGEMAP & edgeMap,FACEMAP & faceMap)
     {
-        m_face = faceMap.at(other->m_face);
-        m_next = edgeMap.at(other->m_next);
-        m_twin = edgeMap.at(other->m_twin);
-        m_prev = edgeMap.at(other->m_prev);
-        m_start = nodeMap.at(other->m_start);
+        m_face = faceMap.at(m_face);
+        m_next = edgeMap.at(m_next);
+        m_twin = edgeMap.at(m_twin);
+        m_prev = edgeMap.at(m_prev);
+        m_start = nodeMap.at(m_start);
     }
 
-    void SetFace(Face * face) { m_face = face; }
-    void SetNext(Edge * next) { m_next = next; }
-    void SetTwin(Edge * twin) { m_twin = twin; }
-    void SetPrev(Edge * prev) { m_prev = prev; }
-    void SetStart(Node * start) { m_start = start; }
+    // calculate or return the cache length of the edge
+    double CalcLength();
+
+    const Core::OwnedPtr<Node> & Start() const;
+
+    void SetFace(const Core::ViewedPtr<Face> & face);
+    void SetNext(const Core::ViewedPtr<Edge> & next);
+    void SetTwin(const Core::ViewedPtr<Edge> & twin);
+    void SetPrev(const Core::ViewedPtr<Edge> & prev);
+    void SetStart(const Core::OwnedPtr<Node> & start);
 private:
-    Face * m_face;
-    Edge * m_next;
-    Edge * m_twin;
-    Edge * m_prev;
-    Node * m_start; // owned by the edge, refcount store in shape
+    Core::ViewedPtr<Face> m_face;
+    Core::ViewedPtr<Edge> m_next;
+    Core::ViewedPtr<Edge> m_twin;
+    Core::ViewedPtr<Edge> m_prev;
+    Core::OwnedPtr<Node> m_start;
+    double m_length = -1.0;
 };
