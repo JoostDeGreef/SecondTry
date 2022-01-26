@@ -1,4 +1,5 @@
 #include "Geometry.h"
+#include "Log.h"
 
 using namespace Core;
 using namespace Geometry;
@@ -124,5 +125,49 @@ Shape Shape::Construct::Box(const Core::Vector3d & sides)
     // set the surface to the generated faces
     res.m_surface = {face012,face132,face051,face045,face026,face064,
                      face173,face157,face237,face276,face467,face475};
+    return res;
+}
+
+Shape Shape::Construct::Cylinder(const double length, double outerRadius, double innerRadius)
+{
+    Shape res;
+
+    if(innerRadius<0.0)
+    {
+        innerRadius *= -outerRadius;
+    }
+    if(innerRadius>=outerRadius)
+    {
+        std::swap(innerRadius,outerRadius);
+        LogWarning("Inner radius should be smaller than outer radius.");
+    }
+    double halfCorner = acos(innerRadius/outerRadius);
+    size_t sections = ceil(Core::Constants::Pi / halfCorner);
+    double corner = (Core::Constants::Pi*2.0)/sections;
+    // create bottom and top nodes
+    std::vector<Core::OwnedPtr<Node>> bottomNodes;
+    std::vector<Core::OwnedPtr<Node>> topNodes;
+    bottomNodes.reserve(sections+2);
+    topNodes.reserve(sections+2);
+    bottomNodes.emplace_back(res.AddNode(0.0, 0.0, 0.0));
+    topNodes.emplace_back(res.AddNode(0.0, 0.0, length));
+    for(size_t i=0;i<sections;++i)
+    {
+        double alpha = corner*i;
+        bottomNodes.emplace_back(res.AddNode(outerRadius*cos(alpha), outerRadius*sin(alpha), 0.0));
+        topNodes.emplace_back(res.AddNode(outerRadius*cos(alpha), outerRadius*sin(alpha), length));
+    }
+    // create side normals
+    std::vector<Core::OwnedPtr<Core::Vector3d>> normals;
+    normals.reserve(sections);
+    for(size_t i=0;i<sections;++i)
+    {
+        double alpha = corner*(i+0.5);
+        normals.emplace_back(res.AddNormal(outerRadius*cos(alpha), outerRadius*sin(alpha), 0.0));
+    }
+    auto normalBottom = res.AddNormal(0, 0, -1);
+    auto normalTop = res.AddNormal(0, 0,  1);
+    // create edges
+    
     return res;
 }

@@ -25,7 +25,7 @@ private:
 
 protected:
     template<typename ... ARGS>
-    Core::OwnedPtr<Node> AddNormal(ARGS ... args)
+    Core::OwnedPtr<Core::Vector3d> AddNormal(ARGS ... args)
     {
         return m_normals.Create(args...);
     }
@@ -82,12 +82,15 @@ public:
         Construct() = delete;
 
     public:
-        // construct a cube at 0,0,0 with 'side' length sides
+        // construct a cube at 0,0,0 with 'side' length sides in directions x,y,z
         static Shape Cube(const double side);
 
-        // construct a box at 0,0,0 with 'sides' length sides
+        // construct a box at 0,0,0 with 'sides' length sides in directions x,y,z
         static Shape Box(const Core::Vector3d & sides);
         
+        // construct a cilinder at 0,0,0 with 'length' in the z directions and an aproximated radius between 'outerRadius' and 'innerRadius'
+        // note: a negative inner radius means it's a fraction of the outer radius
+        static Shape Cylinder(const double length, double outerRadius, double innerRadius = -0.95);
     };
 };
 
