@@ -62,6 +62,33 @@ double Shape::CalculateVolume() const
     return res;
 }
 
+double Shape::CalculateSurface() const
+{
+    double res = 0;
+    for(auto face:m_surface)
+    {
+        res += face->CalcSurface();
+    }
+    return res;
+}
+
+std::vector<float> Shape::Draw() const
+{
+    std::vector<float> res;
+    res.reserve(m_surface.size()*3);
+    for(auto & face:m_surface)
+    {
+        for(size_t i=0;i<3;++i)
+        {
+            auto & n = *face->GetEdge(i)->Start();
+            res.push_back(n[0]);
+            res.push_back(n[1]);
+            res.push_back(n[2]);
+        }
+    }
+    return res;
+}
+
 Shape Shape::Construct::Cube(const double side)
 {
     return Box({side,side,side});

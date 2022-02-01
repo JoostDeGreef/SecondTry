@@ -1,5 +1,6 @@
 #pragma once
 
+// class for holding the nodes which make up a 2D polygon (in the x-y plane)
 class Polygon2D
 {
 public:
@@ -32,19 +33,13 @@ public:
 
     // returns true if the polygon is defined clockwise,
     // see http://www.faqs.org/faqs/graphics/algorithms-faq/
-    bool IsClockwise() const
-    {
-        auto & a = m_southEast-1<0?m_nodes.back():m_nodes[m_southEast-1];
-        auto & b = m_nodes[m_southEast];
-        auto & c = m_southEast+1>=m_nodes.size()?m_nodes.front():m_nodes[m_southEast+1];
-        auto A = b-a;
-        auto B = c-b;
-        return A[0]*B[1] - A[1]*B[2] < 0;
-    }
+    bool IsClockwise() const;
+
 private:
     std::vector<Core::Vector2d> m_nodes;
     size_t m_southEast;
 };
+
 
 class TriangulatedPolygon2D
 {

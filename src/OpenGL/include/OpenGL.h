@@ -67,6 +67,26 @@ namespace OpenGL
             float const & zNear, 
             float const & zFar);
 
+        Mat4 & SetPerspective(
+            const double verticalFOV, 
+            const double aspect, 
+            const double near, 
+            const double far);
+        static Mat4 Perspective(
+            const double verticalFOV, 
+            const double aspect, 
+            const double near, 
+            const double far);
+
+        Mat4 & SetLookAt(
+            const Core::Vector3d & eye,
+            const Core::Vector3d & center,
+            const Core::Vector3d & up);
+        static Mat4 LookAt(
+            const Core::Vector3d & eye,
+            const Core::Vector3d & center,
+            const Core::Vector3d & up);
+
         void ApplyAsUniform(GLuint uniform) const;
     };
 

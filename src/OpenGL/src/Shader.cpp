@@ -8,6 +8,7 @@ namespace Shaders
         std::map<std::string,std::tuple<std::string,std::string>> shaders;
 
 #include "Shaders/2d.cpp"
+#include "Shaders/3d.cpp"
 #include "Shaders/text.cpp"
 
         return shaders;

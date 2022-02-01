@@ -12,7 +12,11 @@ public:
     Shape & Copy(const Shape & other);
     void Clear();
    
+    // return the shape as a sequence of triangle vertices
+    std::vector<float> Draw() const;
+    
     double CalculateVolume() const;
+    double CalculateSurface() const;
 private:
     // The shape owns the memory stores for all the objects which define it
     Core::SmartPtrStore<Core::Vector3d> m_normals;
@@ -74,7 +78,6 @@ protected:
         e2->SetPrev(e1);
         return face;
     }
-
 public:
     class Construct
     {

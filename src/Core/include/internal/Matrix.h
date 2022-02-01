@@ -57,6 +57,7 @@ namespace implementation
         template<size_t INDEX>
         void _Set()
         {
+            static_assert(INDEX == ROWS * COLUMNS, "All fields should be set");
         }
         template<size_t INDEX,typename ...Args>
         void _Set(const element_type& e0, Args... args)

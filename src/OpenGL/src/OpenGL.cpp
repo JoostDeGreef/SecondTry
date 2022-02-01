@@ -29,6 +29,76 @@ OpenGL::Mat4 OpenGL::Mat4::Ortho(
     return res;
 }
 
+/**
+ * Generates a perspective projection matrix with the given bounds
+ *
+ * @param {mat4} out mat4 frustum matrix will be written into
+ * @param {number} verticalFOV Vertical field of view in radians
+ * @param {number} aspect Aspect ratio. typically viewport width/height
+ * @param {number} near Near bound of the frustum
+ * @param {number} far Far bound of the frustum
+ * @returns {mat4} out
+ */
+OpenGL::Mat4 OpenGL::Mat4::Perspective(
+  const double verticalFOV, 
+  const double aspect, 
+  const double near, 
+  const double far) 
+{
+    double f = 1.0 / tan(verticalFOV / 2);
+    double nf = 1.0 / (near - far);
+    Mat4 res(
+        f / aspect, 0, 0,                   0,
+        0,          f, 0,                   0,
+        0,          0, (far + near) * nf,   (2 * far * near) * nf,
+        0,          0, -1,                  0);
+    return res;
+};
+OpenGL::Mat4 & OpenGL::Mat4::SetPerspective(
+  const double verticalFOV, 
+  const double aspect, 
+  const double near, 
+  const double far) 
+{
+  *this = Perspective(verticalFOV,aspect,near,far);
+  return *this;  
+}
+
+OpenGL::Mat4 & OpenGL::Mat4::SetLookAt(
+    const Core::Vector3d & eye,
+    const Core::Vector3d & center,
+    const Core::Vector3d & up)
+{
+  *this = LookAt(eye,center,up);
+  return *this;
+}
+OpenGL::Mat4 OpenGL::Mat4::LookAt(
+    const Core::Vector3d & eye,
+    const Core::Vector3d & center,
+    const Core::Vector3d & up)
+{
+    auto z = eye - center;
+
+    if (abs(z[0]) < 0.000001 &&
+        abs(z[1]) < 0.000001 &&
+        abs(z[2]) < 0.000001) 
+    {
+        return Identity();
+    }
+
+    z.Normalize();
+    auto x = up.Cross(z).Normalized(); // todo: what is normalization can't be done? default should be 0,0,0
+    auto y = z.Cross(x).Normalized(); // todo: what is normalization can't be done? default should be 0,0,0
+
+    Mat4 res(
+        x[0], x[1], x[2], -x.InnerProduct(eye),
+        y[0], y[1], y[2], -y.InnerProduct(eye),
+        z[0], z[1], z[2], -z.InnerProduct(eye),
+        0,    0,    0,    1);
+
+    return res;
+}
+
 OpenGL::Mat4 & OpenGL::Mat4::SetIdentity()
 {
     *this = Identity();

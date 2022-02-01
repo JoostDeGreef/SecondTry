@@ -23,6 +23,8 @@ TEST_F(ShapeTest, Cube)
     auto cube = Shape::Construct::Cube(1);
     double volume = cube.CalculateVolume();
     EXPECT_FLOAT_EQ(1.0,volume);
+    double surface = cube.CalculateSurface();
+    EXPECT_FLOAT_EQ(6.0,surface);
 }
 
 TEST_F(ShapeTest, Box)
@@ -30,4 +32,6 @@ TEST_F(ShapeTest, Box)
     auto box = Shape::Construct::Box({1,1.2,1.5});
     double volume = box.CalculateVolume();
     EXPECT_FLOAT_EQ(1.8,volume);
+    double surface = box.CalculateSurface();
+    EXPECT_FLOAT_EQ(9.0,surface);
 }

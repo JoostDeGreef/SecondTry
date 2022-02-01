@@ -3,10 +3,12 @@
 
 #include "Log.h"
 #include "OpenGL.h"
+#include "Geometry.h"
 
 using namespace std;
 using namespace OpenGL;
 using namespace Core;
+using namespace Geometry;
 
 class UI : public CallbackHandler
 {
@@ -14,7 +16,9 @@ public:
     UI()
         : CallbackHandler()
         , mainWindow(*this, "Test window 1", Window::Option::HasCloseButton)
-    {}
+    {
+        AddShapes();
+    }
 
     void char_callback(const std::shared_ptr<Window>& window, unsigned int c) 
     { 
@@ -57,6 +61,10 @@ public:
         window->SetTitle("size_callback(...,{0},{1})", width, height); 
         window->GetState2d().Size().Set(width, height);
         window->GetState2d().Projection().SetOrtho(0, width, 0, height, -1, 1);
+        window->GetState3d().Size().Set(width, height);
+//        window->GetState2d().Projection().SetOrtho(0, width, 0, height, -1, 1);
+        window->GetState3d().Projection().SetPerspective(1.2, width*1.0/height, 0.1, 100);
+        window->GetState3d().View().SetLookAt({0,0,-1},{0,0,0},{0,1,0});
     };
     void scroll_callback(const std::shared_ptr<OpenGL::Window>& window, double x, double y) override { window->SetTitle("scroll_callback(...,{0},{1})", x, y); };
     void refresh_callback(const std::shared_ptr<OpenGL::Window>& window) override { window->SetTitle("refresh_callback(...)"); };
@@ -69,15 +77,17 @@ public:
     int Run();
 
     void AddShaders();
-
+    void AddShapes();
 private:
     enum class ShaderId
     {
         two_d = 1,
+        three_d = 2,
     };
 
     OpenGL::Window mainWindow;
     std::map<ShaderId,OpenGL::Shader> m_shaders;
+    std::vector<Shape> m_shapes;
 };
 
 int UI::Run()
@@ -95,6 +105,7 @@ int UI::Run()
 void UI::AddShaders()
 {
     m_shaders.emplace(ShaderId::two_d, OpenGL::Shader::LoadFromResource("2d"));
+    m_shaders.emplace(ShaderId::three_d, OpenGL::Shader::LoadFromResource("3d"));
 }
 
 void UI::ContextInit(const std::shared_ptr<OpenGL::Window>& window)
@@ -103,14 +114,13 @@ void UI::ContextInit(const std::shared_ptr<OpenGL::Window>& window)
     GLfloat light_position[] = { 4.0, 4.0, 4.0, 0.0 };
     GLCHECK(glClearColor(0.1, 0.1, 0.1, 1.0));
 
-    GLCHECK(glFrontFace(GL_CCW));
-    GLCHECK(glEnable(GL_CULL_FACE));
+//    GLCHECK(glFrontFace(GL_CCW));
+//    GLCHECK(glEnable(GL_CULL_FACE));
     GLCHECK(glEnable(GL_DEPTH_TEST));
     GLCHECK(glActiveTexture(GL_TEXTURE0));
     GLCHECK(glEnable(GL_BLEND));
     GLCHECK(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
     GLCHECK(glBlendEquation(GL_FUNC_ADD));
- // GLCHECK(glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE));
     // glDisable(GL_STENCIL_TEST);
     // glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
     // glStencilMask(0x00);
@@ -187,6 +197,55 @@ void UI::Draw2D(const std::shared_ptr<OpenGL::Window>& window)
 
 void UI::Draw3D(const std::shared_ptr<OpenGL::Window>& window)
 {
+    GLuint VBO, VAO;
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+    // bind the Vertex Array Object first, then bind and set vertex buffer(s), and then configure vertex attributes(s).
+    GLCHECK(glBindVertexArray(VAO));
+    GLCHECK(glBindBuffer(GL_ARRAY_BUFFER, VBO));
+
+    // std::vector<float> vertices = 
+    // {
+    //    -0.5, -0.3, 1,
+    //     0.5, -0.3, 1,
+    //      0,   0.5, 1,
+    // };
+
+    // draw the shapes
+    GLCHECK(glEnable(GL_DEPTH_TEST));
+    for(auto shape:m_shapes)
+    {
+        auto vertices = shape.Draw();
+        GLCHECK(glBufferData(GL_ARRAY_BUFFER, vertices.size()*sizeof(vertices.front()), vertices.data(), GL_STATIC_DRAW));
+
+        GLCHECK(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0));
+        GLCHECK(glEnableVertexAttribArray(0));
+
+        // note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
+        GLCHECK(glBindBuffer(GL_ARRAY_BUFFER, 0)); 
+
+        // You can unbind the VAO afterwards so other VAO calls won't accidentally modify this VAO, but this rarely happens. Modifying other
+        // VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
+        GLCHECK(glBindVertexArray(0)); 
+
+        auto uniforms = m_shaders[ShaderId::three_d].Use("model","view","projection","color");
+        RGBColorf color(0xFF4040);
+        auto & state3d = window->GetState3d();
+        state3d.Model().ApplyAsUniform(uniforms.at(0));
+        state3d.View().ApplyAsUniform(uniforms.at(1));
+        state3d.Projection().ApplyAsUniform(uniforms.at(2));
+        GLCHECK(glUniform3f(uniforms.at(3), color.R, color.G, color.B)); // color
+
+        GLCHECK(glBindVertexArray(VAO)); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
+        GLCHECK(glDrawArrays(GL_TRIANGLES, 0, vertices.size()/3));
+    }
+    GLCHECK(glDeleteVertexArrays(1, &VAO));
+    GLCHECK(glDeleteBuffers(1, &VBO));
+}
+
+void UI::AddShapes()
+{
+    m_shapes.emplace_back(Geometry::Shape::Construct::Cube(0.5));
 }
 
 void InitializeLogger()

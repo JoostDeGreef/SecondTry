@@ -2,6 +2,7 @@
 project(OpenGLPlayground)
 
 link_libraries(OpenGL
+               Geometry
                ${CMAKE_DL_LIBS})
 
 add_executable(${PROJECT_NAME}
