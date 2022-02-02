@@ -72,6 +72,24 @@ double Shape::CalculateSurface() const
     return res;
 }
 
+Shape & Shape::Translate(const Core::Vector3d & translation)
+{
+   for(auto & node:m_nodes)
+   {
+       node += translation;
+   }
+   return *this;
+}
+
+Shape & Shape::Rotate(const Core::Quat & rotation,const Core::Vector3d & center)
+{
+   for(auto & node:m_nodes)
+   {
+       node = center+rotation.Transform(node-center);
+   }
+   return *this;
+}
+
 std::vector<float> Shape::Draw() const
 {
     std::vector<float> res;
@@ -84,6 +102,28 @@ std::vector<float> Shape::Draw() const
             res.push_back(n[0]);
             res.push_back(n[1]);
             res.push_back(n[2]);
+        }
+    }
+    return res;
+}
+
+std::vector<float> Shape::DrawWithNormals() 
+{
+    std::vector<float> res;
+    res.reserve(m_surface.size()*3*3*2);
+    for(auto & face:m_surface)
+    {
+        // TODO: use vertex normals when present
+        auto & normal = face->CalcNormal();
+        for(size_t i=0;i<3;++i)
+        {
+            auto & n = *face->GetEdge(i)->Start();
+            res.push_back(n[0]);
+            res.push_back(n[1]);
+            res.push_back(n[2]);
+            res.push_back(normal[0]);
+            res.push_back(normal[1]);
+            res.push_back(normal[2]);
         }
     }
     return res;

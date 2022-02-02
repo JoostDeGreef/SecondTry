@@ -131,6 +131,16 @@ OpenGL::Mat4 & OpenGL::Mat4::Translate(
     return M;
 }
 
+Mat4 Mat4::Translation(
+    const vector_type & translation)
+{
+    auto M = Mat4::Identity();
+    M[12] += translation[0];
+    M[13] += translation[1];
+    M[14] += translation[2];
+    return M;
+}
+
 const float * OpenGL::Mat4::glData() const
 {
     return Raw();

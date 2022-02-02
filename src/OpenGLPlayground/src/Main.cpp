@@ -62,7 +62,6 @@ public:
         window->GetState2d().Size().Set(width, height);
         window->GetState2d().Projection().SetOrtho(0, width, 0, height, -1, 1);
         window->GetState3d().Size().Set(width, height);
-//        window->GetState2d().Projection().SetOrtho(0, width, 0, height, -1, 1);
         window->GetState3d().Projection().SetPerspective(1.2, width*1.0/height, 0.1, 100);
         window->GetState3d().View().SetLookAt({0,0,-1},{0,0,0},{0,1,0});
     };
@@ -83,6 +82,7 @@ private:
     {
         two_d = 1,
         three_d = 2,
+        three_d_phong = 3,
     };
 
     OpenGL::Window mainWindow;
@@ -106,16 +106,16 @@ void UI::AddShaders()
 {
     m_shaders.emplace(ShaderId::two_d, OpenGL::Shader::LoadFromResource("2d"));
     m_shaders.emplace(ShaderId::three_d, OpenGL::Shader::LoadFromResource("3d"));
+    m_shaders.emplace(ShaderId::three_d_phong, OpenGL::Shader::LoadFromResource("3d_phong"));
 }
 
 void UI::ContextInit(const std::shared_ptr<OpenGL::Window>& window)
 {
     AddShaders();
-    GLfloat light_position[] = { 4.0, 4.0, 4.0, 0.0 };
     GLCHECK(glClearColor(0.1, 0.1, 0.1, 1.0));
 
-//    GLCHECK(glFrontFace(GL_CCW));
-//    GLCHECK(glEnable(GL_CULL_FACE));
+    // GLCHECK(glFrontFace(GL_CCW));
+    // GLCHECK(glEnable(GL_CULL_FACE));
     GLCHECK(glEnable(GL_DEPTH_TEST));
     GLCHECK(glActiveTexture(GL_TEXTURE0));
     GLCHECK(glEnable(GL_BLEND));
@@ -204,21 +204,14 @@ void UI::Draw3D(const std::shared_ptr<OpenGL::Window>& window)
     GLCHECK(glBindVertexArray(VAO));
     GLCHECK(glBindBuffer(GL_ARRAY_BUFFER, VBO));
 
-    // std::vector<float> vertices = 
-    // {
-    //    -0.5, -0.3, 1,
-    //     0.5, -0.3, 1,
-    //      0,   0.5, 1,
-    // };
-
     // draw the shapes
     GLCHECK(glEnable(GL_DEPTH_TEST));
     for(auto shape:m_shapes)
     {
-        auto vertices = shape.Draw();
+        auto vertices = shape.DrawWithNormals();
         GLCHECK(glBufferData(GL_ARRAY_BUFFER, vertices.size()*sizeof(vertices.front()), vertices.data(), GL_STATIC_DRAW));
 
-        GLCHECK(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0));
+        GLCHECK(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0));
         GLCHECK(glEnableVertexAttribArray(0));
 
         // note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
@@ -228,16 +221,20 @@ void UI::Draw3D(const std::shared_ptr<OpenGL::Window>& window)
         // VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
         GLCHECK(glBindVertexArray(0)); 
 
-        auto uniforms = m_shaders[ShaderId::three_d].Use("model","view","projection","color");
+        auto uniforms = m_shaders[ShaderId::three_d_phong].Use("model","view","projection","color","lightPos","lightColor");
         RGBColorf color(0xFF4040);
+        RGBColorf lightColor(0xFFFFFF);
+        Core::Vector3d lightPos(0,0,10);
         auto & state3d = window->GetState3d();
         shape.Model().ApplyAsUniform(uniforms.at(0));
         state3d.View().ApplyAsUniform(uniforms.at(1));
         state3d.Projection().ApplyAsUniform(uniforms.at(2));
         GLCHECK(glUniform3f(uniforms.at(3), color.R, color.G, color.B)); // color
+        GLCHECK(glUniform3f(uniforms.at(4), lightPos[0], lightPos[1], lightPos[2])); // light pos
+        GLCHECK(glUniform3f(uniforms.at(5), lightColor.R, lightColor.G, lightColor.B)); // light color
 
         GLCHECK(glBindVertexArray(VAO)); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
-        GLCHECK(glDrawArrays(GL_TRIANGLES, 0, vertices.size()/3));
+        GLCHECK(glDrawArrays(GL_TRIANGLES, 0, vertices.size()/6)); // /6 => vertex+normal
     }
     GLCHECK(glDeleteVertexArrays(1, &VAO));
     GLCHECK(glDeleteBuffers(1, &VBO));
@@ -245,8 +242,8 @@ void UI::Draw3D(const std::shared_ptr<OpenGL::Window>& window)
 
 void UI::AddShapes()
 {
-    m_shapes.emplace_back(Geometry::Shape::Construct::Cube(0.5));
-    m_shapes.back().Model().Translate({-.25,-.25,-.25});
+    m_shapes.emplace_back(Geometry::Shape::Construct::Cube(0.3),Mat4::Translation({-.4,0,0}));
+    m_shapes.back().Translate({-.15,-.15,-.15});
 }
 
 void InitializeLogger()

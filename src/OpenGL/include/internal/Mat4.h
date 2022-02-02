@@ -51,6 +51,8 @@ namespace OpenGL
 
         Mat4 & Translate(
             const vector_type & translation);
+        static Mat4 Translation(
+            const vector_type & translation);
 
         void ApplyAsUniform(GLuint uniform) const;
     };

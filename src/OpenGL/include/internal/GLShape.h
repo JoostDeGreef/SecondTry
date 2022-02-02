@@ -5,9 +5,9 @@ namespace OpenGL
     class GLShape : public Geometry::Shape
     {
     public:
-        GLShape(Geometry::Shape && shape)
+        GLShape(Geometry::Shape && shape,const Mat4 model = Mat4::Identity())
             : Geometry::Shape(shape)
-            , m_model(Mat4::Identity())
+            , m_model(model)
         {}
 
         Mat4 & Model()

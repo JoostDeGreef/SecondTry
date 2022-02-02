@@ -14,9 +14,13 @@ public:
    
     // return the shape as a sequence of triangle vertices
     std::vector<float> Draw() const;
+    std::vector<float> DrawWithNormals();
     
     double CalculateVolume() const;
     double CalculateSurface() const;
+
+    Shape & Translate(const Core::Vector3d & translation);
+    Shape & Rotate(const Core::Quat & rotation,const Core::Vector3d & center = Core::Vector3d(0,0,0));
 private:
     // The shape owns the memory stores for all the objects which define it
     Core::SmartPtrStore<Core::Vector3d> m_normals;

@@ -338,6 +338,7 @@ public:
         {
             auto res = new (m_free.back()) object_type_wrapper(this, args...);
             m_free.pop_back();
+            m_used.emplace(res);
             return OwnedPtr(res);
         }
         else
@@ -349,15 +350,52 @@ public:
         }
     }
 
+    // iterator over the used objects in the store.
+    // mainly for use by store owners to update all objects
+    class UsedPtrIterator
+    {
+    public:
+        UsedPtrIterator(typename std::unordered_set<object_type_wrapper *>::iterator && iter)
+            : m_iter(std::move(iter))
+        {}
+
+        bool operator != (const UsedPtrIterator & other)
+        {
+            return m_iter != other.m_iter;
+        }
+
+        void operator ++ ()
+        {
+            m_iter++;
+        }
+
+        object_type & operator * ()
+        {
+            return (*m_iter)->Object();
+        }
+    private:
+        typename std::unordered_set<object_type_wrapper *>::iterator m_iter;
+    };
+
+    UsedPtrIterator begin()
+    {
+        return m_used.begin();
+    }
+    UsedPtrIterator end()
+    {
+        return m_used.end();
+    }
 protected:
     void UsedToFree(object_type_wrapper * otw)
     {
         otw->Object().~T();
         m_free.emplace_back(otw);
+        m_used.erase(otw);
     }
     void UsedToLimbo(object_type_wrapper * otw)
     {
         ++m_limbo;
+        m_used.erase(otw);
     }
     void LimboToFree(object_type_wrapper * otw)
     {
@@ -458,6 +496,7 @@ protected:
 private:
     std::vector<object_type_wrapper *> m_blocks;
     std::vector<object_type_wrapper *> m_free;
+    std::unordered_set<object_type_wrapper *> m_used;
     size_t m_limbo = 0;
 };
 
