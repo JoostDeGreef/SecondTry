@@ -87,7 +87,7 @@ private:
 
     OpenGL::Window mainWindow;
     std::map<ShaderId,OpenGL::Shader> m_shaders;
-    std::vector<Shape> m_shapes;
+    std::vector<OpenGL::GLShape> m_shapes;
 };
 
 int UI::Run()
@@ -231,7 +231,7 @@ void UI::Draw3D(const std::shared_ptr<OpenGL::Window>& window)
         auto uniforms = m_shaders[ShaderId::three_d].Use("model","view","projection","color");
         RGBColorf color(0xFF4040);
         auto & state3d = window->GetState3d();
-        state3d.Model().ApplyAsUniform(uniforms.at(0));
+        shape.Model().ApplyAsUniform(uniforms.at(0));
         state3d.View().ApplyAsUniform(uniforms.at(1));
         state3d.Projection().ApplyAsUniform(uniforms.at(2));
         GLCHECK(glUniform3f(uniforms.at(3), color.R, color.G, color.B)); // color
@@ -246,6 +246,7 @@ void UI::Draw3D(const std::shared_ptr<OpenGL::Window>& window)
 void UI::AddShapes()
 {
     m_shapes.emplace_back(Geometry::Shape::Construct::Cube(0.5));
+    m_shapes.back().Model().Translate({-.25,-.25,-.25});
 }
 
 void InitializeLogger()

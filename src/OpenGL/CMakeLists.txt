@@ -4,6 +4,7 @@ project(OpenGL VERSION 1.0.0 DESCRIPTION "OpenGL functions")
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
 link_libraries(Core
+               Geometry
                fmt
                glad
                glfw
@@ -29,9 +30,11 @@ endif()
 
 add_library (${PROJECT_NAME}
              "src/Font.cpp" 
+             "src/Mat4.cpp"
              "src/Menu.cpp"             
              "src/OpenGL.cpp"
              "src/Shader.cpp"
+             "src/State.cpp"
              "src/Window.cpp"
              ${OSSPECIFIC})
 

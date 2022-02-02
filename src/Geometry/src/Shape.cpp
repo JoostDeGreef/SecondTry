@@ -198,3 +198,9 @@ Shape Shape::Construct::Cylinder(const double length, double outerRadius, double
     
     return res;
 }
+
+Shape Shape::Construct::Extrude(const TriangulatedPolygon2D & polygon, const double height)
+{
+    // TODO
+    return Cube(1);
+}

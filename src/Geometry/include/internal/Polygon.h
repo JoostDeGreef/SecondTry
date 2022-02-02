@@ -15,20 +15,7 @@ public:
     void AddNode(const ARGS & ... args)
     {
         m_nodes.emplace_back(args...);
-        if(m_nodes.back()[1]<m_nodes[m_southEast][1])
-        {
-            m_southEast = m_nodes.size()-1;
-        }
-        else if(m_nodes.back()[1]>m_nodes[m_southEast][1])
-        {
-        }
-        else // =
-        {
-            if(m_nodes.back()[0]<=m_nodes[m_southEast][0])
-            {
-                m_southEast = m_nodes.size()-1;
-            }
-        }
+        UpdateSouthEast();
     }
 
     // returns true if the polygon is defined clockwise,
@@ -38,16 +25,16 @@ public:
 private:
     std::vector<Core::Vector2d> m_nodes;
     size_t m_southEast;
+
+    void UpdateSouthEast();
 };
 
-
+// class which will hold a triangulated polygon in x-y (z=0),
+// defined by edges
 class TriangulatedPolygon2D
 {
 public:
-    TriangulatedPolygon2D(const Polygon2D & polygon2D)
-    {
-
-    }
+    TriangulatedPolygon2D(const Polygon2D & polygon2D);
 private:
     Core::SmartPtrStore<Node> m_nodesStore;
     Core::SmartPtrStore<Edge> m_edgesStore;

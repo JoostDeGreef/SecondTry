@@ -7,7 +7,7 @@ public:
     Shape();
     Shape(const Shape & other);
 
-    ~Shape();
+    virtual ~Shape();
 
     Shape & Copy(const Shape & other);
     void Clear();
@@ -94,6 +94,9 @@ public:
         // construct a cilinder at 0,0,0 with 'length' in the z directions and an aproximated radius between 'outerRadius' and 'innerRadius'
         // note: a negative inner radius means it's a fraction of the outer radius
         static Shape Cylinder(const double length, double outerRadius, double innerRadius = -0.95);
+
+        // extrude the polygon in the z direction
+        static Shape Extrude(const TriangulatedPolygon2D & polygon, const double height);
     };
 };
 
