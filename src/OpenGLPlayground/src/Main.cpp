@@ -211,8 +211,13 @@ void UI::Draw3D(const std::shared_ptr<OpenGL::Window>& window)
         auto vertices = shape.DrawWithNormals();
         GLCHECK(glBufferData(GL_ARRAY_BUFFER, vertices.size()*sizeof(vertices.front()), vertices.data(), GL_STATIC_DRAW));
 
-        GLCHECK(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0));
+        // vertex
+        GLCHECK(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(vertices.front()), (void*)(0 * sizeof(vertices.front()))));
         GLCHECK(glEnableVertexAttribArray(0));
+
+        // normal
+        GLCHECK(glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(vertices.front()), (void*)(3 * sizeof(vertices.front()))));
+        GLCHECK(glEnableVertexAttribArray(1));
 
         // note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
         GLCHECK(glBindBuffer(GL_ARRAY_BUFFER, 0)); 
@@ -224,7 +229,7 @@ void UI::Draw3D(const std::shared_ptr<OpenGL::Window>& window)
         auto uniforms = m_shaders[ShaderId::three_d_phong].Use("model","view","projection","color","lightPos","lightColor");
         RGBColorf color(0xFF4040);
         RGBColorf lightColor(0xFFFFFF);
-        Core::Vector3d lightPos(0,0,10);
+        Core::Vector3d lightPos(0,0,-10);
         auto & state3d = window->GetState3d();
         shape.Model().ApplyAsUniform(uniforms.at(0));
         state3d.View().ApplyAsUniform(uniforms.at(1));
@@ -242,7 +247,7 @@ void UI::Draw3D(const std::shared_ptr<OpenGL::Window>& window)
 
 void UI::AddShapes()
 {
-    m_shapes.emplace_back(Geometry::Shape::Construct::Cube(0.3),Mat4::Translation({-.4,0,0}));
+    m_shapes.emplace_back(Geometry::Shape::Construct::Cube(0.3),Mat4::Translation({-.4,.2,0}));
     m_shapes.back().Translate({-.15,-.15,-.15});
 }
 

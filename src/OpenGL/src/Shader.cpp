@@ -9,6 +9,7 @@ namespace Shaders
 
 #include "Shaders/2d.cpp"
 #include "Shaders/3d.cpp"
+#include "Shaders/3dphong.cpp"
 #include "Shaders/text.cpp"
 
         return shaders;
