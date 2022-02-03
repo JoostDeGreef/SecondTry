@@ -53,6 +53,10 @@ namespace OpenGL
             const vector_type & translation);
         static Mat4 Translation(
             const vector_type & translation);
+        
+        vector_type GetTranslation() const;
+
+        Mat4 Rotated(const Core::Quat & rotation) const;
 
         void ApplyAsUniform(GLuint uniform) const;
     };

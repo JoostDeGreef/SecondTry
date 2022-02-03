@@ -16,6 +16,7 @@ public:
     UI()
         : CallbackHandler()
         , mainWindow(*this, "Test window 1", Window::Option::HasCloseButton)
+        , m_mouseRotation()
     {
         AddShapes();
     }
@@ -44,7 +45,20 @@ public:
     };
     void close_callback(const std::shared_ptr<OpenGL::Window>& window) override { window->SetTitle("close_callback(...)"); };
     void content_scale_callback(const std::shared_ptr<OpenGL::Window>& window, float xscale, float yscale) override { window->SetTitle("content_scale_callback(...,{0},{1})", xscale, yscale); };
-    void cursor_pos_callback(const std::shared_ptr<OpenGL::Window>& window, double xpos, double ypos) override { window->SetTitle("cursor_pos_callback(...,{0},{1})", xpos, ypos); };
+    void cursor_pos_callback(const std::shared_ptr<OpenGL::Window>& window, double xpos, double ypos) override 
+    { 
+        window->SetTitle("cursor_pos_callback(...,{0},{1})", xpos, ypos); 
+        if(m_mousedown)
+        {
+            int dx = xpos-m_xpos;
+            int dy = ypos-m_ypos;
+            Quat qx({1,0,0},dy*4.1/m_height);
+            Quat qy({0,1,0},-dx*4.1/m_width);
+            m_mouseRotation *= qx * qy;
+        }
+        m_xpos = xpos;
+        m_ypos = ypos;
+    };
     void error_callback(const std::shared_ptr<OpenGL::Window>& window, int error, const char* description) override 
     { 
         LogError("error_callback(...,{0},{1})", error, description); 
@@ -54,15 +68,27 @@ public:
     void iconify_callback(const std::shared_ptr<OpenGL::Window>& window, int iconified) override { window->SetTitle("iconify_callback(...,{0})", iconified); };
     void key_callback(const std::shared_ptr<OpenGL::Window>& window, int key, int scancode, int action, int mods) override { window->SetTitle("key_callback(...,{0},{1},{2},{3})", key, scancode, action, mods); };
     void maximize_callback(const std::shared_ptr<OpenGL::Window>& window, int maximized) override { window->SetTitle("maximize_callback(...,{0})", maximized); };
-    void mouse_button_callback(const std::shared_ptr<OpenGL::Window>& window, int button, int action, int mods) override { window->SetTitle("mouse_button_callback(...,{0},{1},{2})", button, action, mods); };
-    void pos_callback(const std::shared_ptr<OpenGL::Window>& window, int xpos, int ypos) override { window->SetTitle("pos_callback(...,{0},{1})", xpos,ypos); };
+    void mouse_button_callback(const std::shared_ptr<OpenGL::Window>& window, int button, int action, int mods) override 
+    { 
+        window->SetTitle("mouse_button_callback(...,{0},{1},{2})", button, action, mods); 
+        if (button == GLFW_MOUSE_BUTTON_LEFT)
+        {
+            m_mousedown = (action == GLFW_PRESS);
+        } 
+    };
+    void pos_callback(const std::shared_ptr<OpenGL::Window>& window, int xpos, int ypos) override 
+    { 
+        window->SetTitle("pos_callback(...,{0},{1})", xpos,ypos); 
+    };
     void size_callback(const std::shared_ptr<OpenGL::Window>& window, int width, int height) override 
     { 
         window->SetTitle("size_callback(...,{0},{1})", width, height); 
+        m_width = width;
+        m_height = height;
         window->GetState2d().Size().Set(width, height);
         window->GetState2d().Projection().SetOrtho(0, width, 0, height, -1, 1);
         window->GetState3d().Size().Set(width, height);
-        window->GetState3d().Projection().SetPerspective(1.2, width*1.0/height, 0.1, 100);
+        window->GetState3d().Projection().SetPerspective(0.78, width*1.0/height, 0.1, 100);
         window->GetState3d().View().SetLookAt({0,0,-1},{0,0,0},{0,1,0});
     };
     void scroll_callback(const std::shared_ptr<OpenGL::Window>& window, double x, double y) override { window->SetTitle("scroll_callback(...,{0},{1})", x, y); };
@@ -88,6 +114,13 @@ private:
     OpenGL::Window mainWindow;
     std::map<ShaderId,OpenGL::Shader> m_shaders;
     std::vector<OpenGL::GLShape> m_shapes;
+
+    bool m_mousedown = false;
+    int m_xpos = 0;
+    int m_ypos = 0;
+    Quat m_mouseRotation;
+    int m_width;
+    int m_height;
 };
 
 int UI::Run()
@@ -226,17 +259,23 @@ void UI::Draw3D(const std::shared_ptr<OpenGL::Window>& window)
         // VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
         GLCHECK(glBindVertexArray(0)); 
 
-        auto uniforms = m_shaders[ShaderId::three_d_phong].Use("model","view","projection","color","lightPos","lightColor");
-        RGBColorf color(0xFF4040);
+        auto uniforms = m_shaders[ShaderId::three_d_phong].Use("model","view","projection","color","lightPos","lightColor","ambientStrength","ambientColor","reflectionStrength","reflectionColor");
+        RGBColorf color(0xFF0000);
         RGBColorf lightColor(0xFFFFFF);
-        Core::Vector3d lightPos(0,0,-10);
+        RGBColorf ambientColor(0xFF0000);
+        RGBColorf reflectionColor(0xFF0000);
+        Core::Vector3d lightPos(-10,0,-10);
         auto & state3d = window->GetState3d();
-        shape.Model().ApplyAsUniform(uniforms.at(0));
+        shape.Model().Rotated(m_mouseRotation).ApplyAsUniform(uniforms.at(0));
         state3d.View().ApplyAsUniform(uniforms.at(1));
         state3d.Projection().ApplyAsUniform(uniforms.at(2));
         GLCHECK(glUniform3f(uniforms.at(3), color.R, color.G, color.B)); // color
         GLCHECK(glUniform3f(uniforms.at(4), lightPos[0], lightPos[1], lightPos[2])); // light pos
         GLCHECK(glUniform3f(uniforms.at(5), lightColor.R, lightColor.G, lightColor.B)); // light color
+        GLCHECK(glUniform1f(uniforms.at(6), 0.1)); // ambient strength
+        GLCHECK(glUniform3f(uniforms.at(7), ambientColor.R, ambientColor.G, ambientColor.B)); // ambient color
+        GLCHECK(glUniform1f(uniforms.at(8), 0.1)); // reflection strength
+        GLCHECK(glUniform3f(uniforms.at(9), reflectionColor.R, reflectionColor.G, reflectionColor.B)); // reflection color
 
         GLCHECK(glBindVertexArray(VAO)); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
         GLCHECK(glDrawArrays(GL_TRIANGLES, 0, vertices.size()/6)); // /6 => vertex+normal
@@ -247,7 +286,7 @@ void UI::Draw3D(const std::shared_ptr<OpenGL::Window>& window)
 
 void UI::AddShapes()
 {
-    m_shapes.emplace_back(Geometry::Shape::Construct::Cube(0.3),Mat4::Translation({-.4,.2,0}));
+    m_shapes.emplace_back(Geometry::Shape::Construct::Cube(0.3),Mat4::Translation({-.4,.2,1}));
     m_shapes.back().Translate({-.15,-.15,-.15});
 }
 

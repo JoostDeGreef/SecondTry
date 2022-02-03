@@ -162,3 +162,27 @@ void OpenGL::Mat4::ApplyAsUniform(GLuint uniform) const
 {
     Helper::ApplyAsUniform(uniform,glData());
 }
+
+OpenGL::Mat4::vector_type OpenGL::Mat4::GetTranslation() const
+{
+    auto & M = *this;
+    return vector_type(M[12],M[13],M[14]);
+}
+
+OpenGL::Mat4 OpenGL::Mat4::Rotated(const Core::Quat & rotation) const
+{
+    Core::Quat::value_type R[9];
+    rotation.GetRotationMatrix3(R);
+    auto & M = *this;
+    auto res = *this;
+    res[ 0] = M[ 0]*R[0] + M[ 1]*R[3] + M[ 2]*R[6];
+    res[ 1] = M[ 0]*R[1] + M[ 1]*R[4] + M[ 2]*R[7];
+    res[ 2] = M[ 0]*R[2] + M[ 1]*R[5] + M[ 2]*R[8];
+    res[ 4] = M[ 4]*R[0] + M[ 5]*R[3] + M[ 6]*R[6];
+    res[ 5] = M[ 4]*R[1] + M[ 5]*R[4] + M[ 6]*R[7];
+    res[ 6] = M[ 4]*R[2] + M[ 5]*R[5] + M[ 6]*R[8];
+    res[ 8] = M[ 8]*R[0] + M[ 9]*R[3] + M[10]*R[6];
+    res[ 9] = M[ 8]*R[1] + M[ 9]*R[4] + M[10]*R[7];
+    res[10] = M[ 8]*R[2] + M[ 9]*R[5] + M[10]*R[8];
+    return res;
+}
