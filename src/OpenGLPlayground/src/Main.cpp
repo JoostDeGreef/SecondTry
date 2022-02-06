@@ -147,8 +147,8 @@ void UI::ContextInit(const std::shared_ptr<OpenGL::Window>& window)
     AddShaders();
     GLCHECK(glClearColor(0.1, 0.1, 0.1, 1.0));
 
-    // GLCHECK(glFrontFace(GL_CCW));
-    // GLCHECK(glEnable(GL_CULL_FACE));
+    GLCHECK(glFrontFace(GL_CCW));
+    GLCHECK(glEnable(GL_CULL_FACE));
     GLCHECK(glEnable(GL_DEPTH_TEST));
     GLCHECK(glActiveTexture(GL_TEXTURE0));
     GLCHECK(glEnable(GL_BLEND));
@@ -231,16 +231,15 @@ void UI::Draw2D(const std::shared_ptr<OpenGL::Window>& window)
 void UI::Draw3D(const std::shared_ptr<OpenGL::Window>& window)
 {
     GLuint VBO, VAO;
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    // bind the Vertex Array Object first, then bind and set vertex buffer(s), and then configure vertex attributes(s).
-    GLCHECK(glBindVertexArray(VAO));
-    GLCHECK(glBindBuffer(GL_ARRAY_BUFFER, VBO));
 
     // draw the shapes
     GLCHECK(glEnable(GL_DEPTH_TEST));
     for(auto shape:m_shapes)
     {
+        GLCHECK(glGenVertexArrays(1, &VAO));
+        GLCHECK(glGenBuffers(1, &VBO));
+        GLCHECK(glBindVertexArray(VAO));
+        GLCHECK(glBindBuffer(GL_ARRAY_BUFFER, VBO));
         auto vertices = shape.DrawWithNormals();
         GLCHECK(glBufferData(GL_ARRAY_BUFFER, vertices.size()*sizeof(vertices.front()), vertices.data(), GL_STATIC_DRAW));
 
@@ -263,8 +262,8 @@ void UI::Draw3D(const std::shared_ptr<OpenGL::Window>& window)
         RGBColorf color(0xFF0000);
         RGBColorf lightColor(0xFFFFFF);
         RGBColorf ambientColor(0xFF0000);
-        RGBColorf reflectionColor(0xFF0000);
-        Core::Vector3d lightPos(-10,0,-10);
+        RGBColorf reflectionColor(0xFFFFFF);
+        Core::Vector3d lightPos(-2,0,-1);
         auto & state3d = window->GetState3d();
         shape.Model().Rotated(m_mouseRotation).ApplyAsUniform(uniforms.at(0));
         state3d.View().ApplyAsUniform(uniforms.at(1));
@@ -274,19 +273,25 @@ void UI::Draw3D(const std::shared_ptr<OpenGL::Window>& window)
         GLCHECK(glUniform3f(uniforms.at(5), lightColor.R, lightColor.G, lightColor.B)); // light color
         GLCHECK(glUniform1f(uniforms.at(6), 0.1)); // ambient strength
         GLCHECK(glUniform3f(uniforms.at(7), ambientColor.R, ambientColor.G, ambientColor.B)); // ambient color
-        GLCHECK(glUniform1f(uniforms.at(8), 0.1)); // reflection strength
+        GLCHECK(glUniform1f(uniforms.at(8), 0.2)); // reflection strength
         GLCHECK(glUniform3f(uniforms.at(9), reflectionColor.R, reflectionColor.G, reflectionColor.B)); // reflection color
 
         GLCHECK(glBindVertexArray(VAO)); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
         GLCHECK(glDrawArrays(GL_TRIANGLES, 0, vertices.size()/6)); // /6 => vertex+normal
+        GLCHECK(glDeleteVertexArrays(1, &VAO));
     }
-    GLCHECK(glDeleteVertexArrays(1, &VAO));
     GLCHECK(glDeleteBuffers(1, &VBO));
 }
 
 void UI::AddShapes()
 {
     m_shapes.emplace_back(Geometry::Shape::Construct::Cube(0.3),Mat4::Translation({-.4,.2,1}));
+    m_shapes.back().Translate({-.15,-.15,-.15});
+    m_shapes.emplace_back(Geometry::Shape::Construct::Cube(0.3),Mat4::Translation({-.1,.2,1}));
+    m_shapes.back().Translate({-.15,-.15,-.15});
+    m_shapes.emplace_back(Geometry::Shape::Construct::Cube(0.3),Mat4::Translation({0.2,.2,1}));
+    m_shapes.back().Translate({-.15,-.15,-.15});
+    m_shapes.emplace_back(Geometry::Shape::Construct::Cube(0.3),Mat4::Translation({0.5,.2,1}));
     m_shapes.back().Translate({-.15,-.15,-.15});
 }
 
