@@ -15,10 +15,13 @@ namespace OpenGL
         OpenGL::Mat4 & Projection() { return m_projection; }
         Core::Vector2f & Size() { return m_size; }
 
+        bool & RenderWireframe(bool wireframe) { m_wireframe = wireframe; return m_wireframe; };
+        bool & RenderWireframe() { return m_wireframe; };
     private:
         OpenGL::Mat4 m_model;
         OpenGL::Mat4 m_view;
         OpenGL::Mat4 m_projection;
         Core::Vector2f m_size;
+        bool m_wireframe = false;
     };
 }

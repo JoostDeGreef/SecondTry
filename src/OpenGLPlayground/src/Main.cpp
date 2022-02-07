@@ -90,6 +90,8 @@ public:
         window->GetState3d().Size().Set(width, height);
         window->GetState3d().Projection().SetPerspective(0.78, width*1.0/height, 0.1, 100);
         window->GetState3d().View().SetLookAt({0,0,-1},{0,0,0},{0,1,0});
+        window->GetState2d().RenderWireframe(false);
+        window->GetState3d().RenderWireframe(true);
     };
     void scroll_callback(const std::shared_ptr<OpenGL::Window>& window, double x, double y) override { window->SetTitle("scroll_callback(...,{0},{1})", x, y); };
     void refresh_callback(const std::shared_ptr<OpenGL::Window>& window) override { window->SetTitle("refresh_callback(...)"); };
@@ -185,6 +187,21 @@ void UI::Draw2D(const std::shared_ptr<OpenGL::Window>& window)
         box[0], box[1], 0.0,
     }; 
 
+    auto & state2d = window->GetState2d();
+    if(state2d.RenderWireframe())
+    {
+        // draw the shapes as wireframes
+        GLCHECK(glPolygonMode(GL_FRONT_AND_BACK, GL_LINE));
+        GLCHECK(glDisable(GL_DEPTH_TEST));
+        GLCHECK(glDisable(GL_CULL_FACE));
+    }
+    else
+    {
+        GLCHECK(glEnable(GL_CULL_FACE));
+        GLCHECK(glEnable(GL_DEPTH_TEST));
+        GLCHECK(glPolygonMode(GL_FRONT_AND_BACK, GL_FILL));
+    }
+
     GLuint VBO, VAO;
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
@@ -205,7 +222,6 @@ void UI::Draw2D(const std::shared_ptr<OpenGL::Window>& window)
 
     auto uniforms = m_shaders[ShaderId::two_d].Use("model","projection","color");
     RGBColorf color(0xFF0000);
-    auto & state2d = window->GetState2d();
     state2d.Model().ApplyAsUniform(uniforms.at(0));
     state2d.Projection().ApplyAsUniform(uniforms.at(1));
     GLCHECK(glUniform3f(uniforms.at(2), color.R, color.G, color.B)); // color
@@ -232,8 +248,22 @@ void UI::Draw3D(const std::shared_ptr<OpenGL::Window>& window)
 {
     GLuint VBO, VAO;
 
-    // draw the shapes
-    GLCHECK(glEnable(GL_DEPTH_TEST));
+    auto & state3d = window->GetState3d();
+    if(state3d.RenderWireframe())
+    {
+        // draw the shapes as wireframes
+        GLCHECK(glPolygonMode(GL_FRONT_AND_BACK, GL_LINE));
+        GLCHECK(glDisable(GL_DEPTH_TEST));
+        GLCHECK(glDisable(GL_CULL_FACE));
+    }
+    else
+    {
+        GLCHECK(glEnable(GL_CULL_FACE));
+        GLCHECK(glEnable(GL_DEPTH_TEST));
+        GLCHECK(glPolygonMode(GL_FRONT_AND_BACK, GL_FILL));
+    }
+
+    // GLCHECK(glEnable(GL_DEPTH_TEST));
     for(auto shape:m_shapes)
     {
         GLCHECK(glGenVertexArrays(1, &VAO));
@@ -264,7 +294,6 @@ void UI::Draw3D(const std::shared_ptr<OpenGL::Window>& window)
         RGBColorf ambientColor(0xFF0000);
         RGBColorf reflectionColor(0xFFFFFF);
         Core::Vector3d lightPos(-2,0,-1);
-        auto & state3d = window->GetState3d();
         shape.Model().Rotated(m_mouseRotation).ApplyAsUniform(uniforms.at(0));
         state3d.View().ApplyAsUniform(uniforms.at(1));
         state3d.Projection().ApplyAsUniform(uniforms.at(2));
@@ -279,8 +308,8 @@ void UI::Draw3D(const std::shared_ptr<OpenGL::Window>& window)
         GLCHECK(glBindVertexArray(VAO)); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
         GLCHECK(glDrawArrays(GL_TRIANGLES, 0, vertices.size()/6)); // /6 => vertex+normal
         GLCHECK(glDeleteVertexArrays(1, &VAO));
+        GLCHECK(glDeleteBuffers(1, &VBO));
     }
-    GLCHECK(glDeleteBuffers(1, &VBO));
 }
 
 void UI::AddShapes()

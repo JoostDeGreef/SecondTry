@@ -60,7 +60,7 @@ void main()
   }
 
   // Sum up the parts
-  vec3 result = color * ( ambient + diffuse ) + reflection * 0.5;
+  vec3 result = color * ( ambient + diffuse ) + reflection * 0.75;
   FragColor = vec4(result, 1.0);
 }
 )SRC";
