@@ -70,7 +70,7 @@ TEST_F(SmartPtrStoreTest, Copy)
     auto a = store0.Create(123);
     EXPECT_EQ(1,store0.UniqueObjects());
 
-    auto mapping = store1.Copy(store0);
+    auto mapping = store1.InsertCopy(store0);
     EXPECT_EQ(1,store1.UniqueObjects());
     auto b = mapping.begin()->second;
     EXPECT_EQ(123,*b);

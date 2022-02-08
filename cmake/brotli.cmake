@@ -6,7 +6,8 @@ FetchContent_Declare(
   brotli
  
   GIT_REPOSITORY https://github.com/google/brotli.git
-  GIT_TAG        master
+  GIT_TAG        v1.0.9
+# GIT_TAG        master
 
   SOURCE_DIR brotli-build
   BINARY_DIR brotli-build

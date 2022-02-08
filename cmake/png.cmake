@@ -6,7 +6,8 @@ FetchContent_Declare(
   png
  
   GIT_REPOSITORY https://github.com/glennrp/libpng.git
-  GIT_TAG        master
+  GIT_TAG        v1.6.37
+# GIT_TAG        master
 )
 
 MESSAGE(STATUS "
