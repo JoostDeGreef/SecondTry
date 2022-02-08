@@ -91,7 +91,7 @@ public:
         window->GetState3d().Projection().SetPerspective(0.78, width*1.0/height, 0.1, 100);
         window->GetState3d().View().SetLookAt({0,0,-1},{0,0,0},{0,1,0});
         window->GetState2d().RenderWireframe(false);
-        window->GetState3d().RenderWireframe(true);
+        window->GetState3d().RenderWireframe(false);
     };
     void scroll_callback(const std::shared_ptr<OpenGL::Window>& window, double x, double y) override { window->SetTitle("scroll_callback(...,{0},{1})", x, y); };
     void refresh_callback(const std::shared_ptr<OpenGL::Window>& window) override { window->SetTitle("refresh_callback(...)"); };

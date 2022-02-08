@@ -38,6 +38,16 @@ const Core::OwnedPtr<Node> & Edge::Start() const
     return m_start;
 }
 
+const Core::ViewedPtr<Edge> & Edge::Prev() const
+{
+    return m_prev;
+}
+
+const Core::ViewedPtr<Edge> & Edge::Next() const
+{
+    return m_next;
+}
+
 void Edge::SetStart(const Core::OwnedPtr<Node> & start) 
 { 
     m_start = start; 

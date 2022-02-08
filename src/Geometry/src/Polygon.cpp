@@ -54,10 +54,44 @@ void Polygon2D::UpdateSouthEast()
 TriangulatedPolygon2D::TriangulatedPolygon2D(const Polygon2D & polygon2D)
     : m_polygon2D(polygon2D)
 {
+    // helper for sorting nodes
+    struct NodeCmp
+    {
+        bool operator()(const Polygon2D::Node* a,const Polygon2D::Node* b) const
+        {
+            const auto & ax = a->m_vertex[0];
+            const auto & ay = a->m_vertex[1];
+            const auto & bx = b->m_vertex[0];
+            const auto & by = b->m_vertex[1];
+            if(ay < by) return true;
+            if(ay > by) return false;
+            if(ax < bx) return true;
+            return false;
+        }
+        bool operator()(const Node & a,const Node & b) const
+        {
+            const auto & ax = a[0];
+            const auto & ay = a[1];
+            const auto & bx = b[0];
+            const auto & by = b[1];
+            if(ay < by) return true;
+            if(ay > by) return false;
+            if(ax < bx) return true;
+            return false;
+        }
+    };
+    auto angle = [](const Core::Vector3d & a,const Core::Vector3d & b)
+    {
+        auto dot = a[0]*b[0] + a[1]*b[1];
+        auto det = a[0]*b[1] - a[1]*b[0];
+        return atan2(det, dot);
+    };
+
     // create 3D vertices in the x-y plane
     for(size_t i=0;i<polygon2D.m_nodes.size();++i)
     {
-        const auto & vertex = polygon2D.m_nodes[i].m_vertex; 
+        m_polygon2D.m_nodes[i].m_userdata = m_edges.size();
+        const auto & vertex = m_polygon2D.m_nodes[i].m_vertex; 
         m_edges.emplace_back();
         auto & edge = m_edges.back();
         edge->SetStart(m_nodesStore.Create(vertex[0],vertex[1],0.0));
@@ -70,6 +104,49 @@ TriangulatedPolygon2D::TriangulatedPolygon2D(const Polygon2D & polygon2D)
         m_edges[i1]->SetNext(m_edges[i2]);
         m_edges[i1]->SetPrev(m_edges[i0]);
         i0 = i1;
+    }
+    // give each node a type
+    // todo: combine this with the 'set edge next/prev' loop?
+    enum class NodeType
+    {
+        Start,
+        End,
+        Regular,
+        Split,
+        Merge
+    };
+    std::vector<NodeType> nodeTypes;
+    nodeTypes.resize(m_edges.size());
+    for(size_t i=0;i<m_edges.size();++i)
+    {
+        const auto & edge = m_edges[i];
+        const auto & node = *edge->Start();
+        const auto & prev = *edge->Prev()->Start();
+        const auto & next = *edge->Next()->Start();
+        if(NodeCmp()(node,prev) && NodeCmp()(node,next))
+        {
+            // todo: check this
+            nodeTypes[i] = angle(node-prev,next-node)<0 ? NodeType::Start : NodeType::Split;
+        }
+        else if (NodeCmp()(prev,node) && NodeCmp()(next,node))
+        {
+            // todo: check this
+            nodeTypes[i] = angle(node-prev,next-node)<0 ? NodeType::End : NodeType::Merge;
+        }
+        else
+        {
+            nodeTypes[i] = NodeType::Regular;
+        }
+    }
+    // split into y-monotone polygons
+    std::set<Polygon2D::Node*,NodeCmp> Q;
+    for(auto & node:m_polygon2D.m_nodes)
+    {
+        Q.emplace(&node);
+    }
+    for(auto * node:Q)
+    {
+        // todo: handle node by type
     }
     // TODO
     //  - split into monotone polygons

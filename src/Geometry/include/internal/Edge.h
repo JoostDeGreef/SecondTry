@@ -21,6 +21,8 @@ public:
     double CalcLength();
 
     const Core::OwnedPtr<Node> & Start() const;
+    const Core::ViewedPtr<Edge> & Prev() const;
+    const Core::ViewedPtr<Edge> & Next() const;
 
     void SetFace(const Core::ViewedPtr<Face> & face);
     void SetNext(const Core::ViewedPtr<Edge> & next);

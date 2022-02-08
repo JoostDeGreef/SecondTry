@@ -52,6 +52,7 @@ public:
         Core::Vector2d m_normal1;
         Core::Vector2d m_normal2;
         Normal m_normal;
+        int m_userdata = -1;
     };
 
     Polygon2D()
