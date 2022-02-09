@@ -54,19 +54,34 @@ void Polygon2D::UpdateSouthEast()
 TriangulatedPolygon2D::TriangulatedPolygon2D(const Polygon2D & polygon2D)
     : m_polygon2D(polygon2D)
 {
+    enum class NodeType
+    {
+        Start,
+        End,
+        Regular,
+        Split,
+        Merge
+    };
+    struct NodeInfo
+    {
+        NodeInfo(const size_t index,
+                 const Geometry::Node & node,
+                 const NodeType nodeType)
+            : m_index(index)
+            , m_node(node)
+            , m_type(nodeType)
+        {}
+        const size_t m_index;
+        const Geometry::Node m_node;
+        const NodeType m_type;
+    };
     // helper for sorting nodes
     struct NodeCmp
     {
-        bool operator()(const Polygon2D::Node* a,const Polygon2D::Node* b) const
+        bool operator()(const NodeInfo & a,
+                        const NodeInfo & b) const
         {
-            const auto & ax = a->m_vertex[0];
-            const auto & ay = a->m_vertex[1];
-            const auto & bx = b->m_vertex[0];
-            const auto & by = b->m_vertex[1];
-            if(ay < by) return true;
-            if(ay > by) return false;
-            if(ax < bx) return true;
-            return false;
+            return NodeCmp()(a.m_node,b.m_node);
         }
         bool operator()(const Node & a,const Node & b) const
         {
@@ -90,7 +105,6 @@ TriangulatedPolygon2D::TriangulatedPolygon2D(const Polygon2D & polygon2D)
     // create 3D vertices in the x-y plane
     for(size_t i=0;i<polygon2D.m_nodes.size();++i)
     {
-        m_polygon2D.m_nodes[i].m_userdata = m_edges.size();
         const auto & vertex = m_polygon2D.m_nodes[i].m_vertex; 
         m_edges.emplace_back();
         auto & edge = m_edges.back();
@@ -107,46 +121,64 @@ TriangulatedPolygon2D::TriangulatedPolygon2D(const Polygon2D & polygon2D)
     }
     // give each node a type
     // todo: combine this with the 'set edge next/prev' loop?
-    enum class NodeType
-    {
-        Start,
-        End,
-        Regular,
-        Split,
-        Merge
-    };
-    std::vector<NodeType> nodeTypes;
-    nodeTypes.resize(m_edges.size());
+    std::set<NodeInfo,NodeCmp> Q;
+    std::unordered_map<size_t,const NodeInfo*> Qi;
     for(size_t i=0;i<m_edges.size();++i)
     {
         const auto & edge = m_edges[i];
         const auto & node = *edge->Start();
         const auto & prev = *edge->Prev()->Start();
         const auto & next = *edge->Next()->Start();
+        NodeType nodeType = NodeType::Regular;
         if(NodeCmp()(node,prev) && NodeCmp()(node,next))
         {
             // todo: check this
-            nodeTypes[i] = angle(node-prev,next-node)<0 ? NodeType::Start : NodeType::Split;
+            nodeType = angle(node-prev,next-node)<0 ? NodeType::Start : NodeType::Split;
         }
         else if (NodeCmp()(prev,node) && NodeCmp()(next,node))
         {
             // todo: check this
-            nodeTypes[i] = angle(node-prev,next-node)<0 ? NodeType::End : NodeType::Merge;
+            nodeType = angle(node-prev,next-node)<0 ? NodeType::End : NodeType::Merge;
         }
-        else
-        {
-            nodeTypes[i] = NodeType::Regular;
-        }
+        auto iter = Q.emplace(i,node,nodeType);
+        Qi.emplace(i,&(*iter.first));
     }
     // split into y-monotone polygons
-    std::set<Polygon2D::Node*,NodeCmp> Q;
-    for(auto & node:m_polygon2D.m_nodes)
+    std::unordered_map<size_t,size_t> T; // edge, node
+    auto AddEdge = [&](const size_t a, const size_t b)
     {
-        Q.emplace(&node);
-    }
-    for(auto * node:Q)
+        //todo
+    };
+    for(const auto & nodeInfo:Q)
     {
         // todo: handle node by type
+        switch(nodeInfo.m_type)
+        {
+            case NodeType::Start:
+                T.emplace(nodeInfo.m_index,nodeInfo.m_index);
+                break;
+            case NodeType::End:
+                {
+                    auto iter = T.find(nodeInfo.m_index-1);
+                    if(iter != T.end())
+                    {
+                        if(Qi[iter->second]->m_type == NodeType::Merge)
+                        {
+                            AddEdge(nodeInfo.m_index,iter->second);
+                        }
+                        T.erase(iter);
+                    }
+                }
+                break;
+            case NodeType::Split:
+                break;
+            case NodeType::Regular:
+                break;
+            case NodeType::Merge:
+                break;
+            default:
+                break;
+        }
     }
     // TODO
     //  - split into monotone polygons
