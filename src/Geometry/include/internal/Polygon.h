@@ -59,7 +59,6 @@ public:
     {
         m_nodes.reserve(32);
     }
-    Polygon2D(const Polygon2D & polygon2D);
 
     // add nodes in the xy plane
     // if an edge has no normals defined at the vertices, the face normal will be used for the side faces.
@@ -91,7 +90,7 @@ public:
 
     // returns true if the polygon is defined clockwise,
     // see http://www.faqs.org/faqs/graphics/algorithms-faq/
-    bool IsClockwise() const;
+    bool IsCounterClockwise() const;
 
 private:
     std::vector<Node> m_nodes;
@@ -107,8 +106,6 @@ class TriangulatedPolygon2D
 public:
     TriangulatedPolygon2D(const Polygon2D & polygon2D);
 private:
-    Polygon2D m_polygon2D;
-
     Core::SmartPtrStore<Node> m_nodesStore;
     Core::SmartPtrStore<Edge> m_edgesStore;
     Core::SmartPtrStore<Core::Vector3d> m_normalsStore;

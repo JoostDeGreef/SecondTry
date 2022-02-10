@@ -3,32 +3,14 @@
 using namespace Core;
 using namespace Geometry;
 
-Polygon2D::Polygon2D(const Polygon2D & other)
-{
-    if(other.IsClockwise())
-    {
-        m_nodes = other.m_nodes;
-        m_southEast = other.m_southEast;
-    }
-    else
-    {
-        m_nodes.reserve(other.m_nodes.size());
-        for(auto iter = other.m_nodes.rbegin(); iter != other.m_nodes.rend(); ++iter)
-        {
-            m_nodes.emplace_back(*iter);
-        }
-        m_southEast = other.m_nodes.size()-other.m_southEast-1;
-    }
-}
-
-bool Polygon2D::IsClockwise() const
+bool Polygon2D::IsCounterClockwise() const
 {
     auto & a = m_southEast-1<0?m_nodes.back().m_vertex:m_nodes[m_southEast-1].m_vertex;
     auto & b = m_nodes[m_southEast].m_vertex;
     auto & c = m_southEast+1>=m_nodes.size()?m_nodes.front().m_vertex:m_nodes[m_southEast+1].m_vertex;
     auto A = b - a;
     auto B = c - b;
-    return A[0]*B[1] - A[1]*B[2] < 0;
+    return A[0]*B[1] - A[1]*B[2] > 0;
 }
 
 void Polygon2D::UpdateSouthEast()
@@ -52,38 +34,66 @@ void Polygon2D::UpdateSouthEast()
 }
 
 TriangulatedPolygon2D::TriangulatedPolygon2D(const Polygon2D & polygon2D)
-    : m_polygon2D(polygon2D)
 {
-    enum class NodeType
+    class Vertex
     {
-        Start,
-        End,
-        Regular,
-        Split,
-        Merge
-    };
-    struct NodeInfo
-    {
-        NodeInfo(const size_t index,
-                 const Geometry::Node & node,
-                 const NodeType nodeType)
-            : m_index(index)
-            , m_node(node)
-            , m_type(nodeType)
-        {}
-        const size_t m_index;
-        const Geometry::Node m_node;
-        const NodeType m_type;
-    };
-    // helper for sorting nodes
-    struct NodeCmp
-    {
-        bool operator()(const NodeInfo & a,
-                        const NodeInfo & b) const
+    public:
+        enum class Type
         {
-            return NodeCmp()(a.m_node,b.m_node);
+            Start,
+            End,
+            Regular,
+            Split,
+            Merge
+        };
+        Vertex(const Polygon2D::Node & node)
+            : m_node(node)
+            , m_type(Type::Regular)
+        {}
+        Core::Vector2d operator - (const Vertex & other)
+        {
+            return m_node.m_vertex - other.m_node.m_vertex;
         }
-        bool operator()(const Node & a,const Node & b) const
+
+        Polygon2D::Node m_node;
+        Type m_type;
+        size_t m_index;
+    };
+    std::vector<Vertex> vertices;
+    vertices.reserve(polygon2D.m_nodes.size());
+    if(polygon2D.IsCounterClockwise())
+    {
+        for(auto iter = polygon2D.m_nodes.begin(); iter != polygon2D.m_nodes.end(); ++iter)
+        {
+            vertices.emplace_back(*iter);
+        }
+    }
+    else
+    {
+        for(auto iter = polygon2D.m_nodes.rbegin(); iter != polygon2D.m_nodes.rend(); ++iter)
+        {
+            vertices.emplace_back(*iter);
+        }
+    }
+    for(size_t i=0;i<vertices.size();++i)
+    {
+        vertices[i].m_index = i;
+    }
+    // helper for sorting vertices
+    struct VertexCmp
+    {
+        bool operator()(const Vertex * a,
+                        const Vertex * b) const
+        {
+            return VertexCmp()(*a,*b);
+        }
+        bool operator()(const Vertex & a,
+                        const Vertex & b) const
+        {
+            return VertexCmp()(a.m_node.m_vertex,b.m_node.m_vertex);
+        }
+        bool operator()(const Vector2d & a,
+                        const Vector2d & b) const
         {
             const auto & ax = a[0];
             const auto & ay = a[1];
@@ -95,92 +105,151 @@ TriangulatedPolygon2D::TriangulatedPolygon2D(const Polygon2D & polygon2D)
             return false;
         }
     };
-    auto angle = [](const Core::Vector3d & a,const Core::Vector3d & b)
+    // calculate angle between two vectors
+    auto angle = [](const Core::Vector2d & a,const Core::Vector2d & b)
     {
         auto dot = a[0]*b[0] + a[1]*b[1];
         auto det = a[0]*b[1] - a[1]*b[0];
         return atan2(det, dot);
     };
+    // edges
+    class Edge
+    {
+    public:
+        Edge(const size_t node_a,const size_t node_b)
+            : m_node_a(node_a)
+            , m_node_b(node_b)
+        {}
 
-    // create 3D vertices in the x-y plane
-    for(size_t i=0;i<polygon2D.m_nodes.size();++i)
-    {
-        const auto & vertex = m_polygon2D.m_nodes[i].m_vertex; 
-        m_edges.emplace_back();
-        auto & edge = m_edges.back();
-        edge->SetStart(m_nodesStore.Create(vertex[0],vertex[1],0.0));
-    }
-    // set edge next/prev
-    size_t i0 = m_edges.size()-1;
-    for(size_t i1=0;i1<m_edges.size();++i1)
-    {
-        size_t i2 = (i1 + 1) % m_edges.size();
-        m_edges[i1]->SetNext(m_edges[i2]);
-        m_edges[i1]->SetPrev(m_edges[i0]);
-        i0 = i1;
-    }
+        size_t m_node_a;
+        size_t m_node_b;
+
+        size_t m_prev = -1;
+        size_t m_next = -1;
+        size_t m_twin = -1;
+    };
+    std::vector<Edge> edges; // predefined edges
+    std::set<Vertex*,VertexCmp> Q; // vertices sorted by y
     // give each node a type
-    // todo: combine this with the 'set edge next/prev' loop?
-    std::set<NodeInfo,NodeCmp> Q;
-    std::unordered_map<size_t,const NodeInfo*> Qi;
-    for(size_t i=0;i<m_edges.size();++i)
+    for(size_t i=0;i<vertices.size();++i)
     {
-        const auto & edge = m_edges[i];
-        const auto & node = *edge->Start();
-        const auto & prev = *edge->Prev()->Start();
-        const auto & next = *edge->Next()->Start();
-        NodeType nodeType = NodeType::Regular;
-        if(NodeCmp()(node,prev) && NodeCmp()(node,next))
+        size_t j = (i+1) % vertices.size();
+        auto & node = vertices[i];
+        auto & prev = vertices[(i+vertices.size()-1) % vertices.size()];
+        auto & next = vertices[j];
+        if(VertexCmp()(node,prev) && VertexCmp()(node,next))
         {
             // todo: check this
-            nodeType = angle(node-prev,next-node)<0 ? NodeType::Start : NodeType::Split;
+            node.m_type = angle(node-prev,next-node)<0 ? Vertex::Type::Start : Vertex::Type::Split;
         }
-        else if (NodeCmp()(prev,node) && NodeCmp()(next,node))
+        else if (VertexCmp()(prev,node) && VertexCmp()(next,node))
         {
             // todo: check this
-            nodeType = angle(node-prev,next-node)<0 ? NodeType::End : NodeType::Merge;
+            node.m_type = angle(node-prev,next-node)<0 ? Vertex::Type::End : Vertex::Type::Merge;
         }
-        auto iter = Q.emplace(i,node,nodeType);
-        Qi.emplace(i,&(*iter.first));
+        Q.emplace(&node);
+        edges.emplace_back(i,j);
     }
     // split into y-monotone polygons
-    std::unordered_map<size_t,size_t> T; // edge, node
+    std::unordered_map<size_t,size_t> T; // edge, helper vertex
     auto AddEdge = [&](const size_t a, const size_t b)
     {
-        //todo
+        edges.emplace_back(a,b);
     };
-    for(const auto & nodeInfo:Q)
+    auto SetHelper = [&](const size_t a, const size_t b)
     {
-        // todo: handle node by type
-        switch(nodeInfo.m_type)
+        T.emplace(a,b);
+    };
+    auto FindLeftEdge = [&](const size_t node)
+    {
+        //todo
+        return T.begin();
+    };
+    auto InteriorToTheLeft = [&](const size_t node)
+    {
+        // todo
+        return true;
+    };
+    for(auto & Vi:Q)
+    {
+        switch(Vi->m_type)
         {
-            case NodeType::Start:
-                T.emplace(nodeInfo.m_index,nodeInfo.m_index);
+            case Vertex::Type::Start:
+                SetHelper(Vi->m_index,Vi->m_index);
                 break;
-            case NodeType::End:
+            case Vertex::Type::End:
                 {
-                    auto iter = T.find(nodeInfo.m_index-1);
+                    auto iter = T.find(Vi->m_index-1);
                     if(iter != T.end())
                     {
-                        if(Qi[iter->second]->m_type == NodeType::Merge)
+                        auto helper = iter->second;
+                        if(vertices[helper].m_type == Vertex::Type::Merge)
                         {
-                            AddEdge(nodeInfo.m_index,iter->second);
+                            AddEdge(Vi->m_index,helper);
                         }
                         T.erase(iter);
                     }
                 }
                 break;
-            case NodeType::Split:
+            case Vertex::Type::Split:
+                {
+                    auto leftEdgeIter = FindLeftEdge(Vi->m_index);
+                    AddEdge(Vi->m_index,leftEdgeIter->second);
+                    SetHelper(leftEdgeIter->first,Vi->m_index);
+                    SetHelper(Vi->m_index,Vi->m_index);
+                }
                 break;
-            case NodeType::Regular:
+            case Vertex::Type::Merge:
+                {
+                    auto iter = T.find(Vi->m_index-1);
+                    if(iter != T.end())
+                    {
+                        auto helper = iter->second;
+                        if(vertices[helper].m_type == Vertex::Type::Merge)
+                        {
+                            AddEdge(Vi->m_index,helper);
+                        }
+                        T.erase(iter);
+                    }
+                    auto leftEdgeIter = FindLeftEdge(Vi->m_index);
+                    if(vertices[leftEdgeIter->second].m_type == Vertex::Type::Merge)
+                    {
+                        AddEdge(Vi->m_index,leftEdgeIter->second);
+                    }
+                    SetHelper(leftEdgeIter->first,Vi->m_index);
+                }
                 break;
-            case NodeType::Merge:
+            case Vertex::Type::Regular:
+                if(InteriorToTheLeft(Vi->m_index))
+                {
+                    auto iter = T.find(Vi->m_index-1);
+                    if(iter != T.end())
+                    {
+                        auto helper = iter->second;
+                        if(vertices[helper].m_type == Vertex::Type::Merge)
+                        {
+                            AddEdge(Vi->m_index,helper);
+                        }
+                        T.erase(iter);
+                    }
+                    SetHelper(Vi->m_index,Vi->m_index);
+                }
+                else
+                {
+                    auto leftEdgeIter = FindLeftEdge(Vi->m_index);
+                    if(vertices[leftEdgeIter->second].m_type == Vertex::Type::Merge)
+                    {
+                        AddEdge(Vi->m_index,leftEdgeIter->second);
+                    }
+                    SetHelper(leftEdgeIter->first,Vi->m_index);
+                }
                 break;
             default:
+                // Something went wrong
                 break;
         }
     }
     // TODO
-    //  - split into monotone polygons
     //  - triangulate monotone polygons
+    //  - create the 3D structures
 }
