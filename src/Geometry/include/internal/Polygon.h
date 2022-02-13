@@ -104,11 +104,86 @@ private:
 class TriangulatedPolygon2D
 {
 public:
+    class Vertex
+    {
+    public:
+        enum class Type
+        {
+            Start,
+            End,
+            Regular,
+            Split,
+            Merge
+        };
+        Vertex(const Polygon2D::Node & node)
+            : m_node(node)
+            , m_type(Type::Regular)
+        {}
+        Core::Vector2d operator - (const Vertex & other)
+        {
+            return m_node.m_vertex - other.m_node.m_vertex;
+        }
+
+        Polygon2D::Node m_node; // node, includes normal information
+        std::vector<size_t> m_edges; // all edges with this start vertex
+        Type m_type;
+        size_t m_index;
+
+        // helper for sorting vertices
+        struct Cmp
+        {
+            bool operator()(const Vertex * a,
+                            const Vertex * b) const
+            {
+                return Cmp()(*a,*b);
+            }
+            bool operator()(const Vertex & a,
+                            const Vertex & b) const
+            {
+                return Cmp()(a.m_node.m_vertex,b.m_node.m_vertex);
+            }
+            bool operator()(const Core::Vector2d & a,
+                            const Core::Vector2d & b) const
+            {
+                const auto & ax = a[0];
+                const auto & ay = a[1];
+                const auto & bx = b[0];
+                const auto & by = b[1];
+                if(ay > by) return true;
+                if(ay < by) return false;
+                if(ax < bx) return true;
+                return false;
+            }
+        };
+    };
+
+    // edges
+    class Edge
+    {
+    public:
+        Edge(const size_t node_a,const size_t node_b)
+            : m_node_a(node_a)
+            , m_node_b(node_b)
+        {}
+
+        size_t m_node_a;
+        size_t m_node_b;
+
+        size_t m_prev = -1;
+        size_t m_next = -1;
+        size_t m_twin = -1;
+    };
+
     TriangulatedPolygon2D(const Polygon2D & polygon2D);
 private:
-    Core::SmartPtrStore<Node> m_nodesStore;
-    Core::SmartPtrStore<Edge> m_edgesStore;
-    Core::SmartPtrStore<Core::Vector3d> m_normalsStore;
+    std::vector<Vertex> m_vertices;
+    std::vector<Edge> m_edges;
 
-    std::vector<Core::OwnedPtr<Edge>> m_edges;
+    void TriangulateInputPolygon();
+
+    // Core::SmartPtrStore<Node> m_nodesStore;
+    // Core::SmartPtrStore<Edge> m_edgesStore;
+    // Core::SmartPtrStore<Core::Vector3d> m_normalsStore;
+
+    // std::vector<Core::OwnedPtr<Edge>> m_edges;
 };
