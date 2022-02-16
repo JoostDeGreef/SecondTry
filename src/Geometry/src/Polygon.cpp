@@ -59,13 +59,6 @@ TriangulatedPolygon2D::TriangulatedPolygon2D(const Polygon2D & polygon2D)
 
 void TriangulatedPolygon2D::TriangulateInputPolygon()
 {
-    // calculate angle between two vectors
-    auto angle = [](const Core::Vector2d & a,const Core::Vector2d & b)
-    {
-        auto dot = a[0]*b[0] + a[1]*b[1];
-        auto det = a[0]*b[1] - a[1]*b[0];
-        return atan2(det, dot);
-    };
     std::set<Vertex*,Vertex::Cmp> Q; // vertices sorted by y
     //***********************
     // give each node a type
@@ -79,17 +72,19 @@ void TriangulatedPolygon2D::TriangulateInputPolygon()
         if(Vertex::Cmp()(node,prev) && Vertex::Cmp()(node,next))
         {
             // todo: check this
-            node.m_type = angle(node-prev,next-node)<0 ? Vertex::Type::Start : Vertex::Type::Split;
+            node.m_type = angle(node-prev,next-node)>0 ? Vertex::Type::Start : Vertex::Type::Split;
         }
         else if (Vertex::Cmp()(prev,node) && Vertex::Cmp()(next,node))
         {
             // todo: check this
-            node.m_type = angle(node-prev,next-node)<0 ? Vertex::Type::End : Vertex::Type::Merge;
+            node.m_type = angle(node-prev,next-node)>0 ? Vertex::Type::End : Vertex::Type::Merge;
         }
         Q.emplace(&node);
         auto e = m_edges.size();
-        m_edges.emplace_back(i,j);
         m_vertices[i].m_edges.emplace_back(e);
+        auto & edge = m_edges.emplace_back(i,j);
+        edge.m_next = j;
+        edge.m_prev = (i+m_vertices.size()-1) % m_vertices.size();
     }
     //********************************
     // split into y-monotone polygons
@@ -114,10 +109,10 @@ void TriangulatedPolygon2D::TriangulateInputPolygon()
         return std::make_tuple(m_edges[edges[0]].m_prev,edges[0]);
     };
     // add a set of edges to m_edges, fill in all references
-    auto AddEdge = [&](const size_t a, const size_t b)
+    auto AddEdgeInLoop = [&](const size_t a, const size_t b,
+                             const size_t a1, const size_t a2,
+                             const size_t b1, const size_t b2)
     {
-        auto [a1,a2] = FindLoop(a,b);
-        auto [b1,b2] = FindLoop(b,a);
         auto & edge_a1 = m_edges[a1];
         auto & edge_a2 = m_edges[a2];
         auto & edge_b1 = m_edges[b1];
@@ -138,6 +133,13 @@ void TriangulatedPolygon2D::TriangulateInputPolygon()
         edge_e2.m_prev = b1;
         m_vertices[a].m_edges.emplace_back(e1);
         m_vertices[b].m_edges.emplace_back(e2);
+        return std::make_tuple(e1,e2);
+    };
+    auto AddEdge = [&](const size_t a, const size_t b)
+    {
+        auto [a1,a2] = FindLoop(a,b);
+        auto [b1,b2] = FindLoop(b,a);
+        AddEdgeInLoop(a,b,a1,a2,b1,b2);
     };
     auto SetHelper = [&](const size_t a, const size_t b)
     {
@@ -267,13 +269,59 @@ void TriangulatedPolygon2D::TriangulateInputPolygon()
     }
     while(!newEdges.empty())
     {
+        // find left and right side of the loop
         auto edge = *newEdges.begin();
-        
-                
+        size_t topLeft = edge;
+        size_t bottomRight = edge;
+        size_t c = m_edges[edge].m_next;
+        while(c != edge )
+        {
+            auto & e = m_edges[c];
+            auto & tl = m_edges[topLeft];
+            auto & e_a = m_vertices[e.m_node_a].m_node.m_vertex;
+            auto & tl_a = m_vertices[tl.m_node_a].m_node.m_vertex;
+            if(Vertex::Cmp()(e_a,tl_a))
+            {
+                topLeft = c;
+            }
+            else
+            {
+                auto & br = m_edges[bottomRight];
+                auto & br_a = m_vertices[br.m_node_a].m_node.m_vertex;
+                if(Vertex::Cmp()(br_a,e_a))
+                {
+                    bottomRight = c;
+                }
+            }
+            newEdges.erase(c);
+            c = e.m_next;
+        }
         newEdges.erase(edge);
+        // create diagonals between left and right part of the loop
+        size_t left = topLeft;
+        size_t right = m_edges[topLeft].m_prev;
+        while(m_edges[left].m_next != m_edges[right].m_prev)
+        {
+            auto & le = m_edges[left];
+            auto & re = m_edges[right];
+            auto [e1,e2] = AddEdgeInLoop(le.m_node_b,re.m_node_a,left,le.m_next,re.m_prev,right);
+            auto & added = m_edges[e2];
+            if(Vertex::Cmp()(m_vertices[m_edges[added.m_next].m_node_b],
+                             m_vertices[m_edges[added.m_prev].m_node_a]))
+            {
+                left = e2;
+                right = added.m_prev;
+            }
+            else
+            {
+                left = added.m_next;
+                right = e2;
+            }
+        }
 
     }
-    // TODO
-    //  - triangulate monotone polygons
-    //  - create the 3D structures
+    for(size_t i=0;i<m_edges.size();++i)
+    {
+        m_edges[i].m_index = i;
+    }
 }

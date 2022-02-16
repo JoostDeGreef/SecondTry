@@ -35,3 +35,12 @@ TEST_F(ShapeTest, Box)
     double surface = box.CalculateSurface();
     EXPECT_FLOAT_EQ(9.0,surface);
 }
+
+TEST_F(ShapeTest, Cylinder)
+{
+    auto cylinder = Shape::Construct::Cylinder(5,2);
+    double volume = cylinder.CalculateVolume();
+    EXPECT_FLOAT_EQ(1.8,volume);
+    double surface = cylinder.CalculateSurface();
+    EXPECT_FLOAT_EQ(9.0,surface);
+}

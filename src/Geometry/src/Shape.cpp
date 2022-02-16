@@ -113,17 +113,16 @@ std::vector<float> Shape::DrawWithNormals()
     res.reserve(m_surface.size()*3*3*2);
     for(auto & face:m_surface)
     {
-        // TODO: use vertex normals when present
-        auto & normal = face->CalcNormal();
         for(size_t i=0;i<3;++i)
         {
-            auto & n = *face->GetEdge(i)->Start();
+            auto & v = *face->GetEdge(i)->Start();
+            auto & n = face->GetVertexNormal(i);
+            res.push_back(v[0]);
+            res.push_back(v[1]);
+            res.push_back(v[2]);
             res.push_back(n[0]);
             res.push_back(n[1]);
             res.push_back(n[2]);
-            res.push_back(normal[0]);
-            res.push_back(normal[1]);
-            res.push_back(normal[2]);
         }
     }
     return res;
@@ -197,8 +196,6 @@ Shape Shape::Construct::Box(const Core::Vector3d & sides)
 
 Shape Shape::Construct::Cylinder(const double length, double outerRadius, double innerRadius)
 {
-    Shape res;
-
     if(innerRadius<0.0)
     {
         innerRadius *= -outerRadius;
@@ -211,36 +208,153 @@ Shape Shape::Construct::Cylinder(const double length, double outerRadius, double
     double halfCorner = acos(innerRadius/outerRadius);
     size_t sections = ceil(Core::Constants::Pi / halfCorner);
     double corner = (Core::Constants::Pi*2.0)/sections;
-    // create bottom and top nodes
-    std::vector<Core::OwnedPtr<Node>> bottomNodes;
-    std::vector<Core::OwnedPtr<Node>> topNodes;
-    bottomNodes.reserve(sections+2);
-    topNodes.reserve(sections+2);
-    bottomNodes.emplace_back(res.AddNode(0.0, 0.0, 0.0));
-    topNodes.emplace_back(res.AddNode(0.0, 0.0, length));
+    // create nodes
+    Polygon2D polygon;
     for(size_t i=0;i<sections;++i)
     {
         double alpha = corner*i;
-        bottomNodes.emplace_back(res.AddNode(outerRadius*cos(alpha), outerRadius*sin(alpha), 0.0));
-        topNodes.emplace_back(res.AddNode(outerRadius*cos(alpha), outerRadius*sin(alpha), length));
+        polygon.AddNode({outerRadius*cos(alpha), outerRadius*sin(alpha)});
     }
-    // create side normals
-    std::vector<Core::OwnedPtr<Core::Vector3d>> normals;
-    normals.reserve(sections);
-    for(size_t i=0;i<sections;++i)
-    {
-        double alpha = corner*(i+0.5);
-        normals.emplace_back(res.AddNormal(outerRadius*cos(alpha), outerRadius*sin(alpha), 0.0));
-    }
-    auto normalBottom = res.AddNormal(0, 0, -1);
-    auto normalTop = res.AddNormal(0, 0,  1);
-    // create edges
-    
-    return res;
+    // todo: create side normals
+
+    TriangulatedPolygon2D triangulatedPolygon(polygon);
+
+    return Extrude(triangulatedPolygon, length);
 }
 
 Shape Shape::Construct::Extrude(const TriangulatedPolygon2D & polygon, const double height)
 {
-    // TODO
-    return Cube(1);
+    Shape res;
+    std::map<size_t,Core::OwnedPtr<Node>> topVertices;
+    std::map<size_t,Core::OwnedPtr<Node>> bottomVertices;
+    std::map<size_t,Core::OwnedPtr<Geometry::Edge>> topEdges;
+    std::map<size_t,Core::OwnedPtr<Geometry::Edge>> bottomEdges;
+    std::map<size_t,Core::OwnedPtr<Geometry::Edge>> sideEdges;
+    auto & edges2d = polygon.GetEdges();
+    auto & vertices2d = polygon.GetVertices();
+    for(auto & vertex2d:vertices2d)
+    {
+        bottomVertices.emplace(vertex2d.m_index, res.AddNode(vertex2d.m_node.m_vertex[0],vertex2d.m_node.m_vertex[1],0));
+        topVertices.emplace(vertex2d.m_index, res.AddNode(vertex2d.m_node.m_vertex[0],vertex2d.m_node.m_vertex[1],height));
+    }
+    for(auto & edge2d:edges2d)
+    {
+        auto edgeBottom = res.AddEdge(); 
+        auto edgeTop = res.AddEdge(); 
+        edgeTop->SetStart(topVertices[edge2d.m_node_b]);
+        edgeBottom->SetStart(bottomVertices[edge2d.m_node_a]);
+        topEdges.emplace(edge2d.m_index,edgeTop);
+        bottomEdges.emplace(edge2d.m_index,edgeBottom);
+    }
+    for(auto & vertex2d:vertices2d)
+    {
+        size_t step = vertices2d.size();
+        size_t i = vertex2d.m_index;
+        size_t j = (vertex2d.m_index+1)%vertices2d.size();
+        // straight up/down
+        auto [down_s,up_s] = res.AddEdgePair(topVertices[i],bottomVertices[i]);
+        up_s->SetTwin(down_s);
+        down_s->SetTwin(up_s);
+        sideEdges.emplace(i + 0*step,down_s);
+        sideEdges.emplace(i + 1*step,up_s);
+        // diagonal up/down
+        auto [down_d,up_d] = res.AddEdgePair(topVertices[i],bottomVertices[j]);
+        up_d->SetTwin(down_d);
+        down_d->SetTwin(up_d);
+        sideEdges.emplace(i + 2*step,down_d);
+        sideEdges.emplace(i + 3*step,up_d);
+        // horizontal left/right
+        auto left = res.AddEdge(); 
+        auto right = res.AddEdge(); 
+        left->SetStart(topVertices[j]);
+        right->SetStart(bottomVertices[i]);
+        auto & top = topEdges[i];
+        auto & bottom = bottomEdges[j];
+        top->SetTwin(left);
+        left->SetTwin(top);
+        bottom->SetTwin(right);
+        right->SetTwin(bottom);
+        sideEdges.emplace(i + 4*step,left);
+        sideEdges.emplace(i + 5*step,right);
+    }
+    auto ConnectEdges = [](Core::OwnedPtr<Geometry::Edge> & ein, Core::OwnedPtr<Geometry::Edge> & eout)
+    {
+        ein->SetNext(eout);
+        eout->SetPrev(ein);
+    };
+    for(auto & edge2d:edges2d)
+    {
+        auto & topEdge = *topEdges[edge2d.m_index];
+        topEdge.SetNext(topEdges[edge2d.m_next]);
+        topEdge.SetPrev(topEdges[edge2d.m_prev]);
+        auto & bottomEdge = *bottomEdges[edge2d.m_index];
+        bottomEdge.SetNext(bottomEdges[edge2d.m_prev]);
+        bottomEdge.SetPrev(bottomEdges[edge2d.m_next]);
+        if(edge2d.m_index>=0)
+        {
+            topEdge.SetTwin(topEdges[edge2d.m_twin]);
+            bottomEdge.SetTwin(topEdges[edge2d.m_twin]);
+        }
+    }
+    auto CreateFacegroupFromEdges = [&](Core::OwnedPtr<Geometry::Edge> & edge0, Core::OwnedPtr<Geometry::Edge> & edge1, Core::OwnedPtr<Geometry::Edge> & edge2, size_t group, Core::OwnedPtr<Core::Vector3d> normal)
+    {
+        assert(edge0 == edge2->Next());
+        assert(edge1 == edge0->Next());
+        assert(edge2 == edge1->Next());
+        assert(edge0 == edge1->Prev());
+        assert(edge1 == edge2->Prev());
+        assert(edge2 == edge0->Prev());
+        auto face = res.AddFace(edge0,edge1,edge2,group,normal);
+        res.m_surface.emplace_back(face);
+    };
+    auto CreateFacegroupFromSet = [&](std::set<Core::OwnedPtr<Geometry::Edge>> & edges, size_t group, Core::OwnedPtr<Core::Vector3d> & normal)
+    {
+        while(!edges.empty())
+        {
+            auto iter0 = edges.begin();
+            auto edge0 = *iter0;
+            auto edge1 = edge0->Next().BecomeOwner();
+            auto edge2 = edge1->Next().BecomeOwner();
+            edges.erase(iter0);
+            edges.erase(edge1);
+            edges.erase(edge2);
+            CreateFacegroupFromEdges(edge0,edge1,edge2,group,normal);
+        }
+    };
+    auto CreateFacegroupFromMap = [&](std::map<size_t,Core::OwnedPtr<Geometry::Edge>> & edgesMap, size_t group, Core::OwnedPtr<Core::Vector3d> normal)
+    {
+        std::set<Core::OwnedPtr<Geometry::Edge>> edges;
+        std::transform(edgesMap.begin(), edgesMap.end(),
+               std::inserter(edges, edges.begin()),
+               [](const std::pair<size_t, Core::OwnedPtr<Geometry::Edge>>& key_value)
+               { return key_value.second; });
+        return CreateFacegroupFromSet(edges,group,normal);
+    };
+    size_t groupid = 1;
+    CreateFacegroupFromMap(bottomEdges,groupid++,res.AddNormal(0,0,-1));
+    CreateFacegroupFromMap(topEdges,groupid++,res.AddNormal(0,0,1));
+    for(size_t i=0;i<vertices2d.size();++i)
+    {
+        size_t step = vertices2d.size();
+        size_t ii = (i+i)%step;
+        auto & e0 = sideEdges[ i + 0*step];
+        auto & e1 = sideEdges[ii + 1*step];
+        auto & e2 = sideEdges[ i + 2*step];
+        auto & e3 = sideEdges[ i + 3*step];
+        auto & e4 = sideEdges[ i + 4*step];
+        auto & e5 = sideEdges[ i + 5*step];
+        ConnectEdges(e0,e5);
+        ConnectEdges(e5,e3);
+        ConnectEdges(e3,e0);
+        ConnectEdges(e1,e4);
+        ConnectEdges(e4,e2);
+        ConnectEdges(e2,e1);
+        auto n = (vertices2d[ii].m_node.m_vertex-vertices2d[i].m_node.m_vertex).Normalized();
+        auto normal = res.AddNormal(n[1],-n[0],0);
+        CreateFacegroupFromEdges(e0,e5,e3,groupid,normal);
+        CreateFacegroupFromEdges(e1,e4,e2,groupid,normal);
+        groupid++;
+        // todo: set vertex normals
+    }
+    return res;
 }

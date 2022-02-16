@@ -170,6 +170,10 @@ public:
         {
             return m_object != other.m_object;
         }
+        bool operator < (const this_type & other) const
+        {
+            return m_object < other.m_object;
+        }
         bool operator == (const ViewedPtr & other) const
         {
             return m_object == other.m_object;
@@ -177,6 +181,16 @@ public:
         bool operator != (const ViewedPtr & other) const
         {
             return m_object != other.m_object;
+        }
+        bool operator < (const ViewedPtr & other) const
+        {
+            return m_object < other.m_object;
+        }
+
+        // return the first non-null ptr
+        const this_type & operator || (const this_type & other) const
+        {
+            return IsSet() ? *this : other;
         }
     private:
         mutable object_type_wrapper * m_object = nullptr;
@@ -253,6 +267,18 @@ public:
                 }
             }
             return false;
+        }
+
+        OwnedPtr BecomeOwner() const
+        {
+            if(IsSet())
+            {
+                return m_object->AttachOwner();
+            }
+            else
+            {
+                return OwnedPtr();
+            }
         }
 
         // these are dangerous, but convenient. 

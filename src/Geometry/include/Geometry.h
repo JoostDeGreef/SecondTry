@@ -10,6 +10,8 @@
 #include <cstdint>
 #include <vector>
 #include <set>
+#include <algorithm>
+#include <map>
 #include <unordered_map>
 #include <unordered_set>
 

@@ -11,6 +11,7 @@ public:
     {
         friend class Polygon2D;
         friend class TriangulatedPolygon2D;
+    public:
         enum class Normal
         {
             None,
@@ -19,7 +20,7 @@ public:
             In,
             Out
         };
-    public:
+
         Node(const Core::Vector2d &vertex)
             : m_vertex(vertex)
             , m_normal(Normal::None)
@@ -47,7 +48,6 @@ public:
             , m_normal(inNormal?Normal::In:Normal::Out)
         {}
 
-    private:
         Core::Vector2d m_vertex;
         Core::Vector2d m_normal1;
         Core::Vector2d m_normal2;
@@ -172,18 +172,24 @@ public:
         size_t m_prev = -1;
         size_t m_next = -1;
         size_t m_twin = -1;
+
+        size_t m_index = -1;
     };
 
     TriangulatedPolygon2D(const Polygon2D & polygon2D);
-private:
+
+    const auto & GetVertices() const { return m_vertices; }
+    const auto & GetEdges() const { return m_edges; }
+protected:
     std::vector<Vertex> m_vertices;
     std::vector<Edge> m_edges;
 
     void TriangulateInputPolygon();
-
-    // Core::SmartPtrStore<Node> m_nodesStore;
-    // Core::SmartPtrStore<Edge> m_edgesStore;
-    // Core::SmartPtrStore<Core::Vector3d> m_normalsStore;
-
-    // std::vector<Core::OwnedPtr<Edge>> m_edges;
+        // calculate angle between two vectors
+    static double angle(const Core::Vector2d & a,const Core::Vector2d & b)
+    {
+        auto dot = a[0]*b[0] + a[1]*b[1];
+        auto det = a[0]*b[1] - a[1]*b[0];
+        return atan2(det, dot);
+    };
 };

@@ -36,6 +36,12 @@ const Core::Vector3d & Face::CalcNormal()
     return *m_normal;
 }
 
+const Core::Vector3d & Face::GetNormal() const
+{
+    assert(m_normal.IsSet());
+    return *m_normal;
+}
+
 void Face::SetShape(Shape * shape) 
 { 
     m_shape = shape; 
@@ -44,11 +50,23 @@ void Face::SetShape(Shape * shape)
 void Face::SetEdges(const std::array<Core::OwnedPtr<Edge>,3> & edges) 
 { 
     m_surface = -1.0;
+    
     m_normal.Release();
+
+    m_normals[0].Release();
+    m_normals[1].Release();
+    m_normals[2].Release();
 
     m_edges[0] = edges[0]; 
     m_edges[1] = edges[1]; 
     m_edges[2] = edges[2]; 
+}
+
+void Face::SetVertexNormals(const std::array<Core::OwnedPtr<Core::Vector3d>,3> & normals)
+{
+    m_normals[0] = normals[0];
+    m_normals[0] = normals[0];
+    m_normals[0] = normals[0];
 }
 
 void Face::SetFacegroup(const uint64_t facegroup) 
@@ -59,6 +77,11 @@ void Face::SetFacegroup(const uint64_t facegroup)
 void Face::SetNormal(const Core::OwnedPtr<Core::Vector3d> & normal)
 {
     m_normal = normal;
+}
+
+const Core::Vector3d & Face::GetVertexNormal(const int i) const
+{
+    return *(m_normals[i] || m_normal);
 }
 
 const Core::OwnedPtr<Edge> & Face::GetEdge(const int i) const
