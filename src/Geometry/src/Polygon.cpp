@@ -35,6 +35,12 @@ void Polygon2D::UpdateSouthEast()
 
 TriangulatedPolygon2D::TriangulatedPolygon2D(const Polygon2D & polygon2D)
 {
+    CopyInputPolygonToVertices(polygon2D);
+    TriangulateInputPolygon();
+}
+
+void TriangulatedPolygon2D::CopyInputPolygonToVertices(const Polygon2D & polygon2D)
+{
     m_vertices.reserve(polygon2D.m_nodes.size());
     if(polygon2D.IsCounterClockwise())
     {
@@ -54,15 +60,10 @@ TriangulatedPolygon2D::TriangulatedPolygon2D(const Polygon2D & polygon2D)
     {
         m_vertices[i].m_index = i;
     }
-    TriangulateInputPolygon();
 }
 
-void TriangulatedPolygon2D::TriangulateInputPolygon()
+void TriangulatedPolygon2D::InitializeVertexType()
 {
-    std::set<Vertex*,Vertex::Cmp> Q; // vertices sorted by y
-    //***********************
-    // give each node a type
-    //***********************
     for(size_t i=0;i<m_vertices.size();++i)
     {
         size_t j = (i+1) % m_vertices.size();
@@ -86,95 +87,107 @@ void TriangulatedPolygon2D::TriangulateInputPolygon()
         edge.m_next = j;
         edge.m_prev = (i+m_vertices.size()-1) % m_vertices.size();
     }
-    //********************************
-    // split into y-monotone polygons
-    //********************************
-    std::unordered_map<size_t,size_t> T; // edge, helper vertex
-    // find the in/out edges for a, on an edge loop which also has b in it;
-    auto FindLoop = [&](const size_t a, const size_t b)
+}
+
+// find the in/out edges for vertex a, on an edge loop which also has vertex b in it;
+// returns in/out edge indices (a->b, b->a)
+std::tuple<size_t,size_t> TriangulatedPolygon2D::FindLoop(const size_t a, const size_t b)
+{
+    auto & edges = m_vertices[a].m_edges;
+    for(size_t i = 1;i < edges.size();++i)
     {
-        auto & edges = m_vertices[a].m_edges;
-        for(size_t i = 1;i < edges.size();++i)
+        size_t j = m_edges[i].m_next;
+        while(j!=i)
         {
-            size_t j = m_edges[i].m_next;
-            while(j!=i)
+            if(m_edges[j].m_node_a == b)
             {
-                if(m_edges[j].m_node_a == b)
-                {
-                    return std::make_tuple(m_edges[edges[i]].m_prev,edges[i]);
-                }
-                j = m_edges[j].m_next;
+                return std::make_tuple(m_edges[edges[i]].m_prev,edges[i]);
+            }
+            j = m_edges[j].m_next;
+        }
+    }
+    return std::make_tuple(m_edges[edges[0]].m_prev,edges[0]);
+};
+
+// add a set of edges to m_edges, fill in all references
+std::tuple<size_t,size_t> TriangulatedPolygon2D::AddEdgeInLoop(
+    const size_t a, const size_t b,
+    const size_t a1, const size_t a2,
+    const size_t b1, const size_t b2)
+{
+    auto e1 = m_edges.size();
+    auto e2 = e1+1;
+    m_edges.emplace_back(a,b);
+    m_edges.emplace_back(b,a);
+    auto & edge_a1 = m_edges[a1];
+    auto & edge_a2 = m_edges[a2];
+    auto & edge_b1 = m_edges[b1];
+    auto & edge_b2 = m_edges[b2];
+    auto & edge_e1 = m_edges[e1];
+    auto & edge_e2 = m_edges[e2];
+    edge_e1.m_index = e1;
+    edge_e2.m_index = e2;
+    edge_e1.m_twin = e2;
+    edge_e2.m_twin = e1;
+    edge_a1.m_next = e1;
+    edge_b2.m_prev = e1;
+    edge_b1.m_next = e2;
+    edge_a2.m_prev = e2;
+    edge_e1.m_next = b2;
+    edge_e1.m_prev = a1;
+    edge_e2.m_next = a2;
+    edge_e2.m_prev = b1;
+    m_vertices[a].m_edges.emplace_back(e1);
+    m_vertices[b].m_edges.emplace_back(e2);
+    return std::make_tuple(e1,e2);
+};
+
+void TriangulatedPolygon2D::AddEdge(const size_t a, const size_t b)
+{
+    auto [a1,a2] = FindLoop(a,b);
+    auto [b1,b2] = FindLoop(b,a);
+    AddEdgeInLoop(a,b,a1,a2,b1,b2);
+};
+
+void TriangulatedPolygon2D::SetHelper(const size_t a, const size_t b)
+{
+    T.insert_or_assign(a,b);
+};
+
+// find the closest edge on the same y level as this node, to the left.
+std::unordered_map<size_t, size_t>::iterator TriangulatedPolygon2D::FindLeftEdge(const size_t node)
+{
+    auto res = T.end();
+    double dist = std::numeric_limits<double>::max();
+    auto & n = m_vertices[node].m_node.m_vertex;
+    for(auto iter = T.begin();iter != T.end(); ++iter)
+    {
+        auto & edge = m_edges[iter->first];
+        auto & a = m_vertices[edge.m_node_a].m_node.m_vertex;
+        auto & b = m_vertices[edge.m_node_b].m_node.m_vertex;
+        if((a[1]<=n[1] && b[1]>=n[1]) || (b[1]<=n[1] && a[1]>=n[1]))
+        {
+            double d = (n[0]-a[0]) - (b[0]-a[0])*(n[1]-a[1])/(b[1]-a[1]);
+            if(d>=0 && d<dist)
+            {
+                dist = d;
+                res = iter;
             }
         }
-        return std::make_tuple(m_edges[edges[0]].m_prev,edges[0]);
-    };
-    // add a set of edges to m_edges, fill in all references
-    auto AddEdgeInLoop = [&](const size_t a, const size_t b,
-                             const size_t a1, const size_t a2,
-                             const size_t b1, const size_t b2)
-    {
-        auto & edge_a1 = m_edges[a1];
-        auto & edge_a2 = m_edges[a2];
-        auto & edge_b1 = m_edges[b1];
-        auto & edge_b2 = m_edges[b2];
-        auto e1 = m_edges.size();
-        auto e2 = e1+1;
-        auto & edge_e1 = m_edges.emplace_back(a,b);
-        auto & edge_e2 = m_edges.emplace_back(b,a);
-        edge_e1.m_twin = e2;
-        edge_e2.m_twin = e1;
-        edge_a1.m_next = e1;
-        edge_b2.m_prev = e1;
-        edge_b1.m_next = e2;
-        edge_a2.m_prev = e2;
-        edge_e1.m_next = b2;
-        edge_e1.m_prev = a1;
-        edge_e2.m_next = a2;
-        edge_e2.m_prev = b1;
-        m_vertices[a].m_edges.emplace_back(e1);
-        m_vertices[b].m_edges.emplace_back(e2);
-        return std::make_tuple(e1,e2);
-    };
-    auto AddEdge = [&](const size_t a, const size_t b)
-    {
-        auto [a1,a2] = FindLoop(a,b);
-        auto [b1,b2] = FindLoop(b,a);
-        AddEdgeInLoop(a,b,a1,a2,b1,b2);
-    };
-    auto SetHelper = [&](const size_t a, const size_t b)
-    {
-        T.emplace(a,b);
-    };
-    // find the closest edge on the same y level as this node, to the left.
-    auto FindLeftEdge = [&](const size_t node)
-    {
-        auto res = T.end();
-        double dist = std::numeric_limits<double>::max();
-        auto & n = m_vertices[node].m_node.m_vertex;
-        for(auto iter = T.begin();iter != T.end(); ++iter)
-        {
-            auto & edge = m_edges[iter->first];
-            auto & a = m_vertices[edge.m_node_a].m_node.m_vertex;
-            auto & b = m_vertices[edge.m_node_b].m_node.m_vertex;
-            if((a[1]<=n[1] && b[1]>=n[1]) || (b[1]<=n[1] && a[1]>=n[1]))
-            {
-                double d = (n[0]-a[0]) - (b[0]-a[0])*(n[1]-a[1])/(b[1]-a[1]);
-                if(d>=0 && d<dist)
-                {
-                    dist = d;
-                    res = iter;
-                }
-            }
-        }
-        return res;
-    };
-    // this only works for regular nodes!
-    auto InteriorToTheLeft = [&](const size_t node)
-    {
-        auto & a = m_vertices[node].m_node.m_vertex;
-        auto & b = m_vertices[(node+1)%m_vertices.size()].m_node.m_vertex;
-        return (b[1]>=a[1]);
-    };
+    }
+    return res;
+};
+
+// this only works for regular nodes!
+bool TriangulatedPolygon2D::InteriorToTheLeft(const size_t node)
+{
+    auto & a = m_vertices[node].m_node.m_vertex;
+    auto & b = m_vertices[(node+1)%m_vertices.size()].m_node.m_vertex;
+    return (b[1]>=a[1]);
+};
+
+void TriangulatedPolygon2D::SplitInMonotonePieces()
+{
     for(auto & Vi:Q)
     {
         switch(Vi->m_type)
@@ -184,7 +197,7 @@ void TriangulatedPolygon2D::TriangulateInputPolygon()
                 break;
             case Vertex::Type::End:
                 {
-                    auto iter = T.find(Vi->m_index-1);
+                    auto iter = T.find((Vi->m_index+m_vertices.size()-1)%m_vertices.size());
                     if(iter != T.end())
                     {
                         auto helper = iter->second;
@@ -199,6 +212,7 @@ void TriangulatedPolygon2D::TriangulateInputPolygon()
             case Vertex::Type::Split:
                 {
                     auto leftEdgeIter = FindLeftEdge(Vi->m_index);
+                    assert(leftEdgeIter != T.end());
                     AddEdge(Vi->m_index,leftEdgeIter->second);
                     SetHelper(leftEdgeIter->first,Vi->m_index);
                     SetHelper(Vi->m_index,Vi->m_index);
@@ -206,7 +220,7 @@ void TriangulatedPolygon2D::TriangulateInputPolygon()
                 break;
             case Vertex::Type::Merge:
                 {
-                    auto iter = T.find(Vi->m_index-1);
+                    auto iter = T.find((Vi->m_index+m_vertices.size()-1)%m_vertices.size());
                     if(iter != T.end())
                     {
                         auto helper = iter->second;
@@ -217,6 +231,7 @@ void TriangulatedPolygon2D::TriangulateInputPolygon()
                         T.erase(iter);
                     }
                     auto leftEdgeIter = FindLeftEdge(Vi->m_index);
+                    assert(leftEdgeIter != T.end());
                     if(m_vertices[leftEdgeIter->second].m_type == Vertex::Type::Merge)
                     {
                         AddEdge(Vi->m_index,leftEdgeIter->second);
@@ -225,9 +240,9 @@ void TriangulatedPolygon2D::TriangulateInputPolygon()
                 }
                 break;
             case Vertex::Type::Regular:
-                if(InteriorToTheLeft(Vi->m_index))
+                if(!InteriorToTheLeft(Vi->m_index))
                 {
-                    auto iter = T.find(Vi->m_index-1);
+                    auto iter = T.find((Vi->m_index+m_vertices.size()-1)%m_vertices.size());
                     if(iter != T.end())
                     {
                         auto helper = iter->second;
@@ -254,6 +269,18 @@ void TriangulatedPolygon2D::TriangulateInputPolygon()
                 break;
         }
     }
+}
+
+void TriangulatedPolygon2D::TriangulateInputPolygon()
+{
+    //***********************
+    // give each node a type
+    //***********************
+    InitializeVertexType();
+    //********************************
+    // split into y-monotone polygons
+    //********************************
+    SplitInMonotonePieces();
     //*******************************
     // triangulate monotone polygons
     //*******************************
@@ -263,7 +290,7 @@ void TriangulatedPolygon2D::TriangulateInputPolygon()
         newEdges.emplace(i);
     }
     // polygon was already monotone, not split
-    if(newEdges.empty())
+    if(newEdges.empty() && !m_edges.empty())
     {
         newEdges.emplace(0);
     }

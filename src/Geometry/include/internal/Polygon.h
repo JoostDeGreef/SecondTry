@@ -181,11 +181,47 @@ public:
     const auto & GetVertices() const { return m_vertices; }
     const auto & GetEdges() const { return m_edges; }
 protected:
+    // available as output
     std::vector<Vertex> m_vertices;
     std::vector<Edge> m_edges;
+    // for internal use
+    std::set<Vertex*,Vertex::Cmp> Q; // vertices sorted by y
+    std::unordered_map<size_t,size_t> T; // edge, helper vertex
 
+    // Copy the input polygont to the internal vertices in the right order
+    void CopyInputPolygonToVertices(const Polygon2D & polygon2D);
+
+    // Triangulate the list of vertices
     void TriangulateInputPolygon();
-        // calculate angle between two vectors
+
+    // Initialize the vertex type
+    void InitializeVertexType();
+
+    // Add an edge between a and b, using the provided in/out edges
+    std::tuple<size_t,size_t> AddEdgeInLoop(
+                             const size_t a, const size_t b,
+                             const size_t a1, const size_t a2,
+                             const size_t b1, const size_t b2);
+
+    // find the in/out edges for vertex a, on an edge loop which also has vertex b in it;
+    std::tuple<size_t,size_t> FindLoop(const size_t a, const size_t b);
+
+    // add edge between vertices a and b
+    void AddEdge(const size_t a, const size_t b);
+
+    // Set the 'helper' vertex b for edge a
+    void SetHelper(const size_t a, const size_t b);
+
+    // find the closest edge on the same y level as this node, to the left.
+    std::unordered_map<size_t, size_t>::iterator FindLeftEdge(const size_t node);
+
+    // Indicate if the polygon is to the left of a regular(!) vertex
+    bool InteriorToTheLeft(const size_t node);
+
+    // Split the vertex loop in monotone pieces (Y-monotone for now)
+    void SplitInMonotonePieces();
+
+    // calculate angle between two vectors
     static double angle(const Core::Vector2d & a,const Core::Vector2d & b)
     {
         auto dot = a[0]*b[0] + a[1]*b[1];

@@ -36,7 +36,7 @@ TEST_F(ShapeTest, Box)
     EXPECT_FLOAT_EQ(9.0,surface);
 }
 
-TEST_F(ShapeTest, Cylinder)
+TEST_F(ShapeTest, DISABLED_Cylinder)
 {
     auto cylinder = Shape::Construct::Cylinder(5,2);
     double volume = cylinder.CalculateVolume();
