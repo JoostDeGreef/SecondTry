@@ -296,56 +296,65 @@ void TriangulatedPolygon2D::TriangulateInputPolygon()
     }
     while(!newEdges.empty())
     {
-        // find left and right side of the loop
+        // collect all edges in this loop and remove them from newEdges
+        std::unordered_map<size_t,size_t> edgeAngle; // edge, 100000*angle
+        std::map<size_t,size_t> angleEdge; // 100000*angle, edge
         auto edge = *newEdges.begin();
-        size_t topLeft = edge;
-        size_t bottomRight = edge;
-        size_t c = m_edges[edge].m_next;
-        while(c != edge )
+        auto next = edge;
+        do
         {
-            auto & e = m_edges[c];
-            auto & tl = m_edges[topLeft];
-            auto & e_a = m_vertices[e.m_node_a].m_node.m_vertex;
-            auto & tl_a = m_vertices[tl.m_node_a].m_node.m_vertex;
-            if(Vertex::Cmp()(e_a,tl_a))
+            newEdges.erase(next);
+            edgeAngle.emplace(next,std::numeric_limits<size_t>::max());
+            next = m_edges[next].m_next;
+        } 
+        while (edge != next);
+        assert(edgeAngle.size()>=3);
+        // calculate the angles
+        if(edgeAngle.size()>3)
+        {
+            auto AddEdgeAngle = [&](std::pair<const size_t, size_t> &edgeAngleKey)
             {
-                topLeft = c;
-            }
-            else
-            {
-                auto & br = m_edges[bottomRight];
-                auto & br_a = m_vertices[br.m_node_a].m_node.m_vertex;
-                if(Vertex::Cmp()(br_a,e_a))
+                auto edge = edgeAngleKey.first;
+                auto & v0 = m_vertices[m_edges[edge].m_node_a];
+                auto & v1 = m_vertices[m_edges[edge].m_node_b];
+                auto & v2 = m_vertices[m_edges[m_edges[edge].m_next].m_node_b];
+                auto a = angle(v1-v0,v2-v1);
+                if(a<0)
                 {
-                    bottomRight = c;
+                    a += Core::Constants::Pi*2;
                 }
-            }
-            newEdges.erase(c);
-            c = e.m_next;
-        }
-        newEdges.erase(edge);
-        // create diagonals between left and right part of the loop
-        size_t left = topLeft;
-        size_t right = m_edges[topLeft].m_prev;
-        while(m_edges[left].m_next != m_edges[right].m_prev)
-        {
-            auto & le = m_edges[left];
-            auto & re = m_edges[right];
-            auto [e1,e2] = AddEdgeInLoop(le.m_node_b,re.m_node_a,left,le.m_next,re.m_prev,right);
-            auto & added = m_edges[e2];
-            if(Vertex::Cmp()(m_vertices[m_edges[added.m_next].m_node_b],
-                             m_vertices[m_edges[added.m_prev].m_node_a]))
+                size_t ia = 100000 * a;
+                while(angleEdge.find(ia) != angleEdge.end())
+                {
+                    ++ia;
+                }
+                angleEdge.emplace(ia,edge);
+                edgeAngleKey.second = ia;
+            };
+            for(auto & edgeAngleKey:edgeAngle)
             {
-                left = e2;
-                right = added.m_prev;
+                AddEdgeAngle(edgeAngleKey);
             }
-            else
+            while (edgeAngle.size()>3)
             {
-                left = added.m_next;
-                right = e2;
+                // split of the triangle with the narrowest angle
+                size_t a2 = angleEdge.begin()->second;
+                size_t a1 = m_edges[a2].m_prev;
+                size_t a = m_edges[a2].m_node_a;
+                size_t b1 = m_edges[a2].m_next;
+                size_t b2 = m_edges[b1].m_next;
+                size_t b = m_edges[b2].m_node_a;
+                auto [e1,e2] = AddEdgeInLoop(a,b,a1,a2,b1,b2);
+                assert(m_edges[m_edges[m_edges[e2].m_next].m_next].m_next == e2);
+                // remove a2,b1 from the loop angle list, and e1 and update a1
+                edgeAngle.erase(a2);
+                edgeAngle.erase(b1);
+                edgeAngle.emplace(e1,std::numeric_limits<size_t>::max());
+                angleEdge.erase(edgeAngle[a1]);
+                AddEdgeAngle(*edgeAngle.find(a1));
+                AddEdgeAngle(*edgeAngle.find(e1));
             }
         }
-
     }
     for(size_t i=0;i<m_edges.size();++i)
     {
