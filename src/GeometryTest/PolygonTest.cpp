@@ -60,6 +60,7 @@ public:
     using TriangulatedPolygon2D::CopyInputPolygonToVertices;
     using TriangulatedPolygon2D::InitializeVertexType;
     using TriangulatedPolygon2D::SplitInMonotonePieces;
+    using TriangulatedPolygon2D::TriangulateInputPolygon;
 
     using TriangulatedPolygon2D::m_vertices;
     using TriangulatedPolygon2D::m_edges;
@@ -180,6 +181,22 @@ TEST_F(PolygonTest, SplitInMonotonePieces)
     EXPECT_EQ(3,tp.m_edges[tp.m_edges[tp.m_edges[3].m_prev].m_prev].m_prev);
     EXPECT_EQ(10,tp.m_edges[tp.m_edges[tp.m_edges[10].m_next].m_next].m_next);
     EXPECT_EQ(10,tp.m_edges[tp.m_edges[tp.m_edges[10].m_prev].m_prev].m_prev);
+}
+
+TEST_F(PolygonTest, Triangulate)
+{
+    Polygon2D p = GetSamplePolygon();
+    TriangulatedPolygon2DTest tp;
+    tp.CopyInputPolygonToVertices(p);
+    EXPECT_EQ(15,tp.m_vertices.size());
+    tp.TriangulateInputPolygon();
+    EXPECT_EQ(15,tp.m_vertices.size());
+    EXPECT_EQ(39,tp.m_edges.size());
+    for(size_t i=0;i<tp.m_edges.size();++i)
+    {
+        EXPECT_EQ(i,tp.m_edges[tp.m_edges[tp.m_edges[i].m_next].m_next].m_next);
+        EXPECT_EQ(i,tp.m_edges[tp.m_edges[tp.m_edges[i].m_prev].m_prev].m_prev);
+    }
 }
 
 TEST_F(PolygonTest, TriangulateMonotone)
