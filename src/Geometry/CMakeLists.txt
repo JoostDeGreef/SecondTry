@@ -6,7 +6,8 @@ link_libraries(Core)
 
 add_library (${PROJECT_NAME}
              "src/Geometry.cpp"
-             "src/Shape.cpp"
+             "src/Shape/Shape.cpp"
+             "src/Shape/Construct.cpp"
              "src/Face.cpp"
              "src/Edge.cpp"
              "src/Polygon.cpp"

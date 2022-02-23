@@ -4,167 +4,6 @@
 using namespace Core;
 using namespace Geometry;
 
-Geometry::Shape::Shape()
-{}
-
-Shape::~Shape()
-{
-    Clear();
-}
-
-Shape::Shape(const Shape & other)
-{
-    Copy(other);
-}
-
-Shape & Shape::Copy(const Shape & other)
-{
-    Clear();
-
-    auto normalsMap = m_normals.InsertCopy(other.m_normals);
-    auto nodeMap = m_nodes.InsertCopy(other.m_nodes);
-    auto edgeMap = m_edges.InsertCopy(other.m_edges);
-    auto faceMap = m_faces.InsertCopy(other.m_faces);
-    
-    for(auto edges:edgeMap)
-    {
-        edges.second->MapPtrsAfterStoreCopy(nodeMap,edgeMap,faceMap);
-    }
-    for(auto faces:faceMap)
-    {
-        faces.second->MapPtrsAfterStoreCopy(this,edgeMap,normalsMap);
-        m_surface.emplace_back(faces.second);
-    }
-    
-    return *this;
-}
-
-void Shape::Clear()
-{
-    m_normals.ClearWithoutCallingDestructors();
-    m_nodes.ClearWithoutCallingDestructors();
-    m_edges.ClearWithoutCallingDestructors();
-    m_faces.ClearWithoutCallingDestructors();
-    m_surface.clear();
-}
-
-std::tuple<Core::OwnedPtr<Geometry::Edge>,Core::OwnedPtr<Geometry::Edge>> Shape::AddEdgePair(
-    const Core::OwnedPtr<Node> & n0,
-    const Core::OwnedPtr<Node> & n1)
-{
-    auto edge0 = AddEdge();
-    auto edge1 = AddEdge();
-    edge0->SetTwin(edge1);
-    edge1->SetTwin(edge0);
-    edge0->SetStart(n0);
-    edge1->SetStart(n1);
-    return std::make_tuple(edge0,edge1);
-}
-
-Core::OwnedPtr<Face> Shape::AddFace(
-    Core::OwnedPtr<Edge> & e0,
-    Core::OwnedPtr<Edge> & e1,
-    Core::OwnedPtr<Edge> & e2,
-    uint64_t facegroup,
-    Core::OwnedPtr<Core::Vector3d> normal)
-{
-    auto face = m_faces.Create();
-    face->SetShape(this);
-    face->SetEdges({e0,e1,e2});
-    face->SetFacegroup(facegroup);
-    face->SetNormal(normal);
-    e0->SetFace(face);
-    e1->SetFace(face);
-    e2->SetFace(face);
-    e0->SetNext(e1);
-    e1->SetNext(e2);
-    e2->SetNext(e0);
-    e0->SetPrev(e2);
-    e1->SetPrev(e0);
-    e2->SetPrev(e1);
-    return face;
-}
-
-double Shape::CalculateVolume() const
-{
-    double res = 0;
-    for(auto face:m_surface)
-    {
-        double surface = face->CalcSurface();
-        auto & normal = face->CalcNormal();
-        res += (surface/9)*(face->GetEdge(0)->Start()->InnerProduct(normal)
-                           +face->GetEdge(1)->Start()->InnerProduct(normal)
-                           +face->GetEdge(2)->Start()->InnerProduct(normal));
-    }
-    return res;
-}
-
-double Shape::CalculateSurface() const
-{
-    double res = 0;
-    for(auto face:m_surface)
-    {
-        res += face->CalcSurface();
-    }
-    return res;
-}
-
-Shape & Shape::Translate(const Core::Vector3d & translation)
-{
-   for(auto & node:m_nodes)
-   {
-       node += translation;
-   }
-   return *this;
-}
-
-Shape & Shape::Rotate(const Core::Quat & rotation,const Core::Vector3d & center)
-{
-   for(auto & node:m_nodes)
-   {
-       node = center+rotation.Transform(node-center);
-   }
-   return *this;
-}
-
-std::vector<float> Shape::Draw() const
-{
-    std::vector<float> res;
-    res.reserve(m_surface.size()*3);
-    for(auto & face:m_surface)
-    {
-        for(size_t i=0;i<3;++i)
-        {
-            auto & n = *face->GetEdge(i)->Start();
-            res.push_back(n[0]);
-            res.push_back(n[1]);
-            res.push_back(n[2]);
-        }
-    }
-    return res;
-}
-
-std::vector<float> Shape::DrawWithNormals() 
-{
-    std::vector<float> res;
-    res.reserve(m_surface.size()*3*3*2);
-    for(auto & face:m_surface)
-    {
-        for(size_t i=0;i<3;++i)
-        {
-            auto & v = *face->GetEdge(i)->Start();
-            auto & n = face->GetVertexNormal(i);
-            res.push_back(v[0]);
-            res.push_back(v[1]);
-            res.push_back(v[2]);
-            res.push_back(n[0]);
-            res.push_back(n[1]);
-            res.push_back(n[2]);
-        }
-    }
-    return res;
-}
-
 Shape Shape::Construct::Cube(const double side)
 {
     return Box({side,side,side});
@@ -267,8 +106,8 @@ Shape Shape::Construct::Extrude(const TriangulatedPolygon2D & polygon, const dou
     std::map<size_t,Core::OwnedPtr<Geometry::Edge>> topEdges;
     std::map<size_t,Core::OwnedPtr<Geometry::Edge>> bottomEdges;
     std::map<size_t,Core::OwnedPtr<Geometry::Edge>> sideEdges;
-    auto & edges2d = polygon.GetEdges();
-    auto & vertices2d = polygon.GetVertices();
+    const auto & edges2d = polygon.GetEdges();
+    const auto & vertices2d = polygon.GetVertices();
     for(auto & vertex2d:vertices2d)
     {
         bottomVertices.emplace(vertex2d.m_index, res.AddNode(vertex2d.m_node.m_vertex[0],vertex2d.m_node.m_vertex[1],0));
@@ -278,11 +117,13 @@ Shape Shape::Construct::Extrude(const TriangulatedPolygon2D & polygon, const dou
     {
         auto edgeBottom = res.AddEdge(); 
         auto edgeTop = res.AddEdge(); 
-        edgeTop->SetStart(topVertices[edge2d.m_node_b]);
-        edgeBottom->SetStart(bottomVertices[edge2d.m_node_a]);
+        edgeTop->SetStart(topVertices[edge2d.m_node_a]);
+        edgeBottom->SetStart(bottomVertices[edge2d.m_node_b]);
         topEdges.emplace(edge2d.m_index,edgeTop);
         bottomEdges.emplace(edge2d.m_index,edgeBottom);
     }
+    assert(topEdges.size() == edges2d.size());
+    assert(bottomEdges.size() == edges2d.size());
     for(auto & vertex2d:vertices2d)
     {
         size_t step = vertices2d.size();
@@ -314,6 +155,8 @@ Shape Shape::Construct::Extrude(const TriangulatedPolygon2D & polygon, const dou
         sideEdges.emplace(i + 4*step,left);
         sideEdges.emplace(i + 5*step,right);
     }
+    assert(topEdges.size() == edges2d.size());
+    assert(bottomEdges.size() == edges2d.size());
     auto ConnectEdges = [](Core::OwnedPtr<Geometry::Edge> & ein, Core::OwnedPtr<Geometry::Edge> & eout)
     {
         ein->SetNext(eout);
@@ -327,12 +170,14 @@ Shape Shape::Construct::Extrude(const TriangulatedPolygon2D & polygon, const dou
         auto & bottomEdge = *bottomEdges[edge2d.m_index];
         bottomEdge.SetNext(bottomEdges[edge2d.m_prev]);
         bottomEdge.SetPrev(bottomEdges[edge2d.m_next]);
-        if(edge2d.m_index>=0)
+        if(edge2d.m_twin!=(size_t)-1)
         {
             topEdge.SetTwin(topEdges[edge2d.m_twin]);
             bottomEdge.SetTwin(topEdges[edge2d.m_twin]);
         }
     }
+    assert(topEdges.size() == edges2d.size());
+    assert(bottomEdges.size() == edges2d.size());
     auto CreateFacegroupFromEdges = [&](Core::OwnedPtr<Geometry::Edge> & edge0, Core::OwnedPtr<Geometry::Edge> & edge1, Core::OwnedPtr<Geometry::Edge> & edge2, size_t group, Core::OwnedPtr<Core::Vector3d> normal)
     {
         assert(edge0 == edge2->Next());
@@ -373,7 +218,7 @@ Shape Shape::Construct::Extrude(const TriangulatedPolygon2D & polygon, const dou
     for(size_t i=0;i<vertices2d.size();++i)
     {
         size_t step = vertices2d.size();
-        size_t ii = (i+i)%step;
+        size_t ii = (i+1)%step;
         auto & e0 = sideEdges[ i + 0*step];
         auto & e1 = sideEdges[ii + 1*step];
         auto & e2 = sideEdges[ i + 2*step];

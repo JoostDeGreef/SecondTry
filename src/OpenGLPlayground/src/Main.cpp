@@ -320,8 +320,8 @@ void UI::AddShapes()
     m_shapes.back().Translate({-.15,-.15,-.15});
     m_shapes.emplace_back(Geometry::Shape::Construct::Cube(0.3),Mat4::Translation({0.2,.2,1}));
     m_shapes.back().Translate({-.15,-.15,-.15});
-    m_shapes.emplace_back(Geometry::Shape::Construct::Cube(0.3),Mat4::Translation({0.5,.2,1}));
-    m_shapes.back().Translate({-.15,-.15,-.15});
+    m_shapes.emplace_back(Geometry::Shape::Construct::Cylinder(0.3,0.15,-0.98),Mat4::Translation({0.5,.2,1}));
+    m_shapes.back().Translate({0,0,-.15});
 }
 
 void InitializeLogger()
