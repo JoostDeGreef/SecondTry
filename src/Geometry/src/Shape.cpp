@@ -48,6 +48,43 @@ void Shape::Clear()
     m_surface.clear();
 }
 
+std::tuple<Core::OwnedPtr<Geometry::Edge>,Core::OwnedPtr<Geometry::Edge>> Shape::AddEdgePair(
+    const Core::OwnedPtr<Node> & n0,
+    const Core::OwnedPtr<Node> & n1)
+{
+    auto edge0 = AddEdge();
+    auto edge1 = AddEdge();
+    edge0->SetTwin(edge1);
+    edge1->SetTwin(edge0);
+    edge0->SetStart(n0);
+    edge1->SetStart(n1);
+    return std::make_tuple(edge0,edge1);
+}
+
+Core::OwnedPtr<Face> Shape::AddFace(
+    Core::OwnedPtr<Edge> & e0,
+    Core::OwnedPtr<Edge> & e1,
+    Core::OwnedPtr<Edge> & e2,
+    uint64_t facegroup,
+    Core::OwnedPtr<Core::Vector3d> normal)
+{
+    auto face = m_faces.Create();
+    face->SetShape(this);
+    face->SetEdges({e0,e1,e2});
+    face->SetFacegroup(facegroup);
+    face->SetNormal(normal);
+    e0->SetFace(face);
+    e1->SetFace(face);
+    e2->SetFace(face);
+    e0->SetNext(e1);
+    e1->SetNext(e2);
+    e2->SetNext(e0);
+    e0->SetPrev(e2);
+    e1->SetPrev(e0);
+    e2->SetPrev(e1);
+    return face;
+}
+
 double Shape::CalculateVolume() const
 {
     double res = 0;

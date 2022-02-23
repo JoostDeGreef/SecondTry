@@ -347,17 +347,22 @@ void TriangulatedPolygon2D::TriangulateInputPolygon()
                 auto [e1,e2] = AddEdgeInLoop(a,b,a1,a2,b1,b2);
                 assert(m_edges[m_edges[m_edges[e2].m_next].m_next].m_next == e2);
                 // remove a2,b1 from the loop angle list, and e1 and update a1
+                angleEdge.erase(edgeAngle[a2]);
+                angleEdge.erase(edgeAngle[b1]);
                 edgeAngle.erase(a2);
                 edgeAngle.erase(b1);
                 edgeAngle.emplace(e1,std::numeric_limits<size_t>::max());
                 angleEdge.erase(edgeAngle[a1]);
                 AddEdgeAngle(*edgeAngle.find(a1));
                 AddEdgeAngle(*edgeAngle.find(e1));
+                assert(angleEdge.size() == edgeAngle.size());
             }
         }
     }
     for(size_t i=0;i<m_edges.size();++i)
     {
         m_edges[i].m_index = i;
+        assert(m_edges[m_edges[m_edges[i].m_next].m_next].m_next == i);
+        assert(m_edges[m_edges[m_edges[i].m_prev].m_prev].m_prev == i);
     }
 }
