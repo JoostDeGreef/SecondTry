@@ -65,8 +65,8 @@ void Face::SetEdges(const std::array<Core::OwnedPtr<Edge>,3> & edges)
 void Face::SetVertexNormals(const std::array<Core::OwnedPtr<Core::Vector3d>,3> & normals)
 {
     m_normals[0] = normals[0];
-    m_normals[0] = normals[0];
-    m_normals[0] = normals[0];
+    m_normals[1] = normals[1];
+    m_normals[2] = normals[2];
 }
 
 void Face::SetFacegroup(const uint64_t facegroup) 

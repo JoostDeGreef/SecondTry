@@ -277,3 +277,9 @@ Shape Shape::Construct::Extrude(const TriangulatedPolygon2D & polygon, const dou
     }
     return res;
 }
+
+Shape Shape::Construct::Sphere(double outerRadius, double innerRadius = -0.95)
+{
+    Shape res;
+    return res;
+}
