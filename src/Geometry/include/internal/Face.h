@@ -17,6 +17,10 @@ public:
         for(int i=0;i<3;++i)
         {
             m_edges[i] = edgeMap.at(m_edges[i]);
+            if(m_normals[i].IsSet())
+            {
+                m_normals[i] = normalsMap.at(m_normals[i]);
+            }
         }
         m_shape = shape;
         if(m_normal.IsSet())

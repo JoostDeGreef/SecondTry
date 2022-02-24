@@ -27,6 +27,7 @@ set(BZIP2_LIBRARIES bz2_static)
 
 set(PNG_LIBRARY png_static)
 set(PNG_INCLUDE_DIRS ${libpng_SOURCE_DIR} ${libpng_BINARY_DIR})
+set(PNG_PNG_INCLUDE_DIR ${libpng_SOURCE_DIR} ${libpng_BINARY_DIR})
 
 set(SKIP_INSTALL_ALL ON CACHE BOOL "Don't install anything" FORCE)
 

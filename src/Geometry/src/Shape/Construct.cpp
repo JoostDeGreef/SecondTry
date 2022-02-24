@@ -89,12 +89,11 @@ Shape Shape::Construct::Cylinder(const double length, double outerRadius, double
     for(size_t i=0;i<sections;++i)
     {
         double alpha = corner*i;
-        polygon.AddNode({outerRadius*cos(alpha), outerRadius*sin(alpha)});
+        auto v = Core::Vector2d(outerRadius*cos(alpha), outerRadius*sin(alpha));
+        auto n = v.Normalized();
+        polygon.AddNode(v,n);
     }
-    // todo: create side normals
-
     TriangulatedPolygon2D triangulatedPolygon(polygon);
-
     return Extrude(triangulatedPolygon, length);
 }
 
@@ -188,6 +187,7 @@ Shape Shape::Construct::Extrude(const TriangulatedPolygon2D & polygon, const dou
         assert(edge2 == edge0->Prev());
         auto face = res.AddFace(edge0,edge1,edge2,group,normal);
         res.m_surface.emplace_back(face);
+        return res.m_surface.back();
     };
     auto CreateFacegroupFromSet = [&](std::set<Core::OwnedPtr<Geometry::Edge>> & edges, size_t group, Core::OwnedPtr<Core::Vector3d> & normal)
     {
@@ -200,7 +200,7 @@ Shape Shape::Construct::Extrude(const TriangulatedPolygon2D & polygon, const dou
             edges.erase(iter0);
             edges.erase(edge1);
             edges.erase(edge2);
-            CreateFacegroupFromEdges(edge0,edge1,edge2,group,normal);
+            CreateFacegroupFromEdges(edge0,edge1,edge2,group,normal)->SetVertexNormals({normal,normal,normal});
         }
     };
     auto CreateFacegroupFromMap = [&](std::map<size_t,Core::OwnedPtr<Geometry::Edge>> & edgesMap, size_t group, Core::OwnedPtr<Core::Vector3d> normal)
@@ -215,6 +215,38 @@ Shape Shape::Construct::Extrude(const TriangulatedPolygon2D & polygon, const dou
     size_t groupid = 1;
     CreateFacegroupFromMap(bottomEdges,groupid++,res.AddNormal(0,0,-1));
     CreateFacegroupFromMap(topEdges,groupid++,res.AddNormal(0,0,1));
+    
+    // todo: create map with vertex normals
+    std::map<size_t,Core::OwnedPtr<Core::Vector3d>> vertexNormalsIn;
+    std::map<size_t,Core::OwnedPtr<Core::Vector3d>> vertexNormalsOut;
+    for(size_t i=0;i<vertices2d.size();++i)
+    {
+        auto & vn = vertices2d[i].m_node;
+        switch(vn.m_normal)
+        {
+        case Geometry::Polygon2D::Node::Normal::Both:
+            vertexNormalsIn.emplace(i,res.AddNormal(vn.m_normal1[0],vn.m_normal1[1],0));
+            vertexNormalsOut.emplace(i,res.AddNormal(vn.m_normal2[0],vn.m_normal2[1],0));
+            break;
+        case Geometry::Polygon2D::Node::Normal::Single:
+            vertexNormalsIn.emplace(i,res.AddNormal(vn.m_normal1[0],vn.m_normal1[1],0));
+            vertexNormalsOut.emplace(i,vertexNormalsIn[i]);
+            break;
+        case Geometry::Polygon2D::Node::Normal::In:
+            vertexNormalsIn.emplace(i,res.AddNormal(vn.m_normal1[0],vn.m_normal1[1],0));
+            vertexNormalsOut.emplace(i,res.AddNormal());
+            break;
+        case Geometry::Polygon2D::Node::Normal::Out:
+            vertexNormalsIn.emplace(i,res.AddNormal());
+            vertexNormalsOut.emplace(i,res.AddNormal(vn.m_normal2[0],vn.m_normal2[1],0));
+            break;
+        case Geometry::Polygon2D::Node::Normal::None:
+            vertexNormalsIn.emplace(i,res.AddNormal());
+            vertexNormalsOut.emplace(i,res.AddNormal());
+            break;
+        }
+    }
+
     for(size_t i=0;i<vertices2d.size();++i)
     {
         size_t step = vertices2d.size();
@@ -233,10 +265,15 @@ Shape Shape::Construct::Extrude(const TriangulatedPolygon2D & polygon, const dou
         ConnectEdges(e2,e1);
         auto n = (vertices2d[ii].m_node.m_vertex-vertices2d[i].m_node.m_vertex).Normalized();
         auto normal = res.AddNormal(n[1],-n[0],0);
-        CreateFacegroupFromEdges(e0,e5,e3,groupid,normal);
-        CreateFacegroupFromEdges(e1,e4,e2,groupid,normal);
+        auto & n0 = vertexNormalsOut[i] || normal;
+        auto & n1 = vertexNormalsIn[ii] || normal;
+        auto & n2 = vertexNormalsOut[i] || normal;
+        auto & n3 = vertexNormalsIn[ii] || normal;
+        auto & n4 = vertexNormalsIn[ii] || normal;
+        auto & n5 = vertexNormalsOut[i] || normal;
+        CreateFacegroupFromEdges(e0,e5,e3,groupid,normal)->SetVertexNormals({n0,n5,n3});
+        CreateFacegroupFromEdges(e1,e4,e2,groupid,normal)->SetVertexNormals({n1,n4,n2});
         groupid++;
-        // todo: set vertex normals
     }
     return res;
 }
