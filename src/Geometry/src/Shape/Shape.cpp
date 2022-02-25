@@ -72,7 +72,6 @@ Core::OwnedPtr<Face> Shape::AddFace(
     face->SetShape(this);
     face->SetEdges({e0,e1,e2});
     face->SetFacegroup(facegroup);
-    face->SetNormal(normal);
     e0->SetFace(face);
     e1->SetFace(face);
     e2->SetFace(face);
@@ -82,6 +81,14 @@ Core::OwnedPtr<Face> Shape::AddFace(
     e0->SetPrev(e2);
     e1->SetPrev(e0);
     e2->SetPrev(e1);
+    if(normal.IsSet())
+    {
+        face->SetNormal(normal);
+    }
+    else
+    {
+        face->CalcNormal();
+    }
     return face;
 }
 

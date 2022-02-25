@@ -33,6 +33,7 @@ public:
     double CalcSurface();
 
     // calculate or return the cached face normal
+    // a fully functional 'face' should have a normal
     const Core::Vector3d & CalcNormal();
 
     // return the cached face normal
@@ -52,8 +53,8 @@ public:
 private:
     Core::OwnedPtr<Edge> m_edges[3];
     Shape * m_shape;
-    Core::OwnedPtr<Core::Vector3d> m_normal; 
-    Core::OwnedPtr<Core::Vector3d> m_normals[3]; 
+    Core::OwnedPtr<Core::Vector3d> m_normal;     // face normal
+    Core::OwnedPtr<Core::Vector3d> m_normals[3]; // vertex normals
     uint64_t m_facegroup;    
     double m_surface = -1.0;
 };

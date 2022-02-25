@@ -52,3 +52,12 @@ TEST_F(ShapeTest, Cylinder)
     EXPECT_GT(smax,surface);
     EXPECT_LT(smin,surface);
 }
+
+TEST_F(ShapeTest, Sphere)
+{
+    auto sphere = Shape::Construct::Sphere(1);
+    double volume = sphere.CalculateVolume();
+    EXPECT_FLOAT_EQ(1.8,volume);
+    double surface = sphere.CalculateSurface();
+    EXPECT_FLOAT_EQ(9.0,surface);
+}

@@ -278,8 +278,104 @@ Shape Shape::Construct::Extrude(const TriangulatedPolygon2D & polygon, const dou
     return res;
 }
 
-Shape Shape::Construct::Sphere(double outerRadius, double innerRadius = -0.95)
+Shape Shape::Construct::Sphere(double outerRadius, double innerRadius)
 {
     Shape res;
+    // vertices
+    std::vector<Core::OwnedPtr<Node>> vertices;
+    double ϕ = 2/(1+sqrt(5));
+    // (±1, ±1, ±1)
+    // (0, ±ϕ, ±1/ϕ)
+    // (±1/ϕ, 0, ±ϕ)
+    // (±ϕ, ±1/ϕ, 0)
+    double a = 0;
+    double b = 1;
+    double c = ϕ;
+    double d = 1/ϕ;
+    vertices.emplace_back(res.AddNode(-b, b, b)); //  0
+    vertices.emplace_back(res.AddNode( b, b, b)); //  1
+    vertices.emplace_back(res.AddNode( b, b,-b)); //  2
+    vertices.emplace_back(res.AddNode(-b, b,-b)); //  3
+    vertices.emplace_back(res.AddNode(-b,-b, b)); //  4
+    vertices.emplace_back(res.AddNode( b,-b, b)); //  5
+    vertices.emplace_back(res.AddNode( b,-b,-b)); //  6
+    vertices.emplace_back(res.AddNode(-b,-b,-b)); //  7
+    vertices.emplace_back(res.AddNode( a, c, d)); //  8
+    vertices.emplace_back(res.AddNode( a,-c,-d)); //  9
+    vertices.emplace_back(res.AddNode( a,-c, d)); // 10
+    vertices.emplace_back(res.AddNode( a,-c,-d)); // 11
+    vertices.emplace_back(res.AddNode(-d, a, c)); // 12
+    vertices.emplace_back(res.AddNode( d, a, c)); // 13
+    vertices.emplace_back(res.AddNode(-d, a,-c)); // 14
+    vertices.emplace_back(res.AddNode( d, a,-c)); // 15
+    vertices.emplace_back(res.AddNode(-c, d, a)); // 16
+    vertices.emplace_back(res.AddNode( c, d, a)); // 17
+    vertices.emplace_back(res.AddNode(-c,-d, a)); // 18
+    vertices.emplace_back(res.AddNode( c,-d, a)); // 19
+    // define pentagons
+    // TODO something is wrong here?
+    std::vector<std::vector<size_t>> pentagons = 
+    {
+        {17, 1, 8, 9, 2},
+        {15, 2, 9, 4,14},
+        {19,17, 2,15, 6},
+        {19, 5,13, 1,17},
+        { 1,13,12, 0, 8},
+        { 0,16, 3, 9, 8},
+        { 6,15,14, 7,11},
+        {10, 5,19, 6,11},
+        {16,18, 7,14, 3},
+        {16, 0,12, 4,18},
+        {12,13, 5,10, 4},
+        { 4,10,11, 7,18}
+    };
+    // add center point to each pentagon
+    for(auto & pentagon:pentagons)
+    {
+        auto v = *vertices[pentagon[0]] + *vertices[pentagon[1]] + *vertices[pentagon[2]] + *vertices[pentagon[3]] + *vertices[pentagon[4]];
+        pentagon.emplace_back(vertices.size());
+        vertices.emplace_back(res.AddNode(v));
+    }
+    // normalize nodes and use them as vertex normals too, then scale the vertices to match outerRadius
+    std::vector<Core::OwnedPtr<Node>> vertexNormals;
+    for(auto & vertex:vertices)
+    {
+        auto & v = *vertex;
+        v.Normalize();
+        vertexNormals.emplace_back(res.AddNormal(v));
+        v *= outerRadius;
+    }
+    // add edges and faces
+    std::map<size_t,Core::OwnedPtr<Geometry::Edge>> edges;
+    auto GetEdge = [&](size_t v0,size_t v1)
+    {
+        size_t index01 = v0*100 + v1;
+        auto iter = edges.find(index01);
+        if(iter == edges.end())
+        {
+            auto [edge01,edge10] = res.AddEdgePair(vertices[v0],vertices[v1]);
+            size_t index10 = v1*100 + v0;
+            edges.emplace(index10,edge10);
+            iter = edges.emplace(index01,edge01).first;
+        }
+        return iter->second;
+    };
+    auto CreateFace = [&](size_t v0,size_t v1,size_t vc)
+    {
+        auto e0 = GetEdge(v0,v1);
+        auto e1 = GetEdge(v1,vc);
+        auto e2 = GetEdge(vc,v0);
+        auto face = res.AddFace(e0,e1,e2,0);
+        face->SetVertexNormals({vertexNormals[v0],vertexNormals[v1],vertexNormals[vc]});
+        res.m_surface.emplace_back(face);
+    };
+    for(auto & pentagon:pentagons)
+    {
+        CreateFace(pentagon[0],pentagon[1],pentagon[5]);
+        CreateFace(pentagon[1],pentagon[2],pentagon[5]);
+        CreateFace(pentagon[2],pentagon[3],pentagon[5]);
+        CreateFace(pentagon[3],pentagon[4],pentagon[5]);
+        CreateFace(pentagon[4],pentagon[0],pentagon[5]);
+    }
     return res;
 }

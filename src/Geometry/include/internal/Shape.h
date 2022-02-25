@@ -70,6 +70,10 @@ public:
         // construct a box at 0,0,0 with 'sides' length sides in directions x,y,z
         static Shape Box(const Core::Vector3d & sides);
         
+        // construct a sphere at 0,0,0 with a certain outer (max) and inner (min) radius
+        // note: a negative inner radius means it's a fraction of the outer radius
+        static Shape Sphere(double outerRadius, double innerRadius = -0.95);
+        
         // construct a cilinder at 0,0,0 with 'length' in the z directions and an aproximated radius between 'outerRadius' and 'innerRadius'
         // note: a negative inner radius means it's a fraction of the outer radius
         static Shape Cylinder(const double length, double outerRadius, double innerRadius = -0.95);

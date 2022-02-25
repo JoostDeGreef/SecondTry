@@ -5,7 +5,7 @@ using namespace Geometry;
 
 bool Polygon2D::IsCounterClockwise() const
 {
-    auto & a = m_southEast-1<0?m_nodes.back().m_vertex:m_nodes[m_southEast-1].m_vertex;
+    auto & a = m_southEast<1?m_nodes.back().m_vertex:m_nodes[m_southEast-1].m_vertex;
     auto & b = m_nodes[m_southEast].m_vertex;
     auto & c = m_southEast+1>=m_nodes.size()?m_nodes.front().m_vertex:m_nodes[m_southEast+1].m_vertex;
     auto A = b - a;
@@ -15,20 +15,27 @@ bool Polygon2D::IsCounterClockwise() const
 
 void Polygon2D::UpdateSouthEast()
 {
-    const auto & A = m_nodes.back().m_vertex;
-    const auto & B = m_nodes[m_southEast].m_vertex;
-    if(A[1] < B[1])
+    if(m_nodes.size()<2)
     {
-        m_southEast = m_nodes.size()-1;
+        m_southEast = 0;
     }
-    else if(A[1] > B[1])
+    else
     {
-    }
-    else // =
-    {
-        if(A[0] < B[0])
+        const auto & A = m_nodes.back().m_vertex;
+        const auto & B = m_nodes[m_southEast].m_vertex;
+        if(A[1] < B[1])
         {
             m_southEast = m_nodes.size()-1;
+        }
+        else if(A[1] > B[1])
+        {
+        }
+        else // =
+        {
+            if(A[0] < B[0])
+            {
+                m_southEast = m_nodes.size()-1;
+            }
         }
     }
 }

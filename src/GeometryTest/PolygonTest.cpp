@@ -47,6 +47,20 @@ protected:
 
 };
 
+namespace Core
+{
+    // TODO: move this to a separate header?
+    bool operator == (const Core::TVector<double, 2> & a,const Core::TVector<double, 2> & b)
+    {
+        return a[0] == b[0] && a[1] == b[1];
+    }
+
+    void PrintTo(const Core::TVector<double, 2>& v, std::ostream* os) 
+    {
+        *os << "[" << v[0] << "," << v[1] << "]"; 
+    }
+}
+
 class TriangulatedPolygon2DTest: public TriangulatedPolygon2D
 {
 public:
@@ -114,17 +128,20 @@ TEST_F(PolygonTest, CopyInputPolygonToVertices)
     p0.AddNode({1,0});
     p0.AddNode({1,1});
     p0.AddNode({0,1});
-    p1.AddNode({0,0});
+    p1.AddNode({0,1});
     p1.AddNode({1,1});
     p1.AddNode({1,0});
-    p1.AddNode({0,1});
+    p1.AddNode({0,0});
     TriangulatedPolygon2DTest tp0;
     TriangulatedPolygon2DTest tp1;
     tp0.CopyInputPolygonToVertices(p0);
     tp1.CopyInputPolygonToVertices(p1);
     EXPECT_EQ(4,tp0.m_vertices.size());
     EXPECT_EQ(4,tp1.m_vertices.size());
-    EXPECT_TRUE(tp0.m_vertices[2].m_node.m_vertex.Equal(tp1.m_vertices[2].m_node.m_vertex));
+    EXPECT_EQ(tp0.m_vertices[0].m_node.m_vertex,tp1.m_vertices[0].m_node.m_vertex);
+    EXPECT_EQ(tp0.m_vertices[1].m_node.m_vertex,tp1.m_vertices[1].m_node.m_vertex);
+    EXPECT_EQ(tp0.m_vertices[2].m_node.m_vertex,tp1.m_vertices[2].m_node.m_vertex);
+    EXPECT_EQ(tp0.m_vertices[3].m_node.m_vertex,tp1.m_vertices[3].m_node.m_vertex);
 }
 
 TEST_F(PolygonTest, AddEdge)

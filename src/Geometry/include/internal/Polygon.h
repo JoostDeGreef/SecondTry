@@ -57,7 +57,7 @@ public:
     Polygon2D()
         : m_southEast(0)
     {
-        m_nodes.reserve(32);
+        m_nodes.reserve(8);
     }
 
     // add nodes in the xy plane
