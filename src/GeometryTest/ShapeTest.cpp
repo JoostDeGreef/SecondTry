@@ -55,9 +55,17 @@ TEST_F(ShapeTest, Cylinder)
 
 TEST_F(ShapeTest, Sphere)
 {
-    auto sphere = Shape::Construct::Sphere(1);
+    double rmax = 1;
+    double rmin = 1 * 0.98;
+    auto sphere = Shape::Construct::Sphere(rmax,rmin);
+    double vmax = 4 * Core::Constants::Pi * pow(rmax,3) / 3.0;
+    double vmin = 4 * Core::Constants::Pi * pow(rmin,3) / 3.0;
     double volume = sphere.CalculateVolume();
-    EXPECT_FLOAT_EQ(1.8,volume);
+    EXPECT_GT(vmax,volume);
+    EXPECT_LT(vmin,volume);
+    double smax = 4 * Core::Constants::Pi * pow(rmax,2);
+    double smin = 4 * Core::Constants::Pi * pow(rmin,2);
     double surface = sphere.CalculateSurface();
-    EXPECT_FLOAT_EQ(9.0,surface);
+    EXPECT_GT(smax,surface);
+    EXPECT_LT(smin,surface);
 }

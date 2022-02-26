@@ -25,5 +25,6 @@ namespace Geometry
 #include "internal/Polygon.h"
 #include "internal/Face.h"
 #include "internal/Shape.h"
+#include "internal/Utilities.h"
 }
 

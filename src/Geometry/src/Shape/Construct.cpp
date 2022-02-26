@@ -290,49 +290,53 @@ Shape Shape::Construct::Sphere(double outerRadius, double innerRadius)
     // (±ϕ, ±1/ϕ, 0)
     double a = 0;
     double b = 1;
-    double c = ϕ;
-    double d = 1/ϕ;
-    vertices.emplace_back(res.AddNode(-b, b, b)); //  0
-    vertices.emplace_back(res.AddNode( b, b, b)); //  1
-    vertices.emplace_back(res.AddNode( b, b,-b)); //  2
-    vertices.emplace_back(res.AddNode(-b, b,-b)); //  3
-    vertices.emplace_back(res.AddNode(-b,-b, b)); //  4
-    vertices.emplace_back(res.AddNode( b,-b, b)); //  5
-    vertices.emplace_back(res.AddNode( b,-b,-b)); //  6
-    vertices.emplace_back(res.AddNode(-b,-b,-b)); //  7
-    vertices.emplace_back(res.AddNode( a, c, d)); //  8
-    vertices.emplace_back(res.AddNode( a,-c,-d)); //  9
-    vertices.emplace_back(res.AddNode( a,-c, d)); // 10
-    vertices.emplace_back(res.AddNode( a,-c,-d)); // 11
-    vertices.emplace_back(res.AddNode(-d, a, c)); // 12
-    vertices.emplace_back(res.AddNode( d, a, c)); // 13
-    vertices.emplace_back(res.AddNode(-d, a,-c)); // 14
-    vertices.emplace_back(res.AddNode( d, a,-c)); // 15
-    vertices.emplace_back(res.AddNode(-c, d, a)); // 16
-    vertices.emplace_back(res.AddNode( c, d, a)); // 17
-    vertices.emplace_back(res.AddNode(-c,-d, a)); // 18
-    vertices.emplace_back(res.AddNode( c,-d, a)); // 19
+    double c = ϕ;   // 0.62
+    double d = 1/ϕ; // 1.62
+    vertices.emplace_back(res.AddNode(-c,-d, a)); //  0  blue
+    vertices.emplace_back(res.AddNode( c, d, a)); //  1  blue
+    vertices.emplace_back(res.AddNode( b, b, b)); //  2  yellow
+    vertices.emplace_back(res.AddNode( a, c, d)); //  3  green
+    vertices.emplace_back(res.AddNode(-b, b, b)); //  4  yellow
+    vertices.emplace_back(res.AddNode(-c, d, a)); //  5  blue
+    vertices.emplace_back(res.AddNode( d,-a, c)); //  6  red
+    vertices.emplace_back(res.AddNode( b,-b, b)); //  7  yellow
+    vertices.emplace_back(res.AddNode( a,-c, d)); //  8  green
+    vertices.emplace_back(res.AddNode( b, b,-b)); //  9  yellow
+    vertices.emplace_back(res.AddNode( d,-a,-c)); // 10  red
+    vertices.emplace_back(res.AddNode( b,-b,-b)); // 11  yellow
+    vertices.emplace_back(res.AddNode( c,-d, a)); // 12  blue
+    vertices.emplace_back(res.AddNode(-b,-b, b)); // 13  yellow
+    vertices.emplace_back(res.AddNode(-d,-a, c)); // 14  red
+    vertices.emplace_back(res.AddNode(-d,-a,-c)); // 15  red
+    vertices.emplace_back(res.AddNode(-b, b,-b)); // 16  yellow
+    vertices.emplace_back(res.AddNode( a, c,-d)); // 17  green
+    vertices.emplace_back(res.AddNode( a,-c,-d)); // 18  green
+    vertices.emplace_back(res.AddNode(-b,-b,-b)); // 19  yellow
     // define pentagons
-    // TODO something is wrong here?
     std::vector<std::vector<size_t>> pentagons = 
     {
-        {17, 1, 8, 9, 2},
-        {15, 2, 9, 4,14},
-        {19,17, 2,15, 6},
-        {19, 5,13, 1,17},
-        { 1,13,12, 0, 8},
-        { 0,16, 3, 9, 8},
-        { 6,15,14, 7,11},
-        {10, 5,19, 6,11},
-        {16,18, 7,14, 3},
-        {16, 0,12, 4,18},
-        {12,13, 5,10, 4},
-        { 4,10,11, 7,18}
+        { 8,13, 0,12, 7}, //  0
+        { 1, 5, 4, 3, 2}, //  1
+        { 2, 3, 8, 7, 6}, //  2
+        { 1, 2, 6,10, 9}, //  3
+        { 3, 4,14,13, 8}, //  4
+        { 6, 7,12,11,10}, //  5
+        { 9,10,11,18,17}, //  6
+        { 1, 9,17,16, 5}, //  7
+        { 4, 5,16,15,14}, //  8
+        { 0,13,14,15,19}, //  9
+        { 0,19,18,11,12}, // 10
+        {15,16,17,18,19}  // 11
     };
     // add center point to each pentagon
     for(auto & pentagon:pentagons)
     {
-        auto v = *vertices[pentagon[0]] + *vertices[pentagon[1]] + *vertices[pentagon[2]] + *vertices[pentagon[3]] + *vertices[pentagon[4]];
+        auto & v0 = *vertices[pentagon[0]];
+        auto & v1 = *vertices[pentagon[1]];
+        auto & v2 = *vertices[pentagon[2]];
+        auto & v3 = *vertices[pentagon[3]];
+        auto & v4 = *vertices[pentagon[4]];
+        auto v = v0 + v1 + v2 + v3 + v4;
         pentagon.emplace_back(vertices.size());
         vertices.emplace_back(res.AddNode(v));
     }
@@ -346,29 +350,30 @@ Shape Shape::Construct::Sphere(double outerRadius, double innerRadius)
         v *= outerRadius;
     }
     // add edges and faces
-    std::map<size_t,Core::OwnedPtr<Geometry::Edge>> edges;
+    std::map<std::pair<size_t,size_t>,Core::OwnedPtr<Geometry::Edge>> edges;
     auto GetEdge = [&](size_t v0,size_t v1)
     {
-        size_t index01 = v0*100 + v1;
+        auto index01 = std::make_pair(v0,v1);
         auto iter = edges.find(index01);
         if(iter == edges.end())
         {
             auto [edge01,edge10] = res.AddEdgePair(vertices[v0],vertices[v1]);
-            size_t index10 = v1*100 + v0;
+            auto index10 = std::make_pair(v1,v0);
             edges.emplace(index10,edge10);
             iter = edges.emplace(index01,edge01).first;
         }
         return iter->second;
     };
-    auto CreateFace = [&](size_t v0,size_t v1,size_t vc)
+    auto CreateFace = [&](size_t v0,size_t v1,size_t v2)
     {
         auto e0 = GetEdge(v0,v1);
-        auto e1 = GetEdge(v1,vc);
-        auto e2 = GetEdge(vc,v0);
+        auto e1 = GetEdge(v1,v2);
+        auto e2 = GetEdge(v2,v0);
         auto face = res.AddFace(e0,e1,e2,0);
-        face->SetVertexNormals({vertexNormals[v0],vertexNormals[v1],vertexNormals[vc]});
+        face->SetVertexNormals({vertexNormals[v0],vertexNormals[v1],vertexNormals[v2]});
         res.m_surface.emplace_back(face);
     };
+    // TODO: Change to CreateTriangle
     for(auto & pentagon:pentagons)
     {
         CreateFace(pentagon[0],pentagon[1],pentagon[5]);
@@ -377,5 +382,13 @@ Shape Shape::Construct::Sphere(double outerRadius, double innerRadius)
         CreateFace(pentagon[3],pentagon[4],pentagon[5]);
         CreateFace(pentagon[4],pentagon[0],pentagon[5]);
     }
+    assert(edges.size() == 12*5+12*10);
+    // split the faces in 4 until the required inner radius is reached
+    // while(DistancePlaneToPoint(res.m_surface[0]->GetNormal(),res.m_surface[0]->GetEdge(0)->Start(),{0,0,0})<innerRadius)
+    // {
+    //     edges.clear();
+
+    // }
+    // TODO: turn triangles into faces
     return res;
 }
