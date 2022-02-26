@@ -280,6 +280,10 @@ Shape Shape::Construct::Extrude(const TriangulatedPolygon2D & polygon, const dou
 
 Shape Shape::Construct::Sphere(double outerRadius, double innerRadius)
 {
+    if(innerRadius<0)
+    {
+        innerRadius *= -outerRadius;
+    }
     Shape res;
     // vertices
     std::vector<Core::OwnedPtr<Node>> vertices;
@@ -342,16 +346,75 @@ Shape Shape::Construct::Sphere(double outerRadius, double innerRadius)
     }
     // normalize nodes and use them as vertex normals too, then scale the vertices to match outerRadius
     std::vector<Core::OwnedPtr<Node>> vertexNormals;
-    for(auto & vertex:vertices)
+    auto NormalizeVertex = [&](Core::OwnedPtr<Geometry::Node> &vertex)
     {
         auto & v = *vertex;
         v.Normalize();
         vertexNormals.emplace_back(res.AddNormal(v));
         v *= outerRadius;
+    };
+    for(auto & vertex:vertices)
+    {
+        NormalizeVertex(vertex);
     }
-    // add edges and faces
+    // turn pentagons into triangles
+    std::vector<std::tuple<size_t,size_t,size_t>> triangles;
+    auto CreateTriangle = [&](size_t v0,size_t v1,size_t v2)
+    {
+        triangles.emplace_back(v0,v1,v2);
+    };
+    for(auto & pentagon:pentagons)
+    {
+        CreateTriangle(pentagon[0],pentagon[1],pentagon[5]);
+        CreateTriangle(pentagon[1],pentagon[2],pentagon[5]);
+        CreateTriangle(pentagon[2],pentagon[3],pentagon[5]);
+        CreateTriangle(pentagon[3],pentagon[4],pentagon[5]);
+        CreateTriangle(pentagon[4],pentagon[0],pentagon[5]);
+    }
+    // split the triangles in 4 until the required inner radius is reached
+    auto DistanceFirstTriangleToOrigin = [&]()
+    {
+        auto & v0 = *vertices[std::get<0>(triangles[0])];
+        auto & v1 = *vertices[std::get<1>(triangles[0])];
+        auto & v2 = *vertices[std::get<2>(triangles[0])];
+        return (v0+v1+v2).Length()/3;
+    };
+    std::map<std::pair<size_t,size_t>,size_t> midPoint;
+    auto GetMidPoint = [&](const size_t v0,const size_t v1)
+    {
+        auto index = std::make_pair(std::min(v0,v1),std::max(v0,v1));
+        auto iter = midPoint.find(index);
+        if(iter == midPoint.end())
+        {
+            size_t v = vertices.size();
+            iter = midPoint.emplace(index,v).first;
+            vertices.emplace_back(res.AddNode(*vertices[v0]+*vertices[v1]));
+            NormalizeVertex(vertices.back());
+        }
+        return iter->second;
+    };
+    while(DistanceFirstTriangleToOrigin()<innerRadius)
+    {
+        midPoint.clear();
+        std::vector<std::tuple<size_t,size_t,size_t>> newTriangles;
+        for(const auto & triangle:triangles)
+        {
+            auto & p0 = std::get<0>(triangle);
+            auto & p1 = std::get<1>(triangle);
+            auto & p2 = std::get<2>(triangle);
+            auto p3 = GetMidPoint(p0,p1);
+            auto p4 = GetMidPoint(p1,p2);
+            auto p5 = GetMidPoint(p2,p0);
+            newTriangles.emplace_back(p0,p3,p5);
+            newTriangles.emplace_back(p1,p4,p3);
+            newTriangles.emplace_back(p4,p5,p3);
+            newTriangles.emplace_back(p2,p5,p4);
+        }
+        triangles.swap(newTriangles);
+    }
+    // turn triangles into faces
     std::map<std::pair<size_t,size_t>,Core::OwnedPtr<Geometry::Edge>> edges;
-    auto GetEdge = [&](size_t v0,size_t v1)
+    auto GetEdge = [&](const size_t v0,const size_t v1)
     {
         auto index01 = std::make_pair(v0,v1);
         auto iter = edges.find(index01);
@@ -364,7 +427,7 @@ Shape Shape::Construct::Sphere(double outerRadius, double innerRadius)
         }
         return iter->second;
     };
-    auto CreateFace = [&](size_t v0,size_t v1,size_t v2)
+    auto CreateFace = [&](const size_t v0,const size_t v1,const size_t v2)
     {
         auto e0 = GetEdge(v0,v1);
         auto e1 = GetEdge(v1,v2);
@@ -373,22 +436,9 @@ Shape Shape::Construct::Sphere(double outerRadius, double innerRadius)
         face->SetVertexNormals({vertexNormals[v0],vertexNormals[v1],vertexNormals[v2]});
         res.m_surface.emplace_back(face);
     };
-    // TODO: Change to CreateTriangle
-    for(auto & pentagon:pentagons)
+    for(const auto & triangle:triangles)
     {
-        CreateFace(pentagon[0],pentagon[1],pentagon[5]);
-        CreateFace(pentagon[1],pentagon[2],pentagon[5]);
-        CreateFace(pentagon[2],pentagon[3],pentagon[5]);
-        CreateFace(pentagon[3],pentagon[4],pentagon[5]);
-        CreateFace(pentagon[4],pentagon[0],pentagon[5]);
+        CreateFace(std::get<0>(triangle),std::get<1>(triangle),std::get<2>(triangle));
     }
-    assert(edges.size() == 12*5+12*10);
-    // split the faces in 4 until the required inner radius is reached
-    // while(DistancePlaneToPoint(res.m_surface[0]->GetNormal(),res.m_surface[0]->GetEdge(0)->Start(),{0,0,0})<innerRadius)
-    // {
-    //     edges.clear();
-
-    // }
-    // TODO: turn triangles into faces
     return res;
 }

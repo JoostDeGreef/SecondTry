@@ -75,6 +75,10 @@ public:
         {
             m_mousedown = (action == GLFW_PRESS);
         } 
+        else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE)
+        {
+            window->GetState3d().RenderWireframe(!window->GetState3d().RenderWireframe());
+        }
     };
     void pos_callback(const std::shared_ptr<OpenGL::Window>& window, int xpos, int ypos) override 
     { 
@@ -92,7 +96,6 @@ public:
         window->GetState3d().View().SetLookAt({0,0,-1},{0,0,0},{0,1,0});
         window->GetState2d().RenderWireframe(false);
         window->GetState3d().RenderWireframe(false);
-//        window->GetState3d().RenderWireframe(true);
     };
     void scroll_callback(const std::shared_ptr<OpenGL::Window>& window, double x, double y) override { window->SetTitle("scroll_callback(...,{0},{1})", x, y); };
     void refresh_callback(const std::shared_ptr<OpenGL::Window>& window) override { window->SetTitle("refresh_callback(...)"); };
@@ -317,9 +320,9 @@ void UI::AddShapes()
 {
     m_shapes.emplace_back(Geometry::Shape::Construct::Cube(0.3),Mat4::Translation({-.4,.2,1}));
     m_shapes.back().Translate({-.15,-.15,-.15});
-    m_shapes.emplace_back(Geometry::Shape::Construct::Cube(0.3),Mat4::Translation({-.1,.2,1}));
-    m_shapes.back().Translate({-.15,-.15,-.15});
-    m_shapes.emplace_back(Geometry::Shape::Construct::Sphere(0.15),Mat4::Translation({0.2,.2,1}));
+    m_shapes.emplace_back(Geometry::Shape::Construct::Sphere(0.15,-0.8),Mat4::Translation({-0.1,.2,1}));
+    m_shapes.back().Translate({0,0,0});
+    m_shapes.emplace_back(Geometry::Shape::Construct::Sphere(0.15,-.96),Mat4::Translation({0.2,.2,1}));
     m_shapes.back().Translate({0,0,0});
     m_shapes.emplace_back(Geometry::Shape::Construct::Cylinder(0.3,0.15,-0.98),Mat4::Translation({0.5,.2,1}));
     m_shapes.back().Translate({0,0,-.15});
