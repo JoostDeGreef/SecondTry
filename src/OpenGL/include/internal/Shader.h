@@ -25,6 +25,7 @@ namespace OpenGL
         Shader(const std::string & vertex,
                const std::string & fragment);
 
+        bool IsLoaded() const;
     private:
         class State
         {
@@ -41,4 +42,13 @@ namespace OpenGL
         std::shared_ptr<Shader::State> m_state;
     };
 
+    // class ShaderCache
+    // {
+    // private:
+    //     ShaderCache()
+    //     {}
+
+    // public:
+    //     Shader & Use(const std::string & name, );
+    // };
 }

@@ -35,6 +35,7 @@ add_library (${PROJECT_NAME}
              "src/OpenGL.cpp"
              "src/Shader.cpp"
              "src/State.cpp"
+             "src/GLShape.cpp"
              "src/Window.cpp"
              ${OSSPECIFIC})
 

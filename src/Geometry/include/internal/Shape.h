@@ -21,6 +21,8 @@ public:
 
     Shape & Translate(const Core::Vector3d & translation);
     Shape & Rotate(const Core::Quat & rotation,const Core::Vector3d & center = Core::Vector3d(0,0,0));
+
+    size_t GetLastChangeID() { return m_lastChangeId; }
 private:
     // The shape owns the memory stores for all the objects which define it
     Core::SmartPtrStore<Core::Vector3d> m_normals;
@@ -31,6 +33,13 @@ private:
     // The shape consists out of faces
     std::vector<Core::OwnedPtr<Face>> m_surface; 
 
+    // Used by rendering derivatives to see if their cached graphics object is up-to-date
+    size_t m_lastChangeId = 0;
+
+    void UpdateLastChangeID()
+    {
+        m_lastChangeId++;
+    }
 protected:
     template<typename ... ARGS>
     Core::OwnedPtr<Core::Vector3d> AddNormal(ARGS ... args)

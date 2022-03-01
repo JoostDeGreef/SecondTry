@@ -92,6 +92,11 @@ namespace OpenGL
     {
     }
 
+    bool Shader::IsLoaded() const
+    {
+        return m_state->GetProgram() != 0;
+    }
+
     Shader::State::~State()
     {
         glDeleteProgram(m_program);
@@ -111,6 +116,7 @@ namespace OpenGL
         m_program = program;
     }
 
+    // todo: create Uniforms object which caches the locations and can be indexed by name
     std::vector<GLuint> Shader::Use(const std::vector<std::string> & uniforms)
     {
         std::vector<GLuint> res;

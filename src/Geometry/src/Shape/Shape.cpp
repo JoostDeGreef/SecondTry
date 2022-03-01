@@ -46,6 +46,7 @@ void Shape::Clear()
     m_edges.ClearWithoutCallingDestructors();
     m_faces.ClearWithoutCallingDestructors();
     m_surface.clear();
+    UpdateLastChangeID();
 }
 
 std::tuple<Core::OwnedPtr<Geometry::Edge>,Core::OwnedPtr<Geometry::Edge>> Shape::AddEdgePair(
@@ -118,20 +119,22 @@ double Shape::CalculateSurface() const
 
 Shape & Shape::Translate(const Core::Vector3d & translation)
 {
-   for(auto & node:m_nodes)
-   {
-       node += translation;
-   }
-   return *this;
+    for(auto & node:m_nodes)
+    {
+        node += translation;
+    }
+    UpdateLastChangeID();
+    return *this;
 }
 
 Shape & Shape::Rotate(const Core::Quat & rotation,const Core::Vector3d & center)
 {
-   for(auto & node:m_nodes)
-   {
-       node = center+rotation.Transform(node-center);
-   }
-   return *this;
+    for(auto & node:m_nodes)
+    {
+        node = center+rotation.Transform(node-center);
+    }
+    UpdateLastChangeID();
+    return *this;
 }
 
 std::vector<float> Shape::Draw() const

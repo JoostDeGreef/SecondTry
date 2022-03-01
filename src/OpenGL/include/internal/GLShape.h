@@ -15,7 +15,15 @@ namespace OpenGL
             return m_model;
         }
 
+        void Render(const OpenGL::Mat4 &model,const OpenGL::Mat4 &view,const OpenGL::Mat4 &projection);
+        void ReleaseRenderCache();
     private:
         Mat4 m_model;
+
+        GLuint m_VBO = 0;
+        GLuint m_VAO = 0;
+        size_t m_lastRenderId = -1;
+        OpenGL::Shader m_shader;
+        size_t m_vertexCount;
     };
 }
