@@ -8,6 +8,7 @@ namespace OpenGL
         GLShape(Geometry::Shape && shape,const Mat4 model = Mat4::Identity())
             : Geometry::Shape(shape)
             , m_model(model)
+            , m_shader()
         {}
 
         Mat4 & Model()
@@ -23,7 +24,7 @@ namespace OpenGL
         GLuint m_VBO = 0;
         GLuint m_VAO = 0;
         size_t m_lastRenderId = -1;
-        OpenGL::Shader m_shader;
+        OpenGL::Shader_3d_phong m_shader;
         size_t m_vertexCount;
     };
 }

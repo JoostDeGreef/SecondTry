@@ -65,6 +65,20 @@ void main()
 }
 )SRC";
 
-shaders["3d_phong"] = std::make_tuple(vertex_3d_phong,fragment_3d_phong);
+const std::vector<OpenGL::Shader::Uniforms> uniforms_3d_phong = 
+{
+  OpenGL::Shader::Uniforms::model,
+  OpenGL::Shader::Uniforms::view,
+  OpenGL::Shader::Uniforms::projection,
+  OpenGL::Shader::Uniforms::color,
+  OpenGL::Shader::Uniforms::lightPos,
+  OpenGL::Shader::Uniforms::lightColor,
+  OpenGL::Shader::Uniforms::ambientStrength,
+  OpenGL::Shader::Uniforms::ambientColor,
+  OpenGL::Shader::Uniforms::reflectionStrength,
+  OpenGL::Shader::Uniforms::reflectionColor,
+};
+
+shaders["3d_phong"] = std::make_tuple(vertex_3d_phong,fragment_3d_phong,uniforms_3d_phong);
 
 

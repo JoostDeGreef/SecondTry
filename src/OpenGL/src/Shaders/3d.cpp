@@ -26,4 +26,12 @@ void main()
 }
 )SRC";
 
-shaders["3d"] = std::make_tuple(vertex_3d,fragment_3d);
+const std::vector<OpenGL::Shader::Uniforms> uniforms_3d = 
+{
+  OpenGL::Shader::Uniforms::model,
+  OpenGL::Shader::Uniforms::view,
+  OpenGL::Shader::Uniforms::projection,
+  OpenGL::Shader::Uniforms::color,
+};
+
+shaders["3d"] = std::make_tuple(vertex_3d,fragment_3d,uniforms_3d);

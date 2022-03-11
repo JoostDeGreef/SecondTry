@@ -4,6 +4,7 @@
 #include <string>
 #include <bitset>
 #include <map>
+#include <utility>
 
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
@@ -36,8 +37,8 @@ namespace OpenGL
     using ColorPtr = Color*;
 }
 
-#include "internal/Shader.h"
 #include "internal/Mat4.h"
+#include "internal/Shader.h"
 #include "internal/State.h"
 
 namespace OpenGL

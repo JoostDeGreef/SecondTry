@@ -65,7 +65,7 @@ namespace OpenGL
         FontImp(const std::string& filename)
             : m_ft(FreetypeLibrary::Instance())
             , m_height(72)
-            , m_shader(OpenGL::Shader::LoadFromResource("text"))
+            , m_shader()
         {
             if (FT_New_Face(m_ft, filename.c_str(), 0, &m_face))
             {
@@ -96,10 +96,11 @@ namespace OpenGL
         void RenderText(const std::string& text, float x, float y, float scale, RGBColorf color, const OpenGL::State & state2d)
         {
             // activate corresponding render state	
-            auto uniforms = m_shader.Use("model","projection","color","text");
-            state2d.Model().ApplyAsUniform(uniforms.at(0));
-            state2d.Projection().ApplyAsUniform(uniforms.at(1));
-            GLCHECK(glUniform3f(uniforms.at(2), color.R, color.G, color.B)); // color
+            m_shader.Activate();
+            m_shader.SetModel(state2d.Model());
+            m_shader.SetProjection(state2d.Projection());
+            m_shader.SetColor(color);
+            
             GLCHECK(glActiveTexture(GL_TEXTURE0));
             GLCHECK(glBindVertexArray(m_VAO));
 
@@ -125,7 +126,7 @@ namespace OpenGL
                 };
                 // render glyph texture over quad
                 GLCHECK(glBindTexture(GL_TEXTURE_2D, ch.TextureID));
-                GLCHECK(glUniform1i(uniforms.at(3), 0));
+                m_shader.SetText(0);
                 // update content of VBO memory
                 GLCHECK(glBindBuffer(GL_ARRAY_BUFFER, m_VBO));
                 GLCHECK(glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices));
@@ -224,7 +225,7 @@ namespace OpenGL
         FT_Face m_face;
         std::map<int, Character> m_characters;
         int m_height;
-        Shader m_shader;
+        Shader_text m_shader;
         unsigned int m_VAO, m_VBO;
     };
 

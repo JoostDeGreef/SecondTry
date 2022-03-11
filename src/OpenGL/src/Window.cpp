@@ -293,6 +293,8 @@ void Window::WindowImp::MainLoop()
 
     glfwMakeContextCurrent(m_window);
 
+    ShaderCache::LoadAll();
+
     m_callbackHandler.ContextInit(imp->m_owner);
 
     while (!glfwWindowShouldClose(m_window))
@@ -305,6 +307,8 @@ void Window::WindowImp::MainLoop()
     PurgeCallbacks();
 
     m_callbackHandler.ContextFree(imp->m_owner);
+
+    ShaderCache::UnloadAll();
 
     state.RemoveWindow(this);
     glfwDestroyWindow(m_window);

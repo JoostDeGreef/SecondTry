@@ -6,10 +6,6 @@ using namespace Geometry;
 
 void GLShape::Render(const OpenGL::Mat4 &model,const OpenGL::Mat4 &view,const OpenGL::Mat4 &projection)
 {
-    if(!m_shader.IsLoaded())
-    {
-        m_shader = OpenGL::Shader::LoadFromResource("3d_phong");
-    }
     if(m_VAO == 0)
     {
         GLCHECK(glGenVertexArrays(1, &m_VAO));
@@ -46,22 +42,23 @@ void GLShape::Render(const OpenGL::Mat4 &model,const OpenGL::Mat4 &view,const Op
         m_lastRenderId = GetLastChangeID();
     }
 
-    auto uniforms = m_shader.Use("model","view","projection","color","lightPos","lightColor","ambientStrength","ambientColor","reflectionStrength","reflectionColor");
     RGBColorf color(0xFF0000);
     RGBColorf lightColor(0xFFFFFF);
     RGBColorf ambientColor(0xFF0000);
     RGBColorf reflectionColor(0xFFFFFF);
     Core::Vector3d lightPos(-2,0,-1);
-    model.ApplyAsUniform(uniforms.at(0));
-    view.ApplyAsUniform(uniforms.at(1));
-    projection.ApplyAsUniform(uniforms.at(2));
-    GLCHECK(glUniform3f(uniforms.at(3), color.R, color.G, color.B)); // color
-    GLCHECK(glUniform3f(uniforms.at(4), lightPos[0], lightPos[1], lightPos[2])); // light pos
-    GLCHECK(glUniform3f(uniforms.at(5), lightColor.R, lightColor.G, lightColor.B)); // light color
-    GLCHECK(glUniform1f(uniforms.at(6), 0.1)); // ambient strength
-    GLCHECK(glUniform3f(uniforms.at(7), ambientColor.R, ambientColor.G, ambientColor.B)); // ambient color
-    GLCHECK(glUniform1f(uniforms.at(8), 0.2)); // reflection strength
-    GLCHECK(glUniform3f(uniforms.at(9), reflectionColor.R, reflectionColor.G, reflectionColor.B)); // reflection color
+
+    m_shader.Activate();
+    m_shader.SetModel(model);
+    m_shader.SetProjection(projection);
+    m_shader.SetView(view);
+    m_shader.SetColor(color);
+    m_shader.SetLightPos(lightPos);
+    m_shader.SetLightColor(lightColor);
+    m_shader.SetAmbientStrength(0.1);
+    m_shader.SetAmbientColor(ambientColor);
+    m_shader.SetReflectionStrength(0.2);
+    m_shader.SetReflectionColor(reflectionColor);
 
     GLCHECK(glBindVertexArray(m_VAO)); 
     GLCHECK(glDrawArrays(GL_TRIANGLES, 0, m_vertexCount)); 
@@ -74,5 +71,5 @@ void GLShape::ReleaseRenderCache()
     GLCHECK(glDeleteBuffers(1, &m_VBO));
     m_VAO = 0;
     m_VBO = 0;
-    m_shader = OpenGL::Shader();
+    m_shader.Unload();
 }

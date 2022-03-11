@@ -31,4 +31,12 @@ void main()
 }
 )SRC";
 
-shaders["text"] = std::make_tuple(vertex_text,fragment_text);
+const std::vector<OpenGL::Shader::Uniforms> uniforms_text = 
+{
+  OpenGL::Shader::Uniforms::model,
+  OpenGL::Shader::Uniforms::projection,
+  OpenGL::Shader::Uniforms::color,
+  OpenGL::Shader::Uniforms::text,
+};
+
+shaders["text"] = std::make_tuple(vertex_text,fragment_text,uniforms_text);

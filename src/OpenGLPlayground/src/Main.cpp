@@ -107,19 +107,10 @@ public:
 
     int Run();
 
-    void AddShaders();
     void AddShapes();
     void ClearShapes();
 private:
-    enum class ShaderId
-    {
-        two_d = 1,
-        three_d = 2,
-        three_d_phong = 3,
-    };
-
     OpenGL::Window mainWindow;
-    std::map<ShaderId,OpenGL::Shader> m_shaders;
     std::vector<OpenGL::GLShape> m_shapes;
 
     bool m_mousedown = false;
@@ -142,16 +133,8 @@ int UI::Run()
     return EXIT_SUCCESS;
 }
 
-void UI::AddShaders()
-{
-    m_shaders.emplace(ShaderId::two_d, OpenGL::Shader::LoadFromResource("2d"));
-    m_shaders.emplace(ShaderId::three_d, OpenGL::Shader::LoadFromResource("3d"));
-    m_shaders.emplace(ShaderId::three_d_phong, OpenGL::Shader::LoadFromResource("3d_phong"));
-}
-
 void UI::ContextInit(const std::shared_ptr<OpenGL::Window>& window)
 {
-    AddShaders();
     GLCHECK(glClearColor(0.1, 0.1, 0.1, 1.0));
 
     GLCHECK(glFrontFace(GL_CCW));
@@ -169,11 +152,12 @@ void UI::ContextInit(const std::shared_ptr<OpenGL::Window>& window)
 
 void UI::ContextFree(const std::shared_ptr<OpenGL::Window>& window)
 {
-    m_shaders.clear();
 }
 
 void UI::Draw2D(const std::shared_ptr<OpenGL::Window>& window)
 {
+    // this function should be converted into a 2d rendering class
+    static OpenGL::Shader_2d shader;
     static OpenGL::Font font(/*"C:/Src/SecondTry/Data/fonts/CHILLER.TTF"*/ "/home/joost/src/SecondTry/Data/fonts/CHILLER.TTF");
     std::string text = "This is sample text";
 
@@ -225,11 +209,12 @@ void UI::Draw2D(const std::shared_ptr<OpenGL::Window>& window)
     // VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
     GLCHECK(glBindVertexArray(0)); 
 
-    auto uniforms = m_shaders[ShaderId::two_d].Use("model","projection","color");
     RGBColorf color(0xFF0000);
-    state2d.Model().ApplyAsUniform(uniforms.at(0));
-    state2d.Projection().ApplyAsUniform(uniforms.at(1));
-    GLCHECK(glUniform3f(uniforms.at(2), color.R, color.G, color.B)); // color
+
+    shader.Activate();
+    shader.SetModel(state2d.Model());
+    shader.SetProjection(state2d.Projection());
+    shader.SetColor(color);
 
     GLCHECK(glBindVertexArray(VAO)); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
     GLCHECK(glDrawArrays(GL_TRIANGLES, 0, 6));
@@ -254,7 +239,6 @@ void UI::Draw3D(const std::shared_ptr<OpenGL::Window>& window)
     auto & state3d = window->GetState3d();
     if(state3d.RenderWireframe())
     {
-        // draw the shapes as wireframes
         GLCHECK(glPolygonMode(GL_FRONT_AND_BACK, GL_LINE));
         GLCHECK(glDisable(GL_DEPTH_TEST));
         GLCHECK(glDisable(GL_CULL_FACE));
@@ -266,7 +250,6 @@ void UI::Draw3D(const std::shared_ptr<OpenGL::Window>& window)
         GLCHECK(glPolygonMode(GL_FRONT_AND_BACK, GL_FILL));
     }
 
-    // GLCHECK(glEnable(GL_DEPTH_TEST));
     for(auto shape:m_shapes)
     {
         shape.Render(shape.Model().Rotated(m_mouseRotation), state3d.View(), state3d.Projection());
