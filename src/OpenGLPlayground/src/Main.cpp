@@ -52,7 +52,7 @@ public:
         {
             int dx = xpos-m_xpos;
             int dy = ypos-m_ypos;
-            Quat qx({1,0,0},dy*4.1/m_height);
+            Quat qx({1,0,0},-dy*4.1/m_height);
             Quat qy({0,1,0},-dx*4.1/m_width);
             m_mouseRotation *= qx * qy;
         }
@@ -93,7 +93,7 @@ public:
         window->GetState2d().Projection().SetOrtho(0, width, 0, height, -1, 1);
         window->GetState3d().Size().Set(width, height);
         window->GetState3d().Projection().SetPerspective(0.78, width*1.0/height, 0.1, 100);
-        window->GetState3d().View().SetLookAt({0,0,-1},{0,0,0},{0,1,0});
+        window->GetState3d().View().SetLookAt({0,0,1},{0,0,0},{0,1,0});
         window->GetState2d().RenderWireframe(false);
         window->GetState3d().RenderWireframe(false);
     };
@@ -258,13 +258,13 @@ void UI::Draw3D(const std::shared_ptr<OpenGL::Window>& window)
 
 void UI::AddShapes()
 {
-    m_shapes.emplace_back(Geometry::Shape::Construct::Cube(0.3),Mat4::Translation({-.4,.2,1}));
+    m_shapes.emplace_back(Geometry::Shape::Construct::Cube(0.3),Mat4::Translation({-.4,0,-1}));
     m_shapes.back().Translate({-.15,-.15,-.15});
-    m_shapes.emplace_back(Geometry::Shape::Construct::Sphere(0.15,-0.8),Mat4::Translation({-0.1,.2,1}));
+    m_shapes.emplace_back(Geometry::Shape::Construct::Sphere(0.15,-0.8),Mat4::Translation({-0.1,0,-1}));
     m_shapes.back().Translate({0,0,0});
-    m_shapes.emplace_back(Geometry::Shape::Construct::Sphere(0.15,-.98),Mat4::Translation({0.2,.2,1}));
+    m_shapes.emplace_back(Geometry::Shape::Construct::Sphere(0.15,-.98),Mat4::Translation({0.2,0,-1}));
     m_shapes.back().Translate({0,0,0});
-    m_shapes.emplace_back(Geometry::Shape::Construct::Cylinder(0.3,0.15,-0.98),Mat4::Translation({0.5,.2,1}));
+    m_shapes.emplace_back(Geometry::Shape::Construct::Cylinder(0.3,0.15,-0.98),Mat4::Translation({0.5,0,-1}));
     m_shapes.back().Translate({0,0,-.15});
 }
 

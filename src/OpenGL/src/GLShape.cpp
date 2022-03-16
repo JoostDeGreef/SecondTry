@@ -46,7 +46,7 @@ void GLShape::Render(const OpenGL::Mat4 &model,const OpenGL::Mat4 &view,const Op
     RGBColorf lightColor(0xFFFFFF);
     RGBColorf ambientColor(0xFF0000);
     RGBColorf reflectionColor(0xFFFFFF);
-    Core::Vector3d lightPos(-2,0,-1);
+    Core::Vector3d lightPos(2,2,2);
 
     m_shader.Activate();
     m_shader.SetModel(model);
