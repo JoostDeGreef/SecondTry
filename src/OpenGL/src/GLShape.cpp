@@ -1,8 +1,10 @@
 #include "OpenGL.h"
 #include "Geometry.h"
+#include "Log.h"
 
 using namespace OpenGL;
 using namespace Geometry;
+using namespace Core;
 
 void GLShape::Render(const OpenGL::Mat4 &model,const OpenGL::Mat4 &view,const OpenGL::Mat4 &projection)
 {
@@ -17,6 +19,10 @@ void GLShape::Render(const OpenGL::Mat4 &model,const OpenGL::Mat4 &view,const Op
 
     if(m_lastRenderId != GetLastChangeID())
     {
+        m_lastRenderId = GetLastChangeID();
+
+        // LogWarning("Rebuilding VBO object\n");
+
         GLCHECK(glBindBuffer(GL_ARRAY_BUFFER, m_VBO));
         auto vertices = DrawWithNormals();
         m_vertexCount = vertices.size()/6; // /6 => vertex+normal
@@ -38,8 +44,6 @@ void GLShape::Render(const OpenGL::Mat4 &model,const OpenGL::Mat4 &view,const Op
         // You can unbind the VAO afterwards so other VAO calls won't accidentally modify this VAO, but this rarely happens. Modifying other
         // VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
         GLCHECK(glBindVertexArray(0)); 
-
-        m_lastRenderId = GetLastChangeID();
     }
 
     RGBColorf color(0xFF0000);

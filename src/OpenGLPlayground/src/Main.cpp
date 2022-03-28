@@ -250,7 +250,7 @@ void UI::Draw3D(const std::shared_ptr<OpenGL::Window>& window)
         GLCHECK(glPolygonMode(GL_FRONT_AND_BACK, GL_FILL));
     }
 
-    for(auto shape:m_shapes)
+    for(auto & shape:m_shapes)
     {
         shape.Render(shape.Model().Rotated(m_mouseRotation), state3d.View(), state3d.Projection());
     }
@@ -262,7 +262,7 @@ void UI::AddShapes()
     m_shapes.back().Translate({-.15,-.15,-.15});
     m_shapes.emplace_back(Geometry::Shape::Construct::Sphere(0.15,-0.8),Mat4::Translation({-0.1,0,-1}));
     m_shapes.back().Translate({0,0,0});
-    m_shapes.emplace_back(Geometry::Shape::Construct::Sphere(0.15,-.98),Mat4::Translation({0.2,0,-1}));
+    m_shapes.emplace_back(Geometry::Shape::Construct::Sphere(0.15,-.999),Mat4::Translation({0.2,0,-1}));
     m_shapes.back().Translate({0,0,0});
     m_shapes.emplace_back(Geometry::Shape::Construct::Cylinder(0.3,0.15,-0.98),Mat4::Translation({0.5,0,-1}));
     m_shapes.back().Translate({0,0,-.15});
