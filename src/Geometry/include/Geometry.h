@@ -23,8 +23,10 @@ namespace Geometry
 #include "internal/Node.h"
 #include "internal/Edge.h"
 #include "internal/Polygon.h"
+#include "internal/TriangulatedPolygon2D.h"
 #include "internal/Face.h"
 #include "internal/Shape.h"
 #include "internal/Utilities.h"
+#include "internal/Operations.h"
 }
 

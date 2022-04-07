@@ -5,7 +5,7 @@
 // Note: this is very similar to std::shared_ptr, but enables 
 //       make_shared with a memory pool
 template<typename T>
-class SmartPtrStore
+class SmartPtrStore final
 {
 public:
     static const unsigned int objects_per_block = 128;

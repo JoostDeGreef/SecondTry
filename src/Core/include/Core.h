@@ -20,5 +20,6 @@ namespace Core
 #include "internal/Quaternion.h"
 #include "internal/RotationMatrix.h"
 #include "internal/SmartPtrStore.h"
+#include "internal/TempMemPool.h"
 }
 

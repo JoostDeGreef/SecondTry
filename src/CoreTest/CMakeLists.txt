@@ -5,6 +5,7 @@ add_executable (${PROJECT_NAME}
                 "QuaternionTest.cpp"
                 "CoreTest.cpp"
                 "SmartPtrStoreTest.cpp"
+                "TempMemPoolTest.cpp"
                 "LogTest.cpp")
 
 target_link_libraries(${PROJECT_NAME} GoogleTest Core)

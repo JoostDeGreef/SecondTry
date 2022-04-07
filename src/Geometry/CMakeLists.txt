@@ -11,8 +11,11 @@ add_library (${PROJECT_NAME}
              "src/Face.cpp"
              "src/Edge.cpp"
              "src/Polygon.cpp"
+             "src/TriangulatedPolygon2D.cpp"
              "src/Utilities.cpp"
-             "src/Constants.cpp")
+             "src/Constants.cpp"
+             "src/Operations/Operations2D.cpp"
+             "src/Operations/Operations3D.cpp")
 
 set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION})
 

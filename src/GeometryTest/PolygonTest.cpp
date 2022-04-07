@@ -88,6 +88,7 @@ TEST_F(PolygonTest, IsCounterClockwise)
     p.AddNode({1,1});
     p.AddNode({0,1});
     EXPECT_TRUE(p.IsCounterClockwise());
+    EXPECT_EQ(1.0, p.Surface());
 }
 
 TEST_F(PolygonTest, IsClockwise)
@@ -98,6 +99,7 @@ TEST_F(PolygonTest, IsClockwise)
     p.AddNode({1,1});
     p.AddNode({1,0});
     EXPECT_FALSE(p.IsCounterClockwise());
+    EXPECT_EQ(1.0, p.Surface());
 }
 
 TEST_F(PolygonTest, Angle)
