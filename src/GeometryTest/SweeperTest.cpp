@@ -44,6 +44,19 @@ TEST_F(SweeperTest, CollectSweepLines)
     EXPECT_EQ(4,sweeplines.size());
 }
 
+TEST_F(SweeperTest, CollectSweepLinesWithShortLine)
+{
+    Polygon2D p0;
+    p0.AddNode({0,0});
+    p0.AddNode({1,0});
+    p0.AddNode({1,1});
+    p0.AddNode({1,1+1e-7});
+    EXPECT_TRUE(p0.IsCounterClockwise());
+    SweeperWrapper s({p0});
+    auto sweeplines = s.CollectSweepLines();
+    EXPECT_EQ(3,sweeplines.size());
+}
+
 TEST_F(SweeperTest, Execute)
 {
     Polygon2D p0,p1;
