@@ -7,13 +7,14 @@
 FetchContent_Declare(
   bzip2
  
-  GIT_REPOSITORY https://github.com/libarchive/bzip2.git
+  GIT_REPOSITORY https://gitlab.com/bzip2/bzip2.git
+  #GIT_TAG        bzip2-1.0.8
   GIT_TAG        master
 
   SOURCE_DIR bzip2-build
   BINARY_DIR bzip2-build
 
-  PATCH_COMMAND  git restore . && git apply --ignore-space-change --ignore-whitespace ${CMAKE_CURRENT_SOURCE_DIR}/bzip2.patch
+#  PATCH_COMMAND  git restore . && git apply --ignore-space-change --ignore-whitespace ${CMAKE_CURRENT_SOURCE_DIR}/bzip2.patch
 )
 
 MESSAGE(STATUS "

@@ -47,6 +47,18 @@ public:
             , m_normal2(normal)
             , m_normal(inNormal?Normal::In:Normal::Out)
         {}
+        Node(const Node & other)
+            : m_vertex(other.m_vertex)
+            , m_normal1(other.m_normal1)
+            , m_normal2(other.m_normal2)
+            , m_normal(other.m_normal)
+        {}
+        Node(Node && other)
+            : m_vertex(std::move(other.m_vertex))
+            , m_normal1(std::move(other.m_normal1))
+            , m_normal2(std::move(other.m_normal2))
+            , m_normal(std::move(other.m_normal))
+        {}
 
         Core::Vector2d m_vertex;
         Core::Vector2d m_normal1;
@@ -59,6 +71,14 @@ public:
     {
         m_nodes.reserve(8);
     }
+    Polygon2D(const Polygon2D & other)
+        : m_southEast(other.m_southEast)
+        , m_nodes(other.m_nodes)
+    {}
+    Polygon2D(Polygon2D && other)
+        : m_southEast(std::move(other.m_southEast))
+        , m_nodes(std::move(other.m_nodes))
+    {}
 
     // add nodes in the xy plane
     // if an edge has no normals defined at the vertices, the face normal will be used for the side faces.

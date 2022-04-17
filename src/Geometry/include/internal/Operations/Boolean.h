@@ -15,7 +15,19 @@ namespace Operations
         {
             std::vector<Polygon2D> res;
             return res;
-        }       
+        }   
+
+        std::vector<Polygon2D> Difference()
+        {
+            std::vector<Polygon2D> res;
+            return res;
+        }
+
+        std::vector<Polygon2D>  Intersection()
+        {
+            std::vector<Polygon2D> res;
+            return res;
+        }
     private:
         Sweeper m_sweeper;
     };

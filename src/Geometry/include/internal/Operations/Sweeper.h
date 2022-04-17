@@ -15,6 +15,17 @@ namespace Operations
         void Execute()
         {
             // sorted set of sweeplines
+            auto sweeplines = CollectSweepLines();
+            // Sweep through segments, add intersections
+
+
+            // When nodes are found to match 'exactly', merge them.
+
+        }
+
+    protected:
+        std::set<SweepLine*,SweepLineCompare> CollectSweepLines()
+        {
             std::set<SweepLine*,SweepLineCompare> sweeplines;
             // create sweeplines per polygon and add them to the set
             for(size_t i=0;i<m_input.size();i++)
@@ -26,6 +37,7 @@ namespace Operations
                 vertices.resize(nodes.size());
                 for(size_t j=0;j<nodes.size();j++)
                 {
+                    // TODO: use matching/existing node if present
                     vertices[j] = m_sweepNodePool.Alloc(nodes[j].m_vertex);
                 }
                 std::vector<SweepLine*> tempsweeplines;
@@ -50,15 +62,13 @@ namespace Operations
                     sweeplines.emplace(sweepline);
                 }
             }
-            // Sweep through segments, add intersections
-            // When nodes are found to match 'exactly', merge them.
-
+            return sweeplines;
         }
-
     private:
         Core::TempMemPool<SweepNode,1024> m_sweepNodePool;
         Core::TempMemPool<SweepLine,512> m_sweepLinePool;
-        const std::vector<Polygon2D> & m_input;
+
+        const std::vector<Polygon2D> m_input;
         std::vector<Polygon2D> m_output;
     };
 }

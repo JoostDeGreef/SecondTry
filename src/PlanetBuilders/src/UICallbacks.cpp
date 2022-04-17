@@ -105,8 +105,8 @@ void UI::size_callback(
     int width, 
     int height)
 { 
-    m_state2d.Size().Set(width, height);
-    m_state2d.Projection().SetOrtho(0, width, 0, height, -1, 1);
+    // m_state2d.Size().Set(width, height);
+    // m_state2d.Projection().SetOrtho(0, width, 0, height, -1, 1);
 };
 
 void UI::scroll_callback(

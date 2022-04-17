@@ -20,6 +20,7 @@ MESSAGE(STATUS "
 #include(DebugVariables)
 
 set(ZLIB_LIBRARIES zlibstatic)
+set(ZLIB_INCLUDE_DIR ${zlib_SOURCE_DIR} ${zlib_BINARY_DIR})
 set(ZLIB_INCLUDE_DIRS ${zlib_SOURCE_DIR} ${zlib_BINARY_DIR})
 
 set(BZIP2_INCLUDE_DIR ${bzip2_SOURCE_DIR} ${bzip2_BINARY_DIR})
@@ -29,6 +30,7 @@ set(PNG_LIBRARY png_static)
 set(PNG_INCLUDE_DIRS ${libpng_SOURCE_DIR} ${libpng_BINARY_DIR})
 set(PNG_PNG_INCLUDE_DIR ${libpng_SOURCE_DIR} ${libpng_BINARY_DIR})
 
+set(FT_DISABLE_HARFBUZZ ON CACHE BOOL "HarfBuzz is not needed" FORCE)
 set(SKIP_INSTALL_ALL ON CACHE BOOL "Don't install anything" FORCE)
 
 FetchContent_MakeAvailable(freetype)

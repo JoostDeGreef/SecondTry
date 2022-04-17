@@ -28,19 +28,9 @@ public:
     void Draw2D(const std::shared_ptr<OpenGL::Window>& window) override;
     void ContextFree(const std::shared_ptr<OpenGL::Window>& window) override;
 
-    void AddShaders();
-
     int Run();
 
 private:
-    enum class ShaderId
-    {
-        two_d = 1,
-    };
-
     OpenGL::Window m_mainWindow;
-    OpenGL::State & m_state2d;
-    OpenGL::State & m_state3d;
-    std::map<ShaderId,OpenGL::Shader> m_shaders;
 };
 
