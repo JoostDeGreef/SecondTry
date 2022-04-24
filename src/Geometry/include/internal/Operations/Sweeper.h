@@ -15,20 +15,22 @@ namespace Operations
         void Execute()
         {
             // sorted set of sweeplines
-            auto sweeplines = CollectSweepLines();
+            auto [sweeplines,sweepNodes] = CollectSweepLines();
             // Sweep through segments, add intersections
-
-
-            // When nodes are found to match 'exactly', merge them.
-
+            std::vector<SweepLine*> eventLine;
+            while( !sweepNodes.empty() )
+            {
+                // todo
+                sweepNodes.clear();
+            }
         }
 
     protected:
-        std::set<SweepLine*,SweepLineCompare> CollectSweepLines()
+        std::tuple<std::multiset<SweepLine*,SweepLineCompare>,std::set<SweepNode*,SweepNodeCompare>> CollectSweepLines()
         {
             // todo: store original node index and line index in sweep equivalents
             std::set<SweepNode*,SweepNodeCompare> sweepNodes;
-            std::set<SweepLine*,SweepLineCompare> sweeplines;
+            std::multiset<SweepLine*,SweepLineCompare> sweeplines;
             // create sweeplines per polygon and add them to the set
             for(size_t i=0;i<m_input.size();i++)
             {
@@ -74,7 +76,7 @@ namespace Operations
                     sweeplines.emplace(sweepline);
                 }
             }
-            return sweeplines;
+            return std::make_tuple(sweeplines,sweepNodes);
         }
     private:
         Core::TempMemPool<SweepNode,1024> m_sweepNodePool;

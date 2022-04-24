@@ -1,5 +1,6 @@
 #include "Geometry.h"
 
+#include "internal/Operations/Vector2dCompare.h"
 #include "internal/Operations/SweepLine.h"
 #include "internal/Operations/SweepNode.h"
 #include "internal/Operations/Sweeper.h"

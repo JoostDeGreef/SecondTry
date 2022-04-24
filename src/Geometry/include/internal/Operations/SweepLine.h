@@ -37,6 +37,30 @@ namespace Operations
         SweepLine * GetNext() const { return m_next; }
         SweepLine * GetPrev() const { return m_prev; }
 
+        class Intersection
+        {
+        public:
+            enum class Type
+            {
+                None,
+                Cross,
+                Overlapping
+            };
+
+            const Type & GetType() const { return m_type; }
+            const double & GetS0() const { return m_S[0]; }
+            const double & GetS1() const { return m_S[1]; }
+
+            Intersection(const Type t, const double s0, const double s1)
+                : m_type(t)
+                , m_S({s0,s1})
+            {}
+        private:
+            const Type m_type;
+            const std::array<double,2> m_S;
+        };
+
+        Intersection DetermineIntersection(const SweepLine & other) const;
     private:
         std::array<SweepNode *,3> m_vertices; // start, end, bottomLeft
         const size_t m_polygon;

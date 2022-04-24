@@ -1,6 +1,7 @@
 #include "gtest/gtest.h"
 #include "Geometry.h"
 
+#include "internal/Operations/Vector2dCompare.h"
 #include "internal/Operations/SweepLine.h"
 #include "internal/Operations/SweepNode.h"
 #include "internal/Operations/Sweeper.h"
@@ -40,8 +41,9 @@ TEST_F(SweeperTest, CollectSweepLines)
     p0.AddNode({0,1});
     EXPECT_TRUE(p0.IsCounterClockwise());
     SweeperWrapper s({p0});
-    auto sweeplines = s.CollectSweepLines();
+    auto [sweeplines,sweepnodes] = s.CollectSweepLines();
     EXPECT_EQ(4,sweeplines.size());
+    EXPECT_EQ(4,sweepnodes.size());
 }
 
 TEST_F(SweeperTest, CollectSweepLinesWithShortLine)
@@ -53,8 +55,9 @@ TEST_F(SweeperTest, CollectSweepLinesWithShortLine)
     p0.AddNode({1,1+1e-7});
     EXPECT_TRUE(p0.IsCounterClockwise());
     SweeperWrapper s({p0});
-    auto sweeplines = s.CollectSweepLines();
+    auto [sweeplines,sweepnodes] = s.CollectSweepLines();
     EXPECT_EQ(3,sweeplines.size());
+    EXPECT_EQ(3,sweepnodes.size());
 }
 
 TEST_F(SweeperTest, Execute)

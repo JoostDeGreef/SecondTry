@@ -5,6 +5,7 @@ add_executable (${PROJECT_NAME}
                 "PolygonTest.cpp"
                 "GeometryTest.cpp"
                 "OperationsTest.cpp"
+                "SweepLineTest.cpp"
                 "SweeperTest.cpp")
 
 target_link_libraries(${PROJECT_NAME} GoogleTest Geometry)
