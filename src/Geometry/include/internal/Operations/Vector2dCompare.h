@@ -6,39 +6,63 @@ namespace Operations
 {
     static constexpr double eps = 1e-6;
 
+    inline 
+    bool Less(const double & a, const double b)
+    {
+        return Core::Numerics::Less(a,b,eps);
+    }
+
+    inline 
+    bool LessOrEqual(const double & a, const double b)
+    {
+        return Core::Numerics::LessOrEqual(a,b,eps);
+    }
+
+    inline 
+    bool Greater(const double & a, const double b)
+    {
+        return Core::Numerics::Greater(a,b,eps);
+    }
+
+    inline 
+    bool GreaterOrEqual(const double & a, const double b)
+    {
+        return Core::Numerics::GreaterOrEqual(a,b,eps);
+    }
+
+    inline 
+    bool Equal(const double & a, const double b)
+    {
+        return Core::Numerics::Equal(a,b,eps);
+    }
+
+    inline 
+    bool NotEqual(const double & a, const double b)
+    {
+        return Core::Numerics::NotEqual(a,b,eps);
+    }
+
+
+    // Note: Y-dominant compares!
     inline
     bool operator < (const Core::Vector2d & a,const Core::Vector2d & b)
     {
-        return a[1] + eps < b[1] ? true
-             : b[1] < a[1] + eps ? false
-             : a[0] + eps < b[0] ? true
-             :                     false;
+        return Less(a[1],b[1]) || (LessOrEqual(a[1],b[1]) && Less(a[0],b[0]));
     }
     inline
     bool operator > (const Core::Vector2d & a,const Core::Vector2d & b)
     {
-        return a[1] > b[1] + eps ? true
-             : b[1] + eps > a[1] ? false
-             : a[0] > b[0] + eps ? true
-             :                     false;
+        return Greater(a[1],b[1]) || (GreaterOrEqual(a[1],b[1]) && Greater(a[0],b[0]));
     }
     inline
     bool operator == (const Core::Vector2d & a,const Core::Vector2d & b)
     {
-        return a[1] > b[1] + eps ? false
-             : a[1] + eps < b[1] ? false
-             : a[0] > b[0] + eps ? false
-             : a[0] + eps < b[0] ? false
-             :                     true;
+        return Equal(a[1],b[1]) && Equal(a[0],b[0]);
     }
     inline
     bool operator != (const Core::Vector2d & a,const Core::Vector2d & b)
     {
-        return a[1] > b[1] + eps ? true
-             : a[1] + eps < b[1] ? true
-             : a[0] > b[0] + eps ? true
-             : a[0] + eps < b[0] ? true
-             :                     false;
+        return NotEqual(a[1],b[1]) && NotEqual(a[0],b[0]);
     }
 }
 }

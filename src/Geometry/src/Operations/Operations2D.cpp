@@ -1,3 +1,4 @@
+#include "Core.h"
 #include "Geometry.h"
 
 #include "internal/Operations/Vector2dCompare.h"

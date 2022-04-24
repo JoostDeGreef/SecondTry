@@ -1,12 +1,13 @@
 project(GeometryTest)
 
 add_executable (${PROJECT_NAME}
-                "ShapeTest.cpp"
-                "PolygonTest.cpp"
                 "GeometryTest.cpp"
                 "OperationsTest.cpp"
+                "PolygonTest.cpp"
+                "ShapeTest.cpp"
                 "SweepLineTest.cpp"
-                "SweeperTest.cpp")
+                "SweeperTest.cpp"
+                "Vector2dCompareTest")
 
 target_link_libraries(${PROJECT_NAME} GoogleTest Geometry)
 

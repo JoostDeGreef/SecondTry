@@ -287,15 +287,15 @@ Shape Shape::Construct::Sphere(double outerRadius, double innerRadius)
     Shape res;
     // vertices
     std::vector<Core::OwnedPtr<Node>> vertices;
-    double ϕ = 2/(1+sqrt(5));
+    double phi = 2/(1+sqrt(5));
     // (±1, ±1, ±1)
     // (0, ±ϕ, ±1/ϕ)
     // (±1/ϕ, 0, ±ϕ)
     // (±ϕ, ±1/ϕ, 0)
     double a = 0;
     double b = 1;
-    double c = ϕ;   // 0.62
-    double d = 1/ϕ; // 1.62
+    double c = phi;   // 0.62
+    double d = 1/phi; // 1.62
     vertices.emplace_back(res.AddNode(-c,-d, a)); //  0  blue
     vertices.emplace_back(res.AddNode( c, d, a)); //  1  blue
     vertices.emplace_back(res.AddNode( b, b, b)); //  2  yellow
