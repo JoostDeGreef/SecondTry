@@ -9,7 +9,8 @@ FetchContent_Declare(
  
   GIT_REPOSITORY https://gitlab.com/bzip2/bzip2.git
   #GIT_TAG        bzip2-1.0.8
-  GIT_TAG        master
+  #GIT_TAG        master
+  GIT_TAG        1ea1ac188ad4b9cb662e3f8314673c63df95a589 # feb 6, 2022
 
   SOURCE_DIR bzip2-build
   BINARY_DIR bzip2-build

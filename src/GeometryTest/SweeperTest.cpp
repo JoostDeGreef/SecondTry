@@ -60,7 +60,7 @@ TEST_F(SweeperTest, CollectSweepLinesWithShortLine)
     EXPECT_EQ(3,sweepnodes.size());
 }
 
-TEST_F(SweeperTest, Execute)
+TEST_F(SweeperTest, ExecuteDisjoint)
 {
     Polygon2D p0,p1;
     p0.AddNode({0,0});

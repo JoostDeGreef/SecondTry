@@ -16,6 +16,7 @@ add_library (${PROJECT_NAME}
              "src/Constants.cpp"
              "src/Operations/Operations2D.cpp"
              "src/Operations/Operations3D.cpp"
+             "src/Operations/Sweeper.cpp"
              "src/Operations/SweepLine.cpp")
 
 set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION})
