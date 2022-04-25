@@ -30,8 +30,12 @@ std::tuple<std::multiset<SweepLine*,SweepLineCompare>,std::set<SweepNode*,SweepN
     // create sweeplines per polygon and add them to the set
     for(size_t i=0;i<m_input.size();i++)
     {
-        size_t leftCount = m_input[i].IsCounterClockwise()?1:0;
-        size_t rightCount = 1 - leftCount;
+        std::set<size_t> leftPolygons{{i}};
+        std::set<size_t> rightPolygons;
+        if(!m_input[i].IsCounterClockwise())
+        {
+            std::swap(leftPolygons,rightPolygons);
+        }
         auto & nodes = m_input[i].GetNodes();
         std::vector<SweepNode*> vertices;
         vertices.resize(nodes.size());
@@ -55,16 +59,9 @@ std::tuple<std::multiset<SweepLine*,SweepLineCompare>,std::set<SweepNode*,SweepN
         size_t k = vertices.size()-1;
         for(size_t j=0;j<vertices.size();j++)
         {
-            tempsweeplines[j] = m_sweepLinePool.Alloc(vertices[k],vertices[j],i,leftCount,rightCount);
+            tempsweeplines[j] = m_sweepLinePool.Alloc(vertices[k],vertices[j],leftPolygons,rightPolygons);
             vertices[k]->AddLine(tempsweeplines[j]);
             vertices[j]->AddLine(tempsweeplines[j]);
-            k = j;
-        }
-        k = tempsweeplines.size() - 1;
-        for(size_t j=0;j<vertices.size();j++)
-        {
-            tempsweeplines[j]->SetPrev(tempsweeplines[k]);
-            tempsweeplines[k]->SetNext(tempsweeplines[j]);
             k = j;
         }
         for(auto sweepline:tempsweeplines)

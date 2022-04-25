@@ -28,8 +28,8 @@ TEST_F(SweepLineTest, GetBottomLeftVertexPtr)
 {
     SweepNode p0({0,0});
     SweepNode p1({1,1});
-    SweepLine l0(&p0,&p1,0,0,0);
-    EXPECT_EQ(&p0,l0.GetBottomLeftVertexPtr());
-    SweepLine l1(&p1,&p0,0,0,0);
-    EXPECT_EQ(&p0,l1.GetBottomLeftVertexPtr());
+    SweepLine l0(&p0,&p1,{},{});
+    EXPECT_EQ(&p0,l0.GetVertexPtr(0));
+    SweepLine l1(&p1,&p0,{},{});
+    EXPECT_EQ(&p0,l1.GetVertexPtr(0));
 }

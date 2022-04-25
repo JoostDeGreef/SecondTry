@@ -8,21 +8,18 @@ using namespace Core;
 using namespace Geometry;
 using namespace Operations;
 
-void SweepLine::DetermineBottomLeft()
+void SweepLine::SetVertexOrder()
 {
-    if( SweepNodeCompare()(m_vertices[0],m_vertices[1]) )
+    if( !SweepNodeCompare()(m_vertices[0],m_vertices[1]) )
     {
-        m_vertices[2] = m_vertices[0];
-    }
-    else
-    {
-        m_vertices[2] = m_vertices[1];
+        std::swap(m_vertices[0],m_vertices[1]);
+        std::swap(m_polygons[0],m_polygons[1]);
     }
 }
 
 bool SweepLineCompare::operator () (const SweepLine & a, const SweepLine & b) const
 {
-    return SweepNodeCompare()(a.GetBottomLeftVertex(), b.GetBottomLeftVertex());
+    return SweepNodeCompare()(a.GetVertex(0), b.GetVertex(0));
 }
 
 SweepLine::Intersection SweepLine::DetermineIntersection(const SweepLine & other) const
@@ -44,7 +41,7 @@ SweepLine::Intersection SweepLine::DetermineIntersection(const SweepLine & other
     }
     else
     {
-        // Todo:
+        // Todo: same slope -> parallel lines, do they overlap?
         Intersection::Type it = Intersection::Type::None;
         double s = 0;
         double t = 0;
