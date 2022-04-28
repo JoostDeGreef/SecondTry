@@ -18,6 +18,7 @@ namespace Operations
         void SetVertex(const Core::Vector2d & vertex) { m_vertex = vertex; }
 
         void AddLine(SweepLine * sweepline) { m_sweeplines.emplace_back(sweepline); }
+        const std::vector<SweepLine*> & GetLines() const { return m_sweeplines; }
     private:
         Core::Vector2d m_vertex;
         std::vector<SweepLine*> m_sweeplines;
@@ -29,6 +30,23 @@ namespace Operations
         bool operator () (const Core::Vector2d & a,const Core::Vector2d & b) const
         {
             return a < b;
+        }
+        bool operator () (const SweepNode & a, const SweepNode & b) const
+        {
+            return operator()(a.GetVertex(),b.GetVertex());
+        }
+        bool operator () (const SweepNode * a, const SweepNode * b) const
+        {
+            return operator()(*a,*b);
+        }
+    };
+
+    // Nodes are ordered left -> right only
+    struct EventNodeCompare
+    {
+        bool operator () (const Core::Vector2d & a,const Core::Vector2d & b) const
+        {
+            return Less(a[0],b[0]);
         }
         bool operator () (const SweepNode & a, const SweepNode & b) const
         {

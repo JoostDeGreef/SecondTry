@@ -22,6 +22,16 @@ bool SweepLineCompare::operator () (const SweepLine & a, const SweepLine & b) co
     return SweepNodeCompare()(a.GetVertex(0), b.GetVertex(0));
 }
 
+bool EventLineCompare::Equal(const SweepLine & a, const SweepLine & b)
+{
+    return Core::Numerics::Equal(a.GetVertex(0).GetVertex()[0], b.GetVertex(0).GetVertex()[0]);
+}
+
+bool EventLineCompare::operator () (const SweepLine & a, const SweepLine & b) const
+{
+    return EventNodeCompare()(a.GetVertex(0), b.GetVertex(0));
+}
+
 SweepLine::Intersection SweepLine::DetermineIntersection(const SweepLine & other) const
 {
     auto slope0 = m_vertices[1]->GetVertex() - m_vertices[0]->GetVertex();

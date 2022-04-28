@@ -19,7 +19,11 @@ namespace Operations
 
         const SweepNode & GetVertex(const size_t & index) const { return *GetVertexPtr(index); }
         const SweepNode * GetVertexPtr(const size_t & index) const { return m_vertices[index]; }
-        void SetVertexPtr(const size_t & index, SweepNode * vertexPtr) { m_vertices[index] = vertexPtr; }
+        void SetVertexPtr(const size_t & index, SweepNode * vertexPtr) 
+        { 
+            m_vertices[index] = vertexPtr; 
+            SetVertexOrder();
+        }
         void SetVertexOrder();
 
         class Intersection
@@ -57,6 +61,21 @@ namespace Operations
         bool operator () (const SweepLine * a, const SweepLine * b) const
         {
             return operator()(*a,*b);
+        }
+    };
+
+    struct EventLineCompare
+    {
+        bool operator () (const SweepLine & a, const SweepLine & b) const;
+        bool operator () (const SweepLine * a, const SweepLine * b) const
+        {
+            return operator()(*a,*b);
+        }
+
+        static bool Equal(const SweepLine & a, const SweepLine & b);
+        static bool Equal(const SweepLine * a, const SweepLine * b)
+        {
+            return Equal(*a,*b);
         }
     };
 }
