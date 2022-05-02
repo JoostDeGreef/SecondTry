@@ -14,6 +14,8 @@ namespace Operations
 
         void Execute();
 
+        std::vector<Polygon2D> GetUnion();
+
     protected:
         std::tuple<std::multiset<SweepLine*,SweepLineCompare>,std::set<SweepNode*,SweepNodeCompare>> CollectSweepLines();
 

@@ -46,6 +46,44 @@ TEST_F(SweeperTest, CollectSweepLines)
     EXPECT_EQ(4,sweepnodes.size());
 }
 
+TEST_F(SweeperTest, CollectSweepLinesDisjoint)
+{
+    Polygon2D p0,p1;
+    p0.AddNode({0,0});
+    p0.AddNode({1,0});
+    p0.AddNode({1,1});
+    p0.AddNode({0,1});
+    p1.AddNode({2,0});
+    p1.AddNode({3,0});
+    p1.AddNode({3,1});
+    p1.AddNode({2,1});
+    EXPECT_TRUE(p0.IsCounterClockwise());
+    EXPECT_TRUE(p1.IsCounterClockwise());
+    SweeperWrapper s({p0,p1});
+    auto [sweeplines,sweepnodes] = s.CollectSweepLines();
+    EXPECT_EQ(8,sweeplines.size());
+    EXPECT_EQ(8,sweepnodes.size());
+}
+
+TEST_F(SweeperTest, CollectSweepLinesCross)
+{
+    Polygon2D p0,p1;
+    p0.AddNode({0,0});
+    p0.AddNode({2,0});
+    p0.AddNode({2,2});
+    p0.AddNode({0,2});
+    p1.AddNode({1,1});
+    p1.AddNode({3,1});
+    p1.AddNode({3,3});
+    p1.AddNode({1,3});
+    EXPECT_TRUE(p0.IsCounterClockwise());
+    EXPECT_TRUE(p1.IsCounterClockwise());
+    SweeperWrapper s({p0,p1});
+    auto [sweeplines,sweepnodes] = s.CollectSweepLines();
+    EXPECT_EQ(8,sweeplines.size());
+    EXPECT_EQ(8,sweepnodes.size());
+}
+
 TEST_F(SweeperTest, CollectSweepLinesWithShortLine)
 {
     Polygon2D p0;
@@ -73,7 +111,28 @@ TEST_F(SweeperTest, ExecuteDisjoint)
     p1.AddNode({2,1});
     EXPECT_TRUE(p0.IsCounterClockwise());
     EXPECT_TRUE(p1.IsCounterClockwise());
-    Sweeper s({p0,p1});
+    SweeperWrapper s({p0,p1});
     s.Execute();
+    auto res = s.GetUnion();
+    EXPECT_EQ(2,res.size());
+}
+
+TEST_F(SweeperTest, ExecuteCross)
+{
+    Polygon2D p0,p1;
+    p0.AddNode({0,0});
+    p0.AddNode({2,0});
+    p0.AddNode({2,2});
+    p0.AddNode({0,2});
+    p1.AddNode({1,1});
+    p1.AddNode({3,1});
+    p1.AddNode({3,3});
+    p1.AddNode({1,3});
+    EXPECT_TRUE(p0.IsCounterClockwise());
+    EXPECT_TRUE(p1.IsCounterClockwise());
+    SweeperWrapper s({p0,p1});
+    s.Execute();
+    auto res = s.GetUnion();
+    EXPECT_EQ(1,res.size());
 }
 

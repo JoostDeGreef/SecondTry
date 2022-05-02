@@ -17,11 +17,11 @@ namespace Operations
         const Core::Vector2d & GetVertex() const { return m_vertex; }
         void SetVertex(const Core::Vector2d & vertex) { m_vertex = vertex; }
 
-        void AddLine(SweepLine * sweepline) { m_sweeplines.emplace_back(sweepline); }
-        const std::vector<SweepLine*> & GetLines() const { return m_sweeplines; }
+        void AddLine(SweepLine * sweepline) { m_sweeplines.emplace(sweepline); }
+        const std::set<SweepLine*> & GetLines() const { return m_sweeplines; }
     private:
         Core::Vector2d m_vertex;
-        std::vector<SweepLine*> m_sweeplines;
+        std::set<SweepLine*> m_sweeplines;
     };
 
     // Nodes are ordered bottom -> top, left -> right
