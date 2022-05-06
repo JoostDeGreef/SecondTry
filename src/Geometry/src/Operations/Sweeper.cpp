@@ -14,6 +14,18 @@ void Sweeper::Execute()
 {
     // sorted set of sweeplines and sweepnodes
     auto [sweepLines,sweepNodes] = CollectSweepLines();
+
+//for debugging
+for(auto & n:sweepNodes)
+{
+    std::cout << n->GetVertex() << " ( ";
+    for(auto & l:n->GetLines())
+    {
+        std::cout << "(" << l->GetVertex(0).GetVertex() << "->" << l->GetVertex(1).GetVertex() << ") ";
+    }
+    std::cout << ")" << std::endl;
+}
+
     // Add nodes as Events
     std::set<SweepEvent,SweepEventCompare> events;
     std::multiset<SweepLine *,EventLineCompare> eventLine;
@@ -24,11 +36,14 @@ void Sweeper::Execute()
     // Handle all events
     auto SplitLineAtNode = [&](SweepLine * line,SweepNode * node)
     {
-        // todo
-        // add to sweepLines
-        auto tempsweepline = m_sweepLinePool.Alloc(vertices[k],vertices[j],leftPolygons,rightPolygons);
-        vertices[k]->AddLine(tempsweeplines[j]);
-        vertices[j]->AddLine(tempsweeplines[j]);
+        SweepNode * oldNode = line->GetVertexPtr(1);
+        SweepLine * newLine = m_sweepLinePool.Alloc(node,oldNode,line->GetPolygons(0),line->GetPolygons(1));
+        line->SetVertexPtr(1,node);
+        oldNode->RemoveLine(line);
+        oldNode->AddLine(newLine);
+        node->AddLine(newLine);
+        node->AddLine(line);
+        sweepLines.emplace(newLine);
     };
     auto HandleCrossIntersection = [&](SweepLine * a,SweepLine * b,SweepLine::Intersection & intersection)
     {
@@ -41,7 +56,7 @@ void Sweeper::Execute()
         auto va1 = a->GetVertexPtr(1);
         auto vb0 = b->GetVertexPtr(0);
         auto vb1 = b->GetVertexPtr(1);
-        auto v = (va0->GetVertex()*s0 + va1->GetVertex()*(1-s0) + vb0->GetVertex()*s1 + vb1->GetVertex()*(1-s1))*0.5;
+        auto v = (va0->GetVertex()*(1-s0) + va1->GetVertex()*(s0) + vb0->GetVertex()*(1-s1) + vb1->GetVertex()*(s1))*0.5;
         auto sweepNode = m_sweepNodePool.Alloc(v);
         auto nodeIter = sweepNodes.emplace(sweepNode);
         SweepNode * node = *(nodeIter.first);
@@ -78,17 +93,20 @@ void Sweeper::Execute()
     };
     auto HandlePossibleIntersection = [&](SweepLine * a,SweepLine * b)
     {
-        auto intersection = a->DetermineIntersection(*b);
-        switch(intersection.GetType())
+        if(a != b)
         {
-            case SweepLine::Intersection::Type::None:
-                break;
-            case SweepLine::Intersection::Type::Cross:
-                HandleCrossIntersection(a,b,intersection);
-                break;
-            case SweepLine::Intersection::Type::Overlapping:
-                HandleOverlappingIntersection(a,b,intersection);
-                break;
+            auto intersection = a->DetermineIntersection(*b);
+            switch(intersection.GetType())
+            {
+                case SweepLine::Intersection::Type::None:
+                    break;
+                case SweepLine::Intersection::Type::Cross:
+                    HandleCrossIntersection(a,b,intersection);
+                    break;
+                case SweepLine::Intersection::Type::Overlapping:
+                    HandleOverlappingIntersection(a,b,intersection);
+                    break;
+            }
         }
     };
     auto GetNeighborhoodRange = [&](std::multiset<SweepLine *, EventLineCompare>::iterator & where)
@@ -117,16 +135,18 @@ void Sweeper::Execute()
         if(end != eventLine.end())
         {
             auto temp = ++end;
-            while(temp != eventLine.begin() && EventLineCompare::Equal(*end,*temp))
+            while(temp != eventLine.end() && EventLineCompare::Equal(*end,*temp))
             {
                 end = temp;
-                --temp;
+                ++temp;
             }
         }
         return std::make_tuple(start,end);
     };
     auto AddLine = [&](SweepLine * line)
     {
+std::cout << "AddLine: " << line->GetVertex(0).GetVertex() << " -> " << line->GetVertex(1).GetVertex() << std::endl;
+
         auto where = eventLine.emplace(line);
         auto [start, end] = GetNeighborhoodRange(where);
         // check all neighbors for intersection with line/where
@@ -140,6 +160,8 @@ void Sweeper::Execute()
     };
     auto RemoveLine = [&](SweepLine * line)
     {
+std::cout << "removeLine: " << line->GetVertex(0).GetVertex() << " -> " << line->GetVertex(1).GetVertex() << std::endl;
+
         auto where = eventLine.find(line);
         auto [start, end] = GetNeighborhoodRange(where);
         eventLine.erase(where);
@@ -155,8 +177,33 @@ void Sweeper::Execute()
             }
         }
     };
+    //for debugging
+    auto DisplayEventLine = [&]()
+    {
+        std::cout << "------------------------------------" << std::endl << " -- ";
+        for(auto & l:eventLine)
+        {
+            std::cout << l->GetVertex(0).GetVertex() << " -- ";
+        }
+        std::cout << std::endl << " -- ";
+        for(auto & l:eventLine)
+        {
+            std::cout << l->GetVertex(1).GetVertex() << " -- ";
+        }
+        std::cout << std::endl;
+    };
+    auto DisplayEvents = [&]()
+    {
+        for(auto & e:events)
+        {
+            std::cout << e.GetNode()->GetVertex() << " ";
+        }
+        std::cout << std::endl;
+    };
     while( !events.empty() )
     {
+        DisplayEvents();
+        DisplayEventLine();
         // get the first unhandled event
         auto iterFirst = events.begin();
         auto firstEvent = *iterFirst;
@@ -170,12 +217,14 @@ void Sweeper::Execute()
                 AddLine(startLine);
             }
         }
+        DisplayEvents();
+        DisplayEventLine();
         // remove the end sweepline(s) from the eventline
-        for(auto & startLine:node->GetLines())
+        for(auto & endLine:node->GetLines())
         {
-            if(startLine->GetVertexPtr(0) == node)
+            if(endLine->GetVertexPtr(1) == node)
             {
-                AddLine(startLine);
+                RemoveLine(endLine);
             }
         }
     }

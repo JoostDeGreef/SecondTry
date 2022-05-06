@@ -17,14 +17,15 @@ namespace Operations
             SetVertexOrder();
         }
 
-        const SweepNode & GetVertex(const size_t & index) const { return *GetVertexPtr(index); }
-        const SweepNode * GetVertexPtr(const size_t & index) const { return m_vertices[index]; }
+        SweepNode & GetVertex(const size_t & index) const { return *GetVertexPtr(index); }
+        SweepNode * GetVertexPtr(const size_t & index) const { return m_vertices[index]; }
         void SetVertexPtr(const size_t & index, SweepNode * vertexPtr) 
         { 
             m_vertices[index] = vertexPtr; 
             SetVertexOrder();
         }
         void SetVertexOrder();
+        std::set<size_t> & GetPolygons(const size_t & index) { return m_polygons[index]; }
 
         class Intersection
         {
@@ -52,7 +53,7 @@ namespace Operations
         Intersection DetermineIntersection(const SweepLine & other) const;
     private:
         std::array<SweepNode *,2> m_vertices; // bottom, top
-        std::array<std::set<size_t>,2> m_polygons;
+        std::array<std::set<size_t>,2> m_polygons; // left, right
     };
 
     struct SweepLineCompare

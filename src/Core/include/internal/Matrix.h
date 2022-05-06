@@ -302,3 +302,16 @@ inline TVector3<VALUE_TYPE> VectorTripleProduct(const TVector3<VALUE_TYPE>& a, c
 {
     return CrossProduct(a, CrossProduct(b, c));
 }
+
+template<typename VALUE_TYPE>
+inline std::ostream& operator<<(std::ostream& os, const TVector2<VALUE_TYPE>& v)
+{
+    os << "[" << v[0] << "," << v[1] << "]";
+    return os;
+}
+template<typename VALUE_TYPE>
+inline std::ostream& operator<<(std::ostream& os, const TVector3<VALUE_TYPE>& v)
+{
+    os << "[" << v[0] << "," << v[1] << "," << v[2] << "]";
+    return os;
+}

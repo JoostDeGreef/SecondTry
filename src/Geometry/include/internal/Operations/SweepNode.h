@@ -18,6 +18,7 @@ namespace Operations
         void SetVertex(const Core::Vector2d & vertex) { m_vertex = vertex; }
 
         void AddLine(SweepLine * sweepline) { m_sweeplines.emplace(sweepline); }
+        void RemoveLine(SweepLine * sweepline) { m_sweeplines.erase(sweepline); }
         const std::set<SweepLine*> & GetLines() const { return m_sweeplines; }
     private:
         Core::Vector2d m_vertex;
