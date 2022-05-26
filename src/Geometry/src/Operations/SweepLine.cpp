@@ -34,14 +34,14 @@ bool EventLineCompare::operator () (const SweepLine & a, const SweepLine & b) co
 
 SweepLine::Intersection SweepLine::DetermineIntersection(const SweepLine & other) const
 {
-    auto slope0 = m_vertices[1]->GetVertex() - m_vertices[0]->GetVertex();
-    auto slope1 = other.m_vertices[1]->GetVertex() - other.m_vertices[0]->GetVertex();
+    auto slope0 = m_vertices[0]->GetVertex() - m_vertices[1]->GetVertex();
+    auto slope1 = other.m_vertices[0]->GetVertex() - other.m_vertices[1]->GetVertex();
     double den = slope0[0] * slope1[1] - slope0[1] * slope1[0];
     if (den > eps || -den > eps)
     {
         auto pivot = m_vertices[0]->GetVertex() - other.m_vertices[0]->GetVertex();
-        double s = (pivot[1] * slope0[0] - pivot[0] * slope0[1])/den;
-        double t = (pivot[1] * slope1[0] - pivot[0] * slope1[1])/den;
+        double s = (pivot[0] * slope1[1] - pivot[1] * slope1[0])/den;
+        double t = (pivot[0] * slope0[1] - pivot[1] * slope0[0])/den;
         Intersection::Type it = Intersection::Type::None;
         if( s+eps>0 && s-eps<1 && t+eps>0 && t-eps<1)
         {
@@ -53,8 +53,8 @@ SweepLine::Intersection SweepLine::DetermineIntersection(const SweepLine & other
     {
         // Todo: same slope -> parallel lines, do they overlap?
         Intersection::Type it = Intersection::Type::None;
-        double s = 0;
-        double t = 0;
+        double s = -1;
+        double t = -1;
         return Intersection(it, s, t);
     }
 }

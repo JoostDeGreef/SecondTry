@@ -57,6 +57,12 @@ for(auto & n:sweepNodes)
         auto vb0 = b->GetVertexPtr(0);
         auto vb1 = b->GetVertexPtr(1);
         auto v = (va0->GetVertex()*(1-s0) + va1->GetVertex()*(s0) + vb0->GetVertex()*(1-s1) + vb1->GetVertex()*(s1))*0.5;
+
+std::cout << "HandleCrossIntersection: ("
+          << va0->GetVertex() << ") -> (" << va1->GetVertex() << ") intersects with (" 
+          << vb0->GetVertex() << ") -> (" << vb1->GetVertex() << ") at (" 
+          << v << ")" << std::endl;
+
         auto sweepNode = m_sweepNodePool.Alloc(v);
         auto nodeIter = sweepNodes.emplace(sweepNode);
         SweepNode * node = *(nodeIter.first);
@@ -164,7 +170,6 @@ std::cout << "removeLine: " << line->GetVertex(0).GetVertex() << " -> " << line-
 
         auto where = eventLine.find(line);
         auto [start, end] = GetNeighborhoodRange(where);
-        eventLine.erase(where);
         // check all neighbors for intersection with line/where
         for(auto i = start; i != end; ++i)
         {
@@ -176,6 +181,7 @@ std::cout << "removeLine: " << line->GetVertex(0).GetVertex() << " -> " << line-
                 }
             }
         }
+        eventLine.erase(where);
     };
     //for debugging
     auto DisplayEventLine = [&]()
@@ -217,8 +223,8 @@ std::cout << "removeLine: " << line->GetVertex(0).GetVertex() << " -> " << line-
                 AddLine(startLine);
             }
         }
-        DisplayEvents();
-        DisplayEventLine();
+        //DisplayEvents();
+        //DisplayEventLine();
         // remove the end sweepline(s) from the eventline
         for(auto & endLine:node->GetLines())
         {
