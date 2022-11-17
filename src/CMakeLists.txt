@@ -18,4 +18,5 @@ add_subdirectory ("PNGWrapper")
 add_subdirectory ("PNGWrapperTest")
 add_subdirectory ("PlanetBuilders")
 add_subdirectory ("PlanetBuildersTest")
+add_subdirectory ("MathTest")
 
