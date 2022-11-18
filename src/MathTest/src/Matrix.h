@@ -8,8 +8,9 @@
 
 namespace VectorOperations
 {
-  // void Add(double * res, const double * const a, const double * const b, const size_t length);
-  // void Add(float * res, const float * const a, const float * const b, const size_t length);
+  // res[:] = a[:] + b[:]
+  void Add(double * res, const double * const a, const double * const b, const size_t length);
+  void Add(float * res, const float * const a, const float * const b, const size_t length);
   template<typename T>
   void Add(T * res, const T * const a, const T * const b, const size_t length)
   {
@@ -19,6 +20,31 @@ namespace VectorOperations
     }
   }
 
+  // res[:] = a[:] - b[:]
+  void Subtract(double * res, const double * const a, const double * const b, const size_t length);
+  void Subtract(float * res, const float * const a, const float * const b, const size_t length);
+  template<typename T>
+  void Subtract(T * res, const T * const a, const T * const b, const size_t length)
+  {
+    for(size_t i=0;i<length;++i)
+    {
+      res[i] = a[i] - b[i];
+    }
+  }
+
+  // res[:] += a * b[:]
+  void ScalarMultiplyAdd(double * res, const double a, const double * const b, const size_t length);
+  void ScalarMultiplyAdd(float * res, const float a, const float * const b, const size_t length);
+  template<typename T>
+  void ScalarMultiplyAdd(T * res, const T a, const T * const b, const size_t length)
+  {
+    for(size_t i = 0; i<length; ++i)
+    {
+      res[i] += a * b[i];
+    }
+  }
+
+  // res[:] = value
   void Fill(double * res, const size_t length, const double value);
   void Fill(float * res, const size_t length, const float value);
   template<typename T>
@@ -30,6 +56,7 @@ namespace VectorOperations
     }
   }
 
+  // dst[:] = src[:]
   template<typename T>
   void Copy(T * dst, const T * const src, const size_t length)
   {
@@ -201,7 +228,6 @@ public:
     m_fields[row][column] = value;
   }
 
-
   MatrixType operator + (const MatrixType & other) const
   {
     return Sum(other);
@@ -209,6 +235,25 @@ public:
   MatrixType & operator += (const MatrixType & other)
   {
     return Add(other);
+  }
+
+  MatrixType operator - (const MatrixType & other) const
+  {
+    return Minus(other);
+  }
+  MatrixType & operator -= (const MatrixType & other)
+  {
+    return Subtract(other);
+  }
+
+  MatrixType operator * (const MatrixType & other) const
+  {
+    return Multiply(other);
+  }
+  MatrixType & operator *= (const MatrixType & other) const
+  {
+    auto temp = Multiply(other);
+    return (*this = temp);
   }
 
   MatrixType & Fill(const T value)
@@ -221,7 +266,6 @@ public:
     return *this;
   }
 
-public:
   MatrixType & Add(const MatrixType & other)
   {
     AssertSizeEqual(other);
@@ -239,6 +283,41 @@ public:
     for(size_t i = 0; i < m_rows; ++i)
     {
       VectorOperations::Add(res.m_fields[i],m_fields[i],other.m_fields[i],m_columns);
+    }
+    return res;
+  }
+
+  MatrixType & Subtract(const MatrixType & other)
+  {
+    AssertSizeEqual(other);
+    MakeUnique();
+    for(size_t i = 0; i < m_rows; ++i)
+    {
+      VectorOperations::Subtract(m_fields[i],m_fields[i],other.m_fields[i],m_columns);
+    }
+    return *this;
+  }
+  MatrixType Minus(const MatrixType & other) const
+  {
+    AssertSizeEqual(other);
+    MatrixType res(m_rows,m_columns);
+    for(size_t i = 0; i < m_rows; ++i)
+    {
+      VectorOperations::Subtract(res.m_fields[i],m_fields[i],other.m_fields[i],m_columns);
+    }
+    return res;
+  }
+
+  MatrixType Multiply(const MatrixType & other) const
+  {
+    AssertSizeMatches(m_columns, other.m_rows);
+    MatrixType res(m_rows, other.m_columns, T(0));
+    for(size_t i = 0; i < m_rows; ++i)
+    {
+      for(size_t j = 0; j < m_columns; ++j)
+      {
+         VectorOperations::ScalarMultiplyAdd(res.m_fields[i], m_fields[i][j], other.m_fields[j], other.m_columns);
+      }
     }
     return res;
   }
@@ -266,6 +345,10 @@ protected:
       }
     }
     void AssertSizeEqual(const MatrixType & other) const
+    {
+      // todo
+    }
+    void AssertSizeMatches(const size_t & columns, const size_t & rows) const
     {
       // todo
     }
