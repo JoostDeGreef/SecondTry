@@ -19,6 +19,17 @@ namespace VectorOperations
       res[i] = a[i] + b[i];
     }
   }
+  // res[:] = a[:] + s
+  void Add(double * res, const double * const a, const double & s, const size_t length);
+  void Add(float * res, const float * const a, const float & s, const size_t length);
+  template<typename T>
+  void Add(T * res, const T * const a, const T & s, const size_t length)
+  {
+    for(size_t i=0;i<length;++i)
+    {
+      res[i] = a[i] + s;
+    }
+  }
 
   // res[:] = a[:] - b[:]
   void Subtract(double * res, const double * const a, const double * const b, const size_t length);
@@ -186,6 +197,15 @@ public:
     delete [] m_fields;
   }
  
+  size_t Rows() const
+  {
+    return m_rows;
+  }
+  size_t Columns() const
+  {
+    return m_columns;
+  }
+
   class Proxy
   {
     protected:
@@ -212,7 +232,7 @@ public:
   };
   const T operator () (const size_t & row, const size_t & column) const
   {
-    return m_fields[row][column];
+    return Get(row,column);
   }
   Proxy operator () (const size_t & row, const size_t & column)
   {
@@ -220,10 +240,12 @@ public:
   }
   const T Get(const size_t & row, const size_t & column) const
   {
+    assert(row<m_rows && column<m_columns);
     return m_fields[row][column];
   }
   void Set(const size_t & row, const size_t & column, const T & value)
   {
+    assert(row<m_rows && column<m_columns);
     MakeUnique();
     m_fields[row][column] = value;
   }
@@ -235,6 +257,16 @@ public:
   MatrixType & operator += (const MatrixType & other)
   {
     return Add(other);
+  }
+  template<typename S>
+  MatrixType operator + (const S & scalar) const
+  {
+    return Sum(scalar);
+  }
+  template<typename S>
+  MatrixType & operator += (const S & scalar)
+  {
+    return Add(scalar);
   }
 
   MatrixType operator - (const MatrixType & other) const
@@ -268,7 +300,7 @@ public:
 
   MatrixType & Add(const MatrixType & other)
   {
-    AssertSizeEqual(other);
+    assert(m_rows == other.m_rows && m_columns == other.m_columns);
     MakeUnique();
     for(size_t i = 0; i < m_rows; ++i)
     {
@@ -278,7 +310,7 @@ public:
   }
   MatrixType Sum(const MatrixType & other) const
   {
-    AssertSizeEqual(other);
+    assert(m_rows == other.m_rows && m_columns == other.m_columns);
     MatrixType res(m_rows,m_columns);
     for(size_t i = 0; i < m_rows; ++i)
     {
@@ -286,10 +318,27 @@ public:
     }
     return res;
   }
+  template<typename S>
+  MatrixType & Add(const S & scalar)
+  {
+    MakeUnique();
+    for(size_t i = 0; i < m_rows; ++i)
+    {
+      VectorOperations::Add(m_fields[i],m_fields[i],scalar,m_columns);
+    }
+    return *this;
+  }
+  template<typename S>
+  MatrixType Sum(const S & scalar) const
+  {
+    MatrixType res(m_rows,m_columns,scalar);
+    res += *this;
+    return res;
+  }
 
   MatrixType & Subtract(const MatrixType & other)
   {
-    AssertSizeEqual(other);
+    assert(m_rows == other.m_rows && m_columns == other.m_columns);
     MakeUnique();
     for(size_t i = 0; i < m_rows; ++i)
     {
@@ -299,7 +348,7 @@ public:
   }
   MatrixType Minus(const MatrixType & other) const
   {
-    AssertSizeEqual(other);
+    assert(m_rows == other.m_rows && m_columns == other.m_columns);
     MatrixType res(m_rows,m_columns);
     for(size_t i = 0; i < m_rows; ++i)
     {
@@ -310,7 +359,7 @@ public:
 
   MatrixType Multiply(const MatrixType & other) const
   {
-    AssertSizeMatches(m_columns, other.m_rows);
+    assert(m_columns == other.m_rows);
     MatrixType res(m_rows, other.m_columns, T(0));
     for(size_t i = 0; i < m_rows; ++i)
     {
@@ -320,6 +369,54 @@ public:
       }
     }
     return res;
+  }
+
+  MatrixType Transposed() const
+  {
+    MatrixType res(m_columns, m_rows);
+    for(size_t i = 0; i < m_rows; ++i)
+    {
+      for(size_t j = 0; j < m_columns; ++j)
+      {
+        res.m_fields[i][j] = m_fields[j][i];
+      }
+    }
+    return res;
+  }
+  MatrixType & Transpose()
+  {
+    return (*this = Transposed());
+  }
+
+  T Determinant() const
+  {
+    assert(m_columns == m_rows);
+    switch(m_rows)
+    {
+      default:
+        {
+          T res(0);
+          T factor(1);
+          MatrixType part(*this);
+          part.m_rows--;
+          part.m_columns--;
+          for(size_t r=1;r<m_rows;++r)
+          {
+            part.m_fields[r-1] = m_fields[r] + 1;
+          }
+          for(size_t r=0;r<m_rows;++r)
+          {
+            res += factor * part.Determinant();
+            factor *= -1;
+            part.m_fields[r] = m_fields[r] + 1;
+          }
+          return res;
+        }
+      case 2:
+        return m_fields[0][0]*m_fields[1][1] - m_fields[0][1]*m_fields[1][0];
+      case 1:
+        return m_fields[0][0];
+    }
   }
 protected:
     void MakeUnique()
@@ -344,17 +441,9 @@ protected:
         m_fields = fields;
       }
     }
-    void AssertSizeEqual(const MatrixType & other) const
-    {
-      // todo
-    }
-    void AssertSizeMatches(const size_t & columns, const size_t & rows) const
-    {
-      // todo
-    }
 private:
-  const size_t m_rows;
-  const size_t m_columns;
+  size_t m_rows;
+  size_t m_columns;
   const size_t m_stride;
   Data m_data;
   T** m_fields;

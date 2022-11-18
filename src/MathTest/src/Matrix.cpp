@@ -23,6 +23,26 @@ namespace VectorOperations
         _mm256_store_ps(res+i*8,RES);
     }
   }
+  void Add(double * res, const double * const a, const double & s, const size_t length)
+  {
+    __m256d S = _mm256_set1_pd(s);
+    for(size_t i=0;i<(length+3)/4;++i)
+    {
+        __m256d A = _mm256_load_pd(a+i*4);
+        __m256d RES = _mm256_add_pd(A,S);
+        _mm256_store_pd(res+i*4,RES);
+    }
+  }
+  void Add(float * res, const float * const a, const float & s, const size_t length)
+  {
+    __m256 S = _mm256_set1_ps(s);
+    for(size_t i=0;i<(length+7)/8;++i)
+    {
+        __m256 A = _mm256_load_ps(a+i*8);
+        __m256 RES = _mm256_add_ps(A,S);
+        _mm256_store_ps(res+i*8,RES);
+    }
+  }
 
   void Subtract(double * res, const double * const a, const double * const b,const size_t length)
   {
