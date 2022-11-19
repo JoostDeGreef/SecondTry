@@ -136,7 +136,7 @@ void ConsoleOutput::OnTestPartResult(const TestPartResult& test_part_result)
             }
             message = user;
         }
-        std::cout << "[    DEBUG ] " << message << std::endl;
+        std::cout << "\033[32m[    DEBUG ]\033[0m " << message << std::endl;
     }
 }
 

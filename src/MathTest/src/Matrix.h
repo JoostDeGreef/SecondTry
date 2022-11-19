@@ -42,6 +42,17 @@ namespace VectorOperations
       res[i] = a[i] - b[i];
     }
   }
+  // res[:] = a[:] - s
+  void Subtract(double * res, const double * const a, const double & s, const size_t length);
+  void Subtract(float * res, const float * const a, const float & s, const size_t length);
+  template<typename T>
+  void Subtract(T * res, const T * const a, const T & s, const size_t length)
+  {
+    for(size_t i=0;i<length;++i)
+    {
+      res[i] = a[i] - s;
+    }
+  }
 
   // res[:] += a * b[:]
   void ScalarMultiplyAdd(double * res, const double a, const double * const b, const size_t length);
@@ -277,6 +288,16 @@ public:
   {
     return Subtract(other);
   }
+  template<typename S>
+  MatrixType operator - (const S & scalar) const
+  {
+    return Minus(scalar);
+  }
+  template<typename S>
+  MatrixType & operator -= (const S & scalar)
+  {
+    return Subtract(scalar);
+  }
 
   MatrixType operator * (const MatrixType & other) const
   {
@@ -356,6 +377,22 @@ public:
     }
     return res;
   }
+  template<typename S>
+  MatrixType & Subtract(const S & scalar)
+  {
+    MakeUnique();
+    for(size_t i = 0; i < m_rows; ++i)
+    {
+      VectorOperations::Subtract(m_fields[i],m_fields[i],scalar,m_columns);
+    }
+    return *this;
+  }
+  template<typename S>
+  MatrixType Minus(const S & scalar) const
+  {
+    MatrixType res(*this);
+    return res.Subtract(scalar);
+  }
 
   MatrixType Multiply(const MatrixType & other) const
   {
@@ -395,7 +432,6 @@ public:
     {
       default:
         {
-          T res(0);
           T factor(1);
           MatrixType part(*this);
           part.m_rows--;
@@ -404,19 +440,47 @@ public:
           {
             part.m_fields[r-1] = m_fields[r] + 1;
           }
-          for(size_t r=0;r<m_rows;++r)
+          T res = factor * m_fields[0][0] * part.Determinant();
+          for(size_t r=1;r<m_rows;++r)
           {
-            res += factor * part.Determinant();
             factor *= -1;
-            part.m_fields[r] = m_fields[r] + 1;
+            part.m_fields[r-1] = m_fields[r-1] + 1;
+            res += factor * m_fields[r][0] * part.Determinant();
           }
           return res;
         }
+      case 3:
+        return m_fields[0][0] * (m_fields[1][1]*m_fields[2][2] - m_fields[1][2]*m_fields[2][1])
+             - m_fields[0][1] * (m_fields[1][0]*m_fields[2][2] - m_fields[1][2]*m_fields[2][0])
+             + m_fields[0][2] * (m_fields[1][0]*m_fields[2][1] - m_fields[1][1]*m_fields[2][0]);
       case 2:
         return m_fields[0][0]*m_fields[1][1] - m_fields[0][1]*m_fields[1][0];
       case 1:
         return m_fields[0][0];
     }
+  }
+
+  MatrixType Cofactor() const // Adjoint
+  {
+    assert(m_columns == m_rows);
+    MatrixType res(m_rows,m_columns,T(0));
+    // todo
+    return res;
+  }
+
+  friend std::ostream& operator<<(std::ostream& out, const MatrixType & matrix)
+  {
+    for(size_t i = 0; i < matrix.m_rows; ++i)
+    {
+      out << (i)?";":"[";
+      for(size_t j = 0; j < matrix.m_columns; ++j)
+      {
+        if(j) out << ",";
+        out << matrix.m_fields[i][j];
+      }
+    }
+    out << "]";
+    return out;
   }
 protected:
     void MakeUnique()

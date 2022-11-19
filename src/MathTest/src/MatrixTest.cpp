@@ -116,4 +116,5 @@ TYPED_TEST(MatrixTest, Determinant)
     m2(0,0) = 1;
     m2(1,1) = 2;
     EXPECT_FLOAT_EQ(60,m2.Determinant());
+    SUCCEED() << m2;
 }
