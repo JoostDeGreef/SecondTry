@@ -66,6 +66,18 @@ namespace VectorOperations
     }
   }
 
+  // res[:] = a[:] * s
+  // void Multiply(double * res, const double * const a, const double & s, const size_t length);
+  // void Multiply(float * res, const float * const a, const float & s, const size_t length);
+  template<typename T>
+  void Multiply(T * res, const T * const a, const T & s, const size_t length)
+  {
+    for(size_t i=0;i<length;++i)
+    {
+      res[i] = a[i] * s;
+    }
+  }
+
   // res[:] = value
   void Fill(double * res, const size_t length, const double value);
   void Fill(float * res, const size_t length, const float value);
@@ -308,6 +320,16 @@ public:
     auto temp = Multiply(other);
     return (*this = temp);
   }
+  template<typename S>
+  MatrixType operator * (const S & scalar) const
+  {
+    return Multiply(scalar);
+  }
+  template<typename S>
+  MatrixType & operator *= (const S & scalar)
+  {
+    return Multiplied(scalar);
+  }
 
   MatrixType & Fill(const T value)
   {
@@ -407,6 +429,25 @@ public:
     }
     return res;
   }
+  template<typename S>
+  MatrixType Multiply(const S & scalar) const
+  {
+    MatrixType res(m_rows, m_columns);
+    for(size_t i = 0; i < m_rows; ++i)
+    {
+      VectorOperations::Multiply(res.m_fields[i], m_fields[i], scalar, m_columns);
+    }
+    return res;
+  }
+  template<typename S>
+  MatrixType & Multiplied(const S & scalar)
+  {
+    for(size_t i = 0; i < m_rows; ++i)
+    {
+      VectorOperations::Multiply(m_fields[i], m_fields[i], scalar, m_columns);
+    }
+    return *this;
+  }
 
   MatrixType Transposed() const
   {
@@ -457,22 +498,144 @@ public:
         return m_fields[0][0]*m_fields[1][1] - m_fields[0][1]*m_fields[1][0];
       case 1:
         return m_fields[0][0];
+      case 0:
+        return (T)0/(T)0;
     }
   }
 
-  MatrixType Cofactor() const // Adjoint
+private:
+  MatrixType AdjointCore(const bool sign_minors,const bool transpose) const
   {
     assert(m_columns == m_rows);
-    MatrixType res(m_rows,m_columns,T(0));
-    // todo
+    MatrixType res(m_rows,m_columns);
+    switch(m_columns)
+    {
+      case 0:
+        break;
+      case 1: 
+        res(0,0) = Get(0,0);
+        break;
+      case 2: 
+        res(0,0) = Get(1,1);
+        if(sign_minors)
+        {
+          if(transpose)
+          {
+            res(0,1) = -Get(0,1);
+            res(1,0) = -Get(1,0);
+          }
+          else
+          {
+            res(1,0) = -Get(0,1);
+            res(0,1) = -Get(1,0);
+          }
+        }
+        else
+        { 
+          if(transpose)
+          {
+            res(0,1) = Get(0,1);
+            res(1,0) = Get(1,0);
+          }
+          else
+          {
+            res(1,0) = Get(0,1);
+            res(0,1) = Get(1,0);
+          }
+        }
+        res(1,1) = Get(0,0);
+        break;
+      default:
+        {
+          MatrixType part = UniqueCopy();
+          part.m_rows--;
+          part.m_columns--;
+          T sign = (m_columns && 1)?-1:1;
+          for(int c=m_columns-1;c>=0;--c)
+          {
+            for(int r=m_rows-1;r>=0;--r)
+            {
+              if(sign_minors)
+              {
+                if(transpose)
+                {
+                  res.m_fields[c][r] = sign * part.Determinant();
+                }
+                else
+                {
+                  res.m_fields[r][c] = sign * part.Determinant();
+                }
+                sign = -sign;
+              }
+              else
+              {
+                if(transpose)
+                {
+                  res.m_fields[c][r] = part.Determinant();
+                }
+                else
+                {
+                  res.m_fields[r][c] = part.Determinant();
+                }
+              }
+              if(r!=0)
+              {
+                std::swap(part.m_fields[r-1],part.m_fields[m_rows-1]);
+              }
+              else
+              {
+                for(size_t i = 0; i < m_rows; ++i)
+                {
+                  part.m_fields[i] = part.m_data.Get() + i*part.m_stride;
+                }
+              }
+            }
+            if(c!=0)
+            {
+              for(size_t r = 0; r < m_rows; ++r)
+              {
+                std::swap(part.m_fields[r][c-1],part.m_fields[r][m_columns-1]);
+              }
+            }
+          }
+        }
+    }
     return res;
+  }
+public:  
+  MatrixType Cofactor() const
+  {
+    MatrixType res = AdjointCore(true,false);
+    return res;
+  }
+  MatrixType Minor() const
+  {
+    MatrixType res = AdjointCore(false,false);
+    return res;
+  }
+  MatrixType Adjoint() const
+  {
+    MatrixType res = AdjointCore(false,true);
+    return res;
+  }
+  MatrixType Inverse() const
+  {
+    MatrixType res = Adjoint();
+    T det = res(0,0) * Get(0,0);
+    T sign = 1;
+    for(size_t c = 1;c<m_columns;++c)
+    {
+      sign = -sign;
+      det += sign * res(c,0) * Get(0,c);
+    }
+    return (res *= (1/det));
   }
 
   friend std::ostream& operator<<(std::ostream& out, const MatrixType & matrix)
   {
     for(size_t i = 0; i < matrix.m_rows; ++i)
     {
-      out << (i)?";":"[";
+      out << ((i)?";":"[");
       for(size_t j = 0; j < matrix.m_columns; ++j)
       {
         if(j) out << ",";
@@ -504,6 +667,15 @@ protected:
         delete [] m_fields;
         m_fields = fields;
       }
+    }
+    MatrixType UniqueCopy() const
+    {
+      MatrixType res(m_rows,m_columns);
+      for(size_t i = 0; i < res.m_rows; ++i)
+      {
+        VectorOperations::Copy(res.m_fields[i],m_fields[i],res.m_stride);
+      }
+      return res;
     }
 private:
   size_t m_rows;
