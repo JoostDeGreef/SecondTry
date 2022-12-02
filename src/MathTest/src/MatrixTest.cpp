@@ -116,29 +116,18 @@ TYPED_TEST(MatrixTest, Determinant)
     m2(0,0) = 1;
     m2(1,1) = 2;
     EXPECT_FLOAT_EQ(60,m2.Determinant());
-    SUCCEED() << m2;
-}
-
-TYPED_TEST(MatrixTest, Cofactor)
-{
-    Matrix<TypeParam> m0(2,2,2);
-    m0(0,0) = 1;
-    m0(1,0) = 3;
-    m0(1,1) = 4;
-    Matrix<TypeParam> m1 = m0.Cofactor();
-    EXPECT_FLOAT_EQ(4,m1(0,0));
-    SUCCEED() << m0;
-    SUCCEED() << m1;
 }
 
 TYPED_TEST(MatrixTest, Inverse)
 {
-    Matrix<TypeParam> m0(2,2,2);
+    Matrix<TypeParam> m0(2,2);
     m0(0,0) = 1;
+    m0(0,1) = 2;
     m0(1,0) = 3;
     m0(1,1) = 4;
     Matrix<TypeParam> m1 = m0.Inverse();
-    EXPECT_FLOAT_EQ(4,m1(0,0));
-    SUCCEED() << m0;
-    SUCCEED() << m1;
+    EXPECT_FLOAT_EQ(-2,  m1(0,0));
+    EXPECT_FLOAT_EQ( 1,  m1(0,1));
+    EXPECT_FLOAT_EQ( 1.5,m1(1,0));
+    EXPECT_FLOAT_EQ(-0.5,m1(1,1));
 }

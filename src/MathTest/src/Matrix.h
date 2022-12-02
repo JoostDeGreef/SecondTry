@@ -503,8 +503,7 @@ public:
     }
   }
 
-private:
-  MatrixType AdjointCore(const bool sign_minors,const bool transpose) const
+  MatrixType Adjoint() const
   {
     assert(m_columns == m_rows);
     MatrixType res(m_rows,m_columns);
@@ -517,32 +516,8 @@ private:
         break;
       case 2: 
         res(0,0) = Get(1,1);
-        if(sign_minors)
-        {
-          if(transpose)
-          {
-            res(0,1) = -Get(0,1);
-            res(1,0) = -Get(1,0);
-          }
-          else
-          {
-            res(1,0) = -Get(0,1);
-            res(0,1) = -Get(1,0);
-          }
-        }
-        else
-        { 
-          if(transpose)
-          {
-            res(0,1) = Get(0,1);
-            res(1,0) = Get(1,0);
-          }
-          else
-          {
-            res(1,0) = Get(0,1);
-            res(0,1) = Get(1,0);
-          }
-        }
+        res(0,1) = -Get(0,1);
+        res(1,0) = -Get(1,0);
         res(1,1) = Get(0,0);
         break;
       default:
@@ -555,29 +530,8 @@ private:
           {
             for(int r=m_rows-1;r>=0;--r)
             {
-              if(sign_minors)
-              {
-                if(transpose)
-                {
-                  res.m_fields[c][r] = sign * part.Determinant();
-                }
-                else
-                {
-                  res.m_fields[r][c] = sign * part.Determinant();
-                }
-                sign = -sign;
-              }
-              else
-              {
-                if(transpose)
-                {
-                  res.m_fields[c][r] = part.Determinant();
-                }
-                else
-                {
-                  res.m_fields[r][c] = part.Determinant();
-                }
-              }
+              res.m_fields[c][r] = sign * part.Determinant();
+              sign = -sign;
               if(r!=0)
               {
                 std::swap(part.m_fields[r-1],part.m_fields[m_rows-1]);
@@ -602,22 +556,6 @@ private:
     }
     return res;
   }
-public:  
-  MatrixType Cofactor() const
-  {
-    MatrixType res = AdjointCore(true,false);
-    return res;
-  }
-  MatrixType Minor() const
-  {
-    MatrixType res = AdjointCore(false,false);
-    return res;
-  }
-  MatrixType Adjoint() const
-  {
-    MatrixType res = AdjointCore(false,true);
-    return res;
-  }
   MatrixType Inverse() const
   {
     MatrixType res = Adjoint();
@@ -626,7 +564,7 @@ public:
     for(size_t c = 1;c<m_columns;++c)
     {
       sign = -sign;
-      det += sign * res(c,0) * Get(0,c);
+      det += res(c,0) * Get(0,c);
     }
     return (res *= (1/det));
   }
