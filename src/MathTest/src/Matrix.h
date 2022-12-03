@@ -5,6 +5,7 @@
 #include <cassert>
 #include <iostream>
 #include <new>
+#include <initializer_list>
 
 namespace VectorOperations
 {
@@ -194,6 +195,11 @@ public:
   {
     Fill(value);
   }
+  Matrix(const size_t rows, const size_t columns, const std::initializer_list<T> & l)
+    : Matrix(rows,columns)
+  {
+    Set(l);
+  }
   Matrix(const MatrixType & other)
     : m_rows(other.m_rows)
     , m_columns(other.m_columns)
@@ -220,6 +226,36 @@ public:
     delete [] m_fields;
   }
  
+  MatrixType & operator = (const MatrixType & other)
+  {
+    m_data = other.m_data;
+    m_rows = other.m_rows;
+    m_stride = other.m_stride;
+    m_columns = other.m_columns;
+    delete [] m_fields;
+    m_fields = new T* [m_rows];
+    for(size_t i = 0; i < m_rows; ++i)
+    {
+      m_fields[i] = other.m_fields[i];
+    }
+
+    return *this;
+  }
+  MatrixType & operator = (MatrixType && other)
+  {
+    std::swap(m_data,other.m_data);
+    std::swap(m_rows,other.m_rows);
+    std::swap(m_stride,other.m_stride);
+    std::swap(m_columns,other.m_columns);
+    std::swap(m_fields,other.m_fields);
+    return *this;
+  }
+  MatrixType & operator = (const std::initializer_list<T> & l)
+  {
+    Set(l);
+    return *this;
+  }
+
   size_t Rows() const
   {
     return m_rows;
@@ -272,6 +308,29 @@ public:
     MakeUnique();
     m_fields[row][column] = value;
   }
+  template<typename... ARGS>
+  void Set(const std::initializer_list<T> & l)
+  {
+    assert(l.size() == m_rows*m_columns);
+    auto iter = l.begin();
+    for(size_t i = 0; i < m_rows; ++i)
+    {
+      for(size_t j = 0; j < m_columns; ++j, ++iter)
+      {
+        m_fields[i][j] = *iter;
+      }
+    }
+  }
+
+  MatrixType & Identity()
+  {
+    Fill((T)0);
+    for(size_t i = 0; i < m_rows && i < m_columns; ++i)
+    {
+      m_fields[i][i] = (T)1;
+    }
+    return *this;
+  }
 
   MatrixType operator + (const MatrixType & other) const
   {
@@ -281,13 +340,11 @@ public:
   {
     return Add(other);
   }
-  template<typename S>
-  MatrixType operator + (const S & scalar) const
+  MatrixType operator + (const FieldType & scalar) const
   {
     return Sum(scalar);
   }
-  template<typename S>
-  MatrixType & operator += (const S & scalar)
+  MatrixType & operator += (const FieldType & scalar)
   {
     return Add(scalar);
   }
@@ -300,13 +357,11 @@ public:
   {
     return Subtract(other);
   }
-  template<typename S>
-  MatrixType operator - (const S & scalar) const
+  MatrixType operator - (const FieldType & scalar) const
   {
     return Minus(scalar);
   }
-  template<typename S>
-  MatrixType & operator -= (const S & scalar)
+  MatrixType & operator -= (const FieldType & scalar)
   {
     return Subtract(scalar);
   }
@@ -315,18 +370,16 @@ public:
   {
     return Multiply(other);
   }
-  MatrixType & operator *= (const MatrixType & other) const
+  MatrixType & operator *= (const MatrixType & other) 
   {
     auto temp = Multiply(other);
     return (*this = temp);
   }
-  template<typename S>
-  MatrixType operator * (const S & scalar) const
+  MatrixType operator * (const FieldType & scalar) const
   {
     return Multiply(scalar);
   }
-  template<typename S>
-  MatrixType & operator *= (const S & scalar)
+  MatrixType & operator *= (const FieldType & scalar)
   {
     return Multiplied(scalar);
   }
@@ -339,6 +392,37 @@ public:
       VectorOperations::Fill(m_fields[i],m_columns,value);
     }
     return *this;
+  }
+
+  bool operator == (const MatrixType & other) const
+  {
+    assert(m_rows == other.m_rows && m_columns == other.m_columns);
+    for(size_t i = 0; i < m_rows; ++i)
+    {
+      for(size_t j = 0; j < m_columns; ++j)
+      {
+        if(m_fields[i][j] != other.m_fields[i][j])
+        {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+  bool operator != (const MatrixType & other) const
+  {
+    assert(m_rows == other.m_rows && m_columns == other.m_columns);
+    for(size_t i = 0; i < m_rows; ++i)
+    {
+      for(size_t j = 0; j < m_columns; ++j)
+      {
+        if(m_fields[i][j] != other.m_fields[i][j])
+        {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   MatrixType & Add(const MatrixType & other)
@@ -361,8 +445,7 @@ public:
     }
     return res;
   }
-  template<typename S>
-  MatrixType & Add(const S & scalar)
+  MatrixType & Add(const FieldType & scalar)
   {
     MakeUnique();
     for(size_t i = 0; i < m_rows; ++i)
@@ -371,8 +454,7 @@ public:
     }
     return *this;
   }
-  template<typename S>
-  MatrixType Sum(const S & scalar) const
+  MatrixType Sum(const FieldType & scalar) const
   {
     MatrixType res(m_rows,m_columns,scalar);
     res += *this;
@@ -399,8 +481,7 @@ public:
     }
     return res;
   }
-  template<typename S>
-  MatrixType & Subtract(const S & scalar)
+  MatrixType & Subtract(const FieldType & scalar)
   {
     MakeUnique();
     for(size_t i = 0; i < m_rows; ++i)
@@ -409,8 +490,7 @@ public:
     }
     return *this;
   }
-  template<typename S>
-  MatrixType Minus(const S & scalar) const
+  MatrixType Minus(const FieldType & scalar) const
   {
     MatrixType res(*this);
     return res.Subtract(scalar);
@@ -429,8 +509,7 @@ public:
     }
     return res;
   }
-  template<typename S>
-  MatrixType Multiply(const S & scalar) const
+  MatrixType Multiply(const FieldType & scalar) const
   {
     MatrixType res(m_rows, m_columns);
     for(size_t i = 0; i < m_rows; ++i)
@@ -439,8 +518,7 @@ public:
     }
     return res;
   }
-  template<typename S>
-  MatrixType & Multiplied(const S & scalar)
+  MatrixType & Multiplied(const FieldType & scalar)
   {
     for(size_t i = 0; i < m_rows; ++i)
     {
@@ -512,20 +590,31 @@ public:
       case 0:
         break;
       case 1: 
-        res(0,0) = Get(0,0);
+        res.m_fields[0][0] = Get(0,0);
         break;
       case 2: 
-        res(0,0) = Get(1,1);
-        res(0,1) = -Get(0,1);
-        res(1,0) = -Get(1,0);
-        res(1,1) = Get(0,0);
+        res.m_fields[0][0] =  Get(1,1);
+        res.m_fields[0][1] = -Get(0,1);
+        res.m_fields[1][0] = -Get(1,0);
+        res.m_fields[1][1] =  Get(0,0);
+        break;
+      case 3: 
+        res.m_fields[0][0] = Get(1,1)*Get(2,2) - Get(1,2)*Get(2,1);
+        res.m_fields[1][0] = Get(1,2)*Get(2,0) - Get(1,0)*Get(2,2);
+        res.m_fields[2][0] = Get(1,0)*Get(2,1) - Get(1,1)*Get(2,0);
+        res.m_fields[0][1] = Get(0,2)*Get(2,1) - Get(0,1)*Get(2,2);
+        res.m_fields[1][1] = Get(0,0)*Get(2,2) - Get(0,2)*Get(2,0);
+        res.m_fields[2][1] = Get(0,1)*Get(2,0) - Get(0,0)*Get(2,1);
+        res.m_fields[0][2] = Get(0,1)*Get(1,2) - Get(0,2)*Get(1,1);
+        res.m_fields[1][2] = Get(0,2)*Get(1,0) - Get(0,0)*Get(1,2);
+        res.m_fields[2][2] = Get(0,0)*Get(1,1) - Get(0,1)*Get(1,0);
         break;
       default:
         {
           MatrixType part = UniqueCopy();
           part.m_rows--;
           part.m_columns--;
-          T sign = (m_columns && 1)?-1:1;
+          T sign = (m_columns && 1)?1:-1;
           for(int c=m_columns-1;c>=0;--c)
           {
             for(int r=m_rows-1;r>=0;--r)
@@ -544,12 +633,13 @@ public:
                 }
               }
             }
-            if(c!=0)
+            if(c!=0)           
             {
               for(size_t r = 0; r < m_rows; ++r)
               {
                 std::swap(part.m_fields[r][c-1],part.m_fields[r][m_columns-1]);
               }
+              sign = -sign;
             }
           }
         }
@@ -618,7 +708,7 @@ protected:
 private:
   size_t m_rows;
   size_t m_columns;
-  const size_t m_stride;
+  size_t m_stride;
   Data m_data;
   T** m_fields;
 };

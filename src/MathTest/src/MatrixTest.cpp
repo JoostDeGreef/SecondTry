@@ -107,27 +107,21 @@ TYPED_TEST(MatrixTest, Transpose)
 
 TYPED_TEST(MatrixTest, Determinant)
 {
-    Matrix<TypeParam> m0(1,1,42);
-    EXPECT_FLOAT_EQ(42,m0.Determinant());
-    Matrix<TypeParam> m1(2,2,3);
-    m1(0,0) = 1;
-    EXPECT_FLOAT_EQ(-6,m1.Determinant());
-    Matrix<TypeParam> m2(3,3,5);
-    m2(0,0) = 1;
-    m2(1,1) = 2;
-    EXPECT_FLOAT_EQ(60,m2.Determinant());
+    EXPECT_FLOAT_EQ(42,Matrix<TypeParam>(1,1,{42}).Determinant());
+    EXPECT_FLOAT_EQ(-6,Matrix<TypeParam>(2,2,{1,3,3,3}).Determinant());
+    EXPECT_FLOAT_EQ(60,Matrix<TypeParam>(3,3,{1,5,5,5,2,5,5,5,5}).Determinant());
+    EXPECT_FLOAT_EQ(-16,Matrix<TypeParam>(4,4,{1,2,3,4,5,6,7,8,1,3,4,1,5,2,1,4}).Determinant());
 }
 
 TYPED_TEST(MatrixTest, Inverse)
 {
     Matrix<TypeParam> m0(2,2);
-    m0(0,0) = 1;
-    m0(0,1) = 2;
-    m0(1,0) = 3;
-    m0(1,1) = 4;
+    m0.Set({1,2,3,4});
     Matrix<TypeParam> m1 = m0.Inverse();
-    EXPECT_FLOAT_EQ(-2,  m1(0,0));
-    EXPECT_FLOAT_EQ( 1,  m1(0,1));
-    EXPECT_FLOAT_EQ( 1.5,m1(1,0));
-    EXPECT_FLOAT_EQ(-0.5,m1(1,1));
+    m0 = {-2, 1, 1.5, -0.5};
+    EXPECT_TRUE(m0 == m1) << "m1 = " << m1;
+    m0 = Matrix<TypeParam>(3,3,{1,2,3, 1,3,4, 5,1,4});
+    EXPECT_FLOAT_EQ(1,(m0 *= m0.Inverse()).Determinant());
+    m0 = Matrix<TypeParam>(4,4,{1,2,3,4,5,6,7,8,1,3,4,1,5,2,1,4});
+    EXPECT_FLOAT_EQ(1,(m0 *= m0.Inverse()).Determinant());
 }
