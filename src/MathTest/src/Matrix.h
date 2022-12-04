@@ -177,6 +177,18 @@ private:
     } * m_shared;
   };
 
+  Matrix(const MatrixType & other, const size_t row, const size_t column, const size_t rows, const size_t columns)
+    : m_rows(rows)
+    , m_columns(columns)
+    , m_stride(other.m_stride)
+    , m_data(other.m_data)
+    , m_fields(new T* [rows])
+  {
+    for(size_t i = 0; i < m_rows; ++i)
+    {
+      m_fields[i] = &other.m_fields[row][column] + i*m_stride;
+    }
+  }
 public:
   Matrix(const size_t rows, const size_t columns)
     : m_rows(rows)
@@ -590,7 +602,7 @@ public:
       case 0:
         break;
       case 1: 
-        res.m_fields[0][0] = Get(0,0);
+        res.m_fields[0][0] = (T)1;
         break;
       case 2: 
         res.m_fields[0][0] =  Get(1,1);
@@ -614,9 +626,13 @@ public:
           MatrixType part = UniqueCopy();
           part.m_rows--;
           part.m_columns--;
-          T sign = (m_columns && 1)?1:-1;
           for(int c=m_columns-1;c>=0;--c)
           {
+            T sign = (c & 1)?1:-1;
+            if(m_columns & 1)
+            {
+              sign = -sign;
+            }
             for(int r=m_rows-1;r>=0;--r)
             {
               res.m_fields[c][r] = sign * part.Determinant();
@@ -639,7 +655,6 @@ public:
               {
                 std::swap(part.m_fields[r][c-1],part.m_fields[r][m_columns-1]);
               }
-              sign = -sign;
             }
           }
         }
@@ -659,6 +674,22 @@ public:
     return (res *= (1/det));
   }
 
+  MatrixType Slice(const size_t row = 0,const size_t column = 0,size_t rows = -1,size_t columns = -1) const
+  {
+    assert(row<m_rows);
+    assert(column<m_columns);
+    if(rows==-1)
+    {
+      rows=m_rows-row;
+    }
+    if(columns==-1)
+    {
+      columns=m_columns-column;
+    }
+    assert(row+rows<=m_rows);
+    assert(column+columns<=m_columns);
+    return MatrixType(*this,row,column,rows,columns);
+  }
   friend std::ostream& operator<<(std::ostream& out, const MatrixType & matrix)
   {
     for(size_t i = 0; i < matrix.m_rows; ++i)
