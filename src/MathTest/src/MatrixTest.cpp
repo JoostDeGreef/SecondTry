@@ -102,7 +102,10 @@ TYPED_TEST(MatrixTest, Multiply)
 
 TYPED_TEST(MatrixTest, Transpose)
 {
-    // TODO
+    Matrix<TypeParam> m0(4,2,{1, 2, 3, 4, 5, 6, 7, 8});
+    Matrix<TypeParam> m1(2,4,{1, 3, 5, 7, 2, 4, 6, 8});
+    auto m2 = m0.Transposed();
+    EXPECT_TRUE(m1 == m2) << "m2 = " << m2;
 }
 
 TYPED_TEST(MatrixTest, Slice)

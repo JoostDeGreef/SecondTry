@@ -68,8 +68,8 @@ namespace VectorOperations
   }
 
   // res[:] = a[:] * s
-  // void Multiply(double * res, const double * const a, const double & s, const size_t length);
-  // void Multiply(float * res, const float * const a, const float & s, const size_t length);
+  void Multiply(double * res, const double * const a, const double & s, const size_t length);
+  void Multiply(float * res, const float * const a, const float & s, const size_t length);
   template<typename T>
   void Multiply(T * res, const T * const a, const T & s, const size_t length)
   {
@@ -396,6 +396,15 @@ public:
     return Multiplied(scalar);
   }
 
+  MatrixType operator / (const FieldType & scalar) const
+  {
+    return Multiply(((T)1)/scalar);
+  }
+  MatrixType & operator /= (const FieldType & scalar)
+  {
+    return Multiplied(((T)1)/scalar);
+  }
+
   MatrixType & Fill(const T value)
   {
     MakeUnique();
@@ -546,7 +555,7 @@ public:
     {
       for(size_t j = 0; j < m_columns; ++j)
       {
-        res.m_fields[i][j] = m_fields[j][i];
+        res.m_fields[j][i] = m_fields[i][j];
       }
     }
     return res;
@@ -621,6 +630,30 @@ public:
         res.m_fields[1][2] = Get(0,2)*Get(1,0) - Get(0,0)*Get(1,2);
         res.m_fields[2][2] = Get(0,0)*Get(1,1) - Get(0,1)*Get(1,0);
         break;
+      case 4:
+        {
+          T a = Get(0,0), b = Get(0,1), c = Get(0,2), d = Get(0,3);
+          T e = Get(1,0), f = Get(1,1), g = Get(1,2), h = Get(1,3);
+          T i = Get(2,0), j = Get(2,1), k = Get(2,2), l = Get(2,3);
+          T m = Get(3,0), n = Get(3,1), o = Get(3,2), p = Get(3,3);
+          res.m_fields[0][0] =  f*(k*p-l*o) + g*(l*n-j*p) + h*(j*o-k*n);
+          res.m_fields[1][0] =  e*(l*o-k*p) + g*(i*p-l*m) + h*(k*m-i*o);
+          res.m_fields[2][0] =  e*(j*p-l*n) + f*(l*m-i*p) + h*(i*n-j*m);
+          res.m_fields[3][0] =  e*(k*n-j*o) + f*(i*o-k*m) + g*(j*m-i*n);
+          res.m_fields[0][1] =  b*(l*o-k*p) + c*(j*p-l*n) + d*(k*n-j*o);
+          res.m_fields[1][1] =  a*(k*p-l*o) + c*(l*m-i*p) + d*(i*o-k*m);
+          res.m_fields[2][1] =  a*(l*n-j*p) + b*(i*p-l*m) + d*(j*m-i*n);
+          res.m_fields[3][1] =  a*(j*o-k*n) + b*(k*m-i*o) + c*(i*n-j*m);
+          res.m_fields[0][2] =  b*(g*p-h*o) + c*(h*n-f*p) + d*(f*o-g*n);
+          res.m_fields[1][2] =  a*(h*o-g*p) + c*(e*p-h*m) + d*(g*m-e*o);
+          res.m_fields[2][2] =  a*(f*p-h*n) + b*(h*m-e*p) + d*(e*n-f*m);
+          res.m_fields[3][2] =  a*(g*n-f*o) + b*(e*o-g*m) + c*(f*m-e*n);
+          res.m_fields[0][3] =  b*(h*k-g*l) + c*(f*l-h*j) + d*(g*j-f*k);
+          res.m_fields[1][3] =  a*(g*l-h*k) + c*(h*i-e*l) + d*(e*k-g*i);
+          res.m_fields[2][3] =  a*(h*j-f*l) + b*(e*l-h*i) + d*(f*i-e*j);
+          res.m_fields[3][3] =  a*(f*k-g*j) + b*(g*i-e*k) + c*(e*j-f*i);
+        }
+        break;
       default:
         {
           MatrixType part = UniqueCopy();
@@ -690,6 +723,7 @@ public:
     assert(column+columns<=m_columns);
     return MatrixType(*this,row,column,rows,columns);
   }
+
   friend std::ostream& operator<<(std::ostream& out, const MatrixType & matrix)
   {
     for(size_t i = 0; i < matrix.m_rows; ++i)
@@ -704,6 +738,7 @@ public:
     out << "]";
     return out;
   }
+
 protected:
     void MakeUnique()
     {
@@ -736,6 +771,7 @@ protected:
       }
       return res;
     }
+
 private:
   size_t m_rows;
   size_t m_columns;
