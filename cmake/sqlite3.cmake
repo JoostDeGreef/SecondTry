@@ -10,7 +10,21 @@ FetchContent_Declare(
   #GIT_TAG        master
   
   GIT_REPOSITORY https://github.com/algoritnl/sqlite-amalgamation.git
-  GIT_TAG        main
+  GIT_TAG        v3.37.1
+# GIT_TAG        main
 )
 
+MESSAGE(STATUS "
+*************************************
+*** 
+***  sqlite3
+*** 
+*************************************")
+
+#include(DebugVariables)
+
+SET(BUILD_TESTING OFF)
+
 FetchContent_MakeAvailable(sqlite)
+
+SET(BUILD_TESTING ON)

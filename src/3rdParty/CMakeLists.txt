@@ -3,11 +3,13 @@ include(FetchContent)
 
 # Remote code
 
-include(GoogleTest)
+include(googletest)
 include(sqlite3)
 include(fmt)
 include(glfw)
 include(zlib)
+include(bzip2)
+include(brotli)
 include(png)
 include(freetype2)
 

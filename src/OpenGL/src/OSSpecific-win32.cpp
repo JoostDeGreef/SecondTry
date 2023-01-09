@@ -1,7 +1,7 @@
 
-#include "OpenGL.h"
-
 #define GLFW_EXPOSE_NATIVE_WIN32 1
+
+#include "OpenGL.h"
 
 #if defined(APIENTRY)
   #undef APIENTRY
@@ -11,12 +11,6 @@
 
 namespace OSSpecific
 {
-    void CloseOwningWindow(GLFWwindow* window)
-    {
-        HWND hwnd = glfwGetWin32Window(window);
-        CloseWindow(hwnd);
-    }
-
     void RemoveWindowDecorations(GLFWwindow* window)
     {
         glfwSetWindowOpacity(window, 0.75f);

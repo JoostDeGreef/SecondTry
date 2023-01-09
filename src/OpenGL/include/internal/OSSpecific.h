@@ -3,17 +3,12 @@
 namespace OSSpecific
 {
     /*
-    ** Close the owning window for an opengl context
-    */
-    void CloseOwningWindow(GLFWwindow* window);
-
-    /*
     ** Remove all title bar decorations
     */
     void RemoveWindowDecorations(GLFWwindow* window);
 
     /*
-    ** Enable/disable 'x' button. Onwindows this ealso enables the system menu
+    ** Enable/disable 'x' button. On windows this also enables the system menu
     */
     void EnableCloseButton(GLFWwindow* window, const bool enabled);
 

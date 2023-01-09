@@ -3,6 +3,7 @@
 
 using namespace std;
 using namespace testing;
+using namespace Core;
 
 class CoreTest : public Test
 {

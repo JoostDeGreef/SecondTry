@@ -1,72 +1,77 @@
 #include "OpenGL.h"
+#include "Log.h"
 
-void OpenGL::glColor(const RGBAColorf& color)
+namespace
 {
-    glColor4fv(color.RGBA);
-}
-void OpenGL::glColor(const RGBAColord& color)
-{
-    glColor4dv(color.RGBA);
-}
-
-void OpenGL::glColor(const RGBColorf& color)
-{
-    glColor3fv(color.RGB);
-}
-void OpenGL::glColor(const RGBColord& color)
-{
-    glColor3dv(color.RGB);
-}
-
-void OpenGL::glVertex(const Vector3f& point)
-{
-    glVertex3fv(point.Raw());
-}
-void OpenGL::glVertex(const Vector3d& point)
-{
-    glVertex3dv(point.Raw());
-}
-
-void OpenGL::glVertex(const double& x, const double& y)
-{
-    glVertex2d(x, y);
-}
-void OpenGL::glVertex(const float& x, const float& y)
-{
-    glVertex2f(x, y);
-}
-
-void OpenGL::glNormal(const Vector3f& normal)
-{
-    glNormal3fv(normal.Raw());
-}
-
-void OpenGL::glNormal(const Vector3d& normal)
-{
-    glNormal3dv(normal.Raw());
+  std::string glGetErrorMessage()
+  {
+    auto value = glGetError();
+    std::string msg;
+    switch(value)
+    {
+        case GL_NO_ERROR:
+          break;
+        case GL_INVALID_ENUM:
+          msg = "glGetError returned GL_INVALID_ENUM\n";
+          break;
+        case GL_INVALID_VALUE:
+          msg = "glGetError returned GL_INVALID_VALUE\n";
+          break;
+        case GL_INVALID_OPERATION:
+          msg = "glGetError returned GL_INVALID_OPERATION\n";
+          break;
+        case GL_INVALID_FRAMEBUFFER_OPERATION:
+          msg = "glGetError returned GL_INVALID_FRAMEBUFFER_OPERATION\n";
+          break;
+        case GL_OUT_OF_MEMORY:
+          msg = "glGetError returned GL_OUT_OF_MEMORY\n";
+          break;
+        case GL_STACK_UNDERFLOW:
+          msg = "glGetError returned GL_STACK_UNDERFLOW\n";
+          break;
+        case GL_STACK_OVERFLOW:
+          msg = "glGetError returned GL_STACK_OVERFLOW\n";
+          break;
+        default:
+          msg = fmt::format("glGetError returned {}\n",value);
+          break;
+    }
+    return msg;
+  }  
 }
 
-void OpenGL::glTextureCoord(const Vector2f& coord)
+void OpenGL::glCheck()
 {
-    glTexCoord2fv(coord.Raw());
+   auto msg = glGetErrorMessage();
+   if(!msg.empty())
+   {
+#ifdef NDEBUG
+     LogWarning("{}",msg);
+#else  
+     throw std::runtime_error(msg);
+#endif
+   }
 }
-
-void OpenGL::glTextureCoord(const Vector2d& coord)
+void OpenGL::glCheck(const std::string & file, const int line, const std::string func)
 {
-    glTexCoord2dv(coord.Raw());
-}
+   auto msg = glGetErrorMessage();
+   if(!msg.empty())
+   {
+     // Short version of __FILE__ without path requires runtime parsing
+     auto sfile = [file]()
+     {
+#ifdef WIN32
+        return (strrchr(file.c_str(), '\\') ? strrchr(file.c_str(), '\\') + 1 : file.c_str());
+#else
+        return (strrchr(file.c_str(), '/') ? strrchr(file.c_str(), '/') + 1 : file.c_str());
+#endif
+     };
 
-void OpenGL::glMultMatrix(const Quat& quat)
-{
-    double r[16];
-    quat.GetRotationMatrix4(r);
-    glMultMatrixd(r);
+     msg = fmt::format("{}:{} \"{}\"\n{}", sfile(), line, func, msg);
+#ifdef NDEBUG
+     LogWarning("{}",msg);
+#else  
+     throw std::runtime_error(msg);
+#endif
+   }
 }
-
-void OpenGL::glLoadMatrix(const Quat& quat)
-{
-    double r[16];
-    quat.GetRotationMatrix4(r);
-    glLoadMatrixd(r);
-}
-

@@ -12,7 +12,7 @@ namespace OpenGL
     public:
         union
         {
-            value_type RGBA[3];
+            value_type RGBA[4];
             struct
             {
                 value_type R;
@@ -62,19 +62,30 @@ namespace OpenGL
                 (value_type)0.5 * (A + other.A));
         }
 
+    private:
+        unsigned int ToByte(const double& value) { return Core::Numerics::Clamp((unsigned int)(value*255),0u,255u); }
+        unsigned int ToByte(const float& value) { return Core::Numerics::Clamp((unsigned int)(value*255),0u,255u); }
+        unsigned int ToByte(const unsigned char& value) { return value; }
+
+        void FromByte(const unsigned int value, double& res) { res = value/255.0; }
+        void FromByte(const unsigned int value, float& res) { res = value/255.0; }
+        void FromByte(const unsigned int value, unsigned char& res) { res = value; }
+        value_type FromByte(const unsigned int value) { value_type res; FromByte(value, res); return res; }
+    public:
         const unsigned int GetInt() const
         {
-            return (Value::ToByte(R) << 24)
-                 + (Value::ToByte(G) << 16)
-                 + (Value::ToByte(B) << 8)
-                 + (Value::ToByte(A));
+            return (ToByte(R) << 24)
+                 + (ToByte(G) << 16)
+                 + (ToByte(B) << 8)
+                 + (ToByte(A));
         }
-        void SetInt(unsigned int color)
+        this_type& SetInt(unsigned int color)
         {
-            R = Value::FromByte((color >> 24) & 255);
-            G = Value::FromByte((color >> 16) & 255);
-            B = Value::FromByte((color >> 8) & 255);
-            A = Value::FromByte((color) & 255);
+            R = FromByte((color >> 24) & 255);
+            G = FromByte((color >> 16) & 255);
+            B = FromByte((color >> 8) & 255);
+            A = FromByte((color) & 255);
+            return *this;
         }
 
         bool operator == (const this_type& other) const
@@ -86,12 +97,12 @@ namespace OpenGL
                 A == other.A;
         }
 
-        static           this_type Random() { return this_type(Value::Rnd(), Value::Rnd(), Value::Rnd(), Value::Hi()); }
-        static constexpr this_type Black() { return this_type(Value::Lo(), Value::Lo(), Value::Lo(), Value::Hi()); }
-        static constexpr this_type Blue() { return this_type(Value::Lo(), Value::Lo(), Value::Hi(), Value::Hi()); }
-        static constexpr this_type Green() { return this_type(Value::Lo(), Value::Hi(), Value::Lo(), Value::Hi()); }
-        static constexpr this_type Red() { return this_type(Value::Hi(), Value::Lo(), Value::Lo(), Value::Hi()); }
-        static constexpr this_type White() { return this_type(Value::Hi(), Value::Hi(), Value::Hi(), Value::Hi()); }
+        static           this_type Random() { return SetInt((Core::Numerics::NormalizedRandomNumber(0xFFFFFFu)<<8) + 0xFF); }
+        static constexpr this_type Black() { return SetInt(0); }
+        static constexpr this_type Blue() { return SetInt(0x0000FFFF); }
+        static constexpr this_type Green() { return SetInt(0x00FF00FFF); }
+        static constexpr this_type Red() { return SetInt(0xFF0000FF); }
+        static constexpr this_type White() { return SetInt(0xFFFFFFFF); }
     };
 
     template<typename VALUE_TYPE> class TRGBAColor;

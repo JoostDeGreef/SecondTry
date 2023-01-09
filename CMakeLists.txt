@@ -3,8 +3,10 @@ cmake_minimum_required (VERSION 3.14)
 # These are just toy projects, make that clear
 project ("SecondTry" VERSION 0.0.1)
 
-SET( CMAKE_CXX_STANDARD 17 )
-SET( CMAKE_CXX_STANDARD_REQUIRED ON )
+# C++-20 would be nice, but not all libraries compile cleanly.
+set(CMAKE_CXX_STANDARD 17 CACHE STRING "The C++ standard to use")
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 set(CMAKE_DISABLE_SOURCE_CHANGES  ON)
@@ -21,11 +23,14 @@ if (WIN32)
   set(CMAKE_SHARED_LIBRARY_PREFIX "")
 endif ()
 
-#IF(CMAKE_COMPILER_IS_GNUCXX)
-#  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopt-info-vec-all -O3")
-#ENDIF(CMAKE_COMPILER_IS_GNUCXX)
+# IF(CMAKE_COMPILER_IS_GNUCXX)
+#   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopt-info-vec-all -O3")
+# ENDIF(CMAKE_COMPILER_IS_GNUCXX)
+# IF(CMAKE_COMPILER_IS_GNUCXX)
+#   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
+# ENDIF(CMAKE_COMPILER_IS_GNUCXX)
 IF(CMAKE_COMPILER_IS_GNUCXX)
-  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -g")
 ENDIF(CMAKE_COMPILER_IS_GNUCXX)
 
 # Output will land here
@@ -42,6 +47,10 @@ SET(CMAKE_MODULE_PATH
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
+# all non-interactive unit tests will be run
+list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure" "-V")
+enable_testing()
 
 # Include sub-projects.
 add_subdirectory ("src")

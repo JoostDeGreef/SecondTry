@@ -1,0 +1,13 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 1807aa4..bc9ec36 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -297,7 +297,7 @@ if(ENABLE_APP)
+     endif()
+ endif()
+ 
+-if(Python3_FOUND)
++if(Python3_FOUND AND BUILD_TESTING)
+     enable_testing()
+     add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND})
+     add_subdirectory(tests)

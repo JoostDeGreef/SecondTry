@@ -1,5 +1,8 @@
 #pragma once
 
+namespace OpenGL
+{
+
 class Window;
 
 class CallbackHandler 
@@ -20,6 +23,11 @@ public:
     virtual void size_callback(const std::shared_ptr<Window>& window, int width, int height) {};
     virtual void scroll_callback(const std::shared_ptr<Window>& window, double x, double y) {};
     virtual void refresh_callback(const std::shared_ptr<Window>& window) {};
+
+    virtual void ContextInit(const std::shared_ptr<Window>& window) {};
+    virtual void Draw3D(const std::shared_ptr<Window>& window) {};
+    virtual void Draw2D(const std::shared_ptr<Window>& window) {};
+    virtual void ContextFree(const std::shared_ptr<Window>& window) {};
 };
 
 class Window // : std::enable_shared_from_this<Window>
@@ -102,7 +110,13 @@ public:
     void Restore();
     void Close();
 
+    // 2d/3d window state
+    OpenGL::State & GetState2d();
+    OpenGL::State & GetState3d();
+
 private:
     class WindowImp;
     std::unique_ptr<WindowImp> m_imp;
 };
+
+}

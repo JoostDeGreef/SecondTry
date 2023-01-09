@@ -4,25 +4,27 @@
 #include <string>
 #include <bitset>
 #include <map>
+#include <utility>
 
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
 #include "fmt/core.h"
 
 #include "Core.h"
+#include "Geometry.h"
 
 namespace OpenGL
 {
-    using TextureCoord = Vector2d;
+    using TextureCoord = Core::Vector2d;
     using TextureCoordPtr = TextureCoord*;
 
-    using Vertex = Vector3d;
+    using Vertex = Core::Vector3d;
     using VertexPtr = Vertex*;
 
-    using Size = Vector2d;
-    using PixelSize = Vector2i;
+    using Size = Core::Vector2d;
+    using PixelSize = Core::Vector2i;
 
-    using Normal = Vector3d;
+    using Normal = Core::Vector3d;
     using NormalPtr = Normal*;
 }
 
@@ -35,35 +37,26 @@ namespace OpenGL
     using ColorPtr = Color*;
 }
 
+#include "internal/Mat4.h"
 #include "internal/Shader.h"
-#include "internal/Font.h"
+#include "internal/State.h"
 
 namespace OpenGL
 {
-	void glColor(const RGBAColorf& color);
-    void glColor(const RGBAColord& color);
-    void glColor(const RGBColorf& color);
-    void glColor(const RGBColord& color);
-    inline void glColor(const ColorPtr& color) { glColor(*color); }
+    void glCheck();    
+    void glCheck(const std::string & file, const int line, const std::string func);
+}
 
-    void glVertex(const Vector3f& point);
-    void glVertex(const Vector3d& point);
-    inline void glVertex(const VertexPtr& point) { glVertex(*point); }
-    void glVertex(const double& x, const double& y);
-    void glVertex(const float& x, const float& y);
+#ifdef NDEBUG
+#define GLCHECK(f) f
+#else
+#define GLCHECK(f)    \
+  f;                  \
+  OpenGL::glCheck(__FILE__,__LINE__,#f); 
+#endif
 
-    void glNormal(const Vector3f& normal);
-    void glNormal(const Vector3d& normal);
-    inline void glNormal(const NormalPtr& normal) { glNormal(*normal); }
-
-    void glTextureCoord(const Vector2f& coord);
-    void glTextureCoord(const Vector2d& coord);
-    inline void glTextureCoord(const TextureCoordPtr& coord) { glTextureCoord(*coord); }
-
-    void glMultMatrix(const Quat& quat);
-
-    void glLoadMatrix(const Quat& quat);
-};
-
+#include "internal/GLShape.h"
+#include "internal/Font.h"
 #include "internal/Window.h"
+#include "internal/Menu.h"
 #include "internal/OSSpecific.h"
