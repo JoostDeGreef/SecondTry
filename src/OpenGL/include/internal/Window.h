@@ -20,10 +20,6 @@ public:
     virtual void size_callback(const std::shared_ptr<Window>& window, int width, int height) {};
     virtual void scroll_callback(const std::shared_ptr<Window>& window, double x, double y) {};
     virtual void refresh_callback(const std::shared_ptr<Window>& window) {};
-
-    virtual void setup(const std::shared_ptr<Window>& window) {};
-    virtual void draw(const std::shared_ptr<Window>& window) {};
-    virtual void finish(const std::shared_ptr<Window>& window) {};
 };
 
 class Window // : std::enable_shared_from_this<Window>

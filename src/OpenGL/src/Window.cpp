@@ -81,9 +81,7 @@ private:
     void close_callback();
 
     void MainLoop();
-    void Setup();
     void Draw();
-    void Finish();
 private:
     CallbackHandler & m_callbackHandler;
     std::string m_title;
@@ -131,17 +129,7 @@ Window::WindowImp::OpenGLState::OpenGLState()
     // setup glfw
     glfwSetErrorCallback(error_callback);
     m_initialisationSucceeded = glfwInit();
-    if (m_initialisationSucceeded)
-    {
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-#ifdef __APPLE__
-        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-#endif
-    }
 }
-
 Window::WindowImp::OpenGLState::~OpenGLState()
 {
     // todo: close all open windows
@@ -273,16 +261,32 @@ void Window::WindowImp::MainLoop()
     using namespace std::placeholders;
 
     glfwMakeContextCurrent(m_window);
-
-    Setup();
-
+    GLfloat light_position[] = { 4.0, 4.0, 4.0, 0.0 };
+    glClearColor(0.0, 0.0, 0.0, 1.0);
+    glShadeModel(GL_SMOOTH);
+    glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+    glEnable(GL_LIGHT0);
+    glFrontFace(GL_CCW);
+    glEnable(GL_COLOR_MATERIAL);
+    glEnable(GL_LIGHTING);
+    glEnable(GL_CULL_FACE);
+    glEnable(GL_DEPTH_TEST);
+    glActiveTexture(GL_TEXTURE0);
+    glEnable(GL_TEXTURE_2D);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glBlendEquation(GL_FUNC_ADD);
+    glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
+    glDisable(GL_STENCIL_TEST);
+    glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+    glStencilMask(0x00);
+    glDepthFunc(GL_LESS);
+    //glDepthFunc(GL_GREATER);
     while (!glfwWindowShouldClose(m_window))
     {
         Draw();
         //std::this_thread::sleep_for(std::chrono::seconds(30));
     }
-
-    Finish();
 
     PurgeCallbacks();
     glfwDestroyWindow(m_window);
@@ -293,40 +297,42 @@ void Window::WindowImp::MainLoop()
 void Window::WindowImp::Draw()
 {
     std::unique_lock<std::mutex> lock(m_mutex);
+    
+    //float ratio = m_width / (float)m_height;
+    //glViewport(0, 0, m_width, m_height);
+    //glStencilMask(0xFF);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    //glStencilMask(0x00);
+    //glMatrixMode(GL_PROJECTION);
+    //glLoadIdentity();
+    //glOrtho(-ratio, ratio, -1.0, 1.0, -1.1, 1.1);
+    //glMatrixMode(GL_MODELVIEW);
+    //glLoadIdentity();
 
-    auto imp = static_cast<WindowImp*>(glfwGetWindowUserPointer(m_window));
-    m_callbackHandler.draw(imp->m_owner);
+//    DrawShapes();
+
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_LIGHTING);
+    glDepthMask(GL_FALSE);
+
+//    DrawFPS();
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(0.0f, m_width, 0.0f, m_height, 0.0f, 1.0f);
+    static OpenGL::Font font("C:/Src/SecondTry/Data/CHILLER.TTF");
+    font.RenderText("This is sample text", 25.0f, 25.0f, 1.0f, OpenGL::RGBColorf(0.5, 0.8f, 0.2f));
+
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_LIGHTING);
+    glDepthMask(GL_TRUE);
 
     lock.unlock();
 
     glfwSwapBuffers(m_window);
-}
-
-void Window::WindowImp::Setup()
-{
-    std::unique_lock<std::mutex> lock(m_mutex);
-
-    auto imp = static_cast<WindowImp*>(glfwGetWindowUserPointer(m_window));
-    m_callbackHandler.setup(imp->m_owner);
-
-    lock.unlock();
-
-    glfwSwapBuffers(m_window);
-}
-
-void Window::WindowImp::Finish()
-{
-    std::unique_lock<std::mutex> lock(m_mutex);
-
-    auto imp = static_cast<WindowImp*>(glfwGetWindowUserPointer(m_window));
-    m_callbackHandler.finish(imp->m_owner);
-
-    lock.unlock();
 }
 
 void Window::WindowImp::SetCallbacks()
 {
-    std::unique_lock<std::mutex> lock(m_mutex);
     glfwSetKeyCallback(m_window, &WindowImp::key_callback);
     glfwSetWindowSizeCallback(m_window, &WindowImp::size_callback);
     glfwSetWindowRefreshCallback(m_window, &WindowImp::refresh_callback);
@@ -345,7 +351,6 @@ void Window::WindowImp::SetCallbacks()
 
 void Window::WindowImp::PurgeCallbacks()
 {
-    std::unique_lock<std::mutex> lock(m_mutex);
     glfwSetKeyCallback(m_window, nullptr);
     glfwSetWindowSizeCallback(m_window, nullptr);
     glfwSetWindowRefreshCallback(m_window, nullptr);
@@ -364,7 +369,6 @@ void Window::WindowImp::PurgeCallbacks()
 
 void Window::WindowImp::key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-    //std::unique_lock<std::mutex> lock(m_mutex);
     auto imp = static_cast<WindowImp*>(glfwGetWindowUserPointer(window));
     imp->m_callbackHandler.key_callback(imp->m_owner, key, scancode, action, mods);
 }
