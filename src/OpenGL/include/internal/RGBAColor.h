@@ -12,7 +12,7 @@ namespace OpenGL
     public:
         union
         {
-            value_type RGBA[3];
+            value_type RGBA[4];
             struct
             {
                 value_type R;

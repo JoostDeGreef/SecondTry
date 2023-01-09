@@ -9,7 +9,10 @@ namespace OpenGL
 
         Shader(const std::string & vertex, const std::string & fragment);
 
+        unsigned int Compile();
         void Use();
     private:
+        const std::string m_vertex;
+        const std::string m_fragment;
     };
 }

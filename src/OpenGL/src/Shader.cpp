@@ -4,6 +4,11 @@ namespace OpenGL
 {
     Shader::Shader(const std::string& vertexShaderSource, const std::string& fragmentShaderSource)
         : Program(0)
+        , m_vertex(vertexShaderSource)
+        , m_fragment(fragmentShaderSource)
+    {}
+
+    unsigned int Shader::Compile()
     {
         auto loadShader = [](unsigned int shaderType, const std::string& source)
         {
@@ -27,8 +32,8 @@ namespace OpenGL
             return shader;
         };
 
-        auto vertexShaderObject = loadShader(GL_VERTEX_SHADER, vertexShaderSource);
-        auto fragmentShaderObject = loadShader(GL_FRAGMENT_SHADER, fragmentShaderSource);
+        auto vertexShaderObject = loadShader(GL_VERTEX_SHADER, m_vertex);
+        auto fragmentShaderObject = loadShader(GL_FRAGMENT_SHADER, m_fragment);
         if (0 == vertexShaderObject || 0 == fragmentShaderObject)
         {
             glDeleteShader(fragmentShaderObject);
@@ -60,11 +65,15 @@ namespace OpenGL
                 Program = 0;
             }
         }
-
+        return Program;
     }
 
     void Shader::Use()
     {
+        if (!Program)
+        {
+            Compile();
+        }
         glUseProgram(Program);
     }
 }
