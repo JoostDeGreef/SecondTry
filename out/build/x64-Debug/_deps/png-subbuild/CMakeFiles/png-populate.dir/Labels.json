@@ -1,0 +1,46 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "C:/Src/SecondTry/out/build/x64-Debug/_deps/png-subbuild/CMakeFiles/png-populate"
+		},
+		{
+			"file" : "C:/Src/SecondTry/out/build/x64-Debug/_deps/png-subbuild/CMakeFiles/png-populate.rule"
+		},
+		{
+			"file" : "C:/Src/SecondTry/out/build/x64-Debug/_deps/png-subbuild/CMakeFiles/png-populate-complete.rule"
+		},
+		{
+			"file" : "C:/Src/SecondTry/out/build/x64-Debug/_deps/png-subbuild/png-populate-prefix/src/png-populate-stamp/png-populate-build.rule"
+		},
+		{
+			"file" : "C:/Src/SecondTry/out/build/x64-Debug/_deps/png-subbuild/png-populate-prefix/src/png-populate-stamp/png-populate-configure.rule"
+		},
+		{
+			"file" : "C:/Src/SecondTry/out/build/x64-Debug/_deps/png-subbuild/png-populate-prefix/src/png-populate-stamp/png-populate-download.rule"
+		},
+		{
+			"file" : "C:/Src/SecondTry/out/build/x64-Debug/_deps/png-subbuild/png-populate-prefix/src/png-populate-stamp/png-populate-install.rule"
+		},
+		{
+			"file" : "C:/Src/SecondTry/out/build/x64-Debug/_deps/png-subbuild/png-populate-prefix/src/png-populate-stamp/png-populate-mkdir.rule"
+		},
+		{
+			"file" : "C:/Src/SecondTry/out/build/x64-Debug/_deps/png-subbuild/png-populate-prefix/src/png-populate-stamp/png-populate-patch.rule"
+		},
+		{
+			"file" : "C:/Src/SecondTry/out/build/x64-Debug/_deps/png-subbuild/png-populate-prefix/src/png-populate-stamp/png-populate-test.rule"
+		},
+		{
+			"file" : "C:/Src/SecondTry/out/build/x64-Debug/_deps/png-subbuild/png-populate-prefix/src/png-populate-stamp/png-populate-update.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"png-populate"
+		],
+		"name" : "png-populate"
+	}
+}

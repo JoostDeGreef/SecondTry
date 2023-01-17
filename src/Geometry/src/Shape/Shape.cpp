@@ -41,11 +41,18 @@ Shape & Shape::Copy(const Shape & other)
 
 void Shape::Clear()
 {
+    char* raw = new char[m_surface.size()*sizeof(Core::OwnedPtr<Geometry::Face>)];
+    Core::OwnedPtr<Geometry::Face>* rawFaces = new (raw) Core::OwnedPtr<Geometry::Face>[m_surface.size()];
+    for (size_t i=0;i<m_surface.size();++i)
+    {
+        rawFaces[i] = m_surface[i];
+    }
+    m_surface.clear();
+    delete raw;
     m_normals.ClearWithoutCallingDestructors();
     m_nodes.ClearWithoutCallingDestructors();
     m_edges.ClearWithoutCallingDestructors();
     m_faces.ClearWithoutCallingDestructors();
-    m_surface.clear();
     UpdateLastChangeID();
 }
 
@@ -143,7 +150,7 @@ std::vector<float> Shape::Draw() const
     res.reserve(m_surface.size()*3);
     for(auto & face:m_surface)
     {
-        for(size_t i=0;i<3;++i)
+        for(int i=0;i<3;++i)
         {
             auto & n = *face->GetEdge(i)->Start();
             res.push_back(n[0]);
@@ -160,7 +167,7 @@ std::vector<float> Shape::DrawWithNormals()
     res.reserve(m_surface.size()*3*3*2);
     for(auto & face:m_surface)
     {
-        for(size_t i=0;i<3;++i)
+        for(int i=0;i<3;++i)
         {
             auto & v = *face->GetEdge(i)->Start();
             auto & n = face->GetVertexNormal(i);

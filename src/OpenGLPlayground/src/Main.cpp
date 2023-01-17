@@ -158,7 +158,7 @@ void UI::Draw2D(const std::shared_ptr<OpenGL::Window>& window)
 {
     // this function should be converted into a 2d rendering class
     static OpenGL::Shader_2d shader;
-    static OpenGL::Font font(/*"C:/Src/SecondTry/Data/fonts/CHILLER.TTF"*/ "/home/joost/src/SecondTry/Data/fonts/CHILLER.TTF");
+    static OpenGL::Font font("C:/Src/SecondTry/Data/fonts/CHILLER.TTF" /*"/home/joost/src/SecondTry/Data/fonts/CHILLER.TTF"*/);
     std::string text = "This is sample text";
 
     // measure the text

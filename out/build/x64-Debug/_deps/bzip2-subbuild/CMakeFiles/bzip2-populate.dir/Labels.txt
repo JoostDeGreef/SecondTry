@@ -1,0 +1,14 @@
+# Target labels
+ bzip2-populate
+# Source files and their labels
+C:/Src/SecondTry/out/build/x64-Debug/_deps/bzip2-subbuild/CMakeFiles/bzip2-populate
+C:/Src/SecondTry/out/build/x64-Debug/_deps/bzip2-subbuild/CMakeFiles/bzip2-populate.rule
+C:/Src/SecondTry/out/build/x64-Debug/_deps/bzip2-subbuild/CMakeFiles/bzip2-populate-complete.rule
+C:/Src/SecondTry/out/build/x64-Debug/_deps/bzip2-subbuild/bzip2-populate-prefix/src/bzip2-populate-stamp/bzip2-populate-build.rule
+C:/Src/SecondTry/out/build/x64-Debug/_deps/bzip2-subbuild/bzip2-populate-prefix/src/bzip2-populate-stamp/bzip2-populate-configure.rule
+C:/Src/SecondTry/out/build/x64-Debug/_deps/bzip2-subbuild/bzip2-populate-prefix/src/bzip2-populate-stamp/bzip2-populate-download.rule
+C:/Src/SecondTry/out/build/x64-Debug/_deps/bzip2-subbuild/bzip2-populate-prefix/src/bzip2-populate-stamp/bzip2-populate-install.rule
+C:/Src/SecondTry/out/build/x64-Debug/_deps/bzip2-subbuild/bzip2-populate-prefix/src/bzip2-populate-stamp/bzip2-populate-mkdir.rule
+C:/Src/SecondTry/out/build/x64-Debug/_deps/bzip2-subbuild/bzip2-populate-prefix/src/bzip2-populate-stamp/bzip2-populate-patch.rule
+C:/Src/SecondTry/out/build/x64-Debug/_deps/bzip2-subbuild/bzip2-populate-prefix/src/bzip2-populate-stamp/bzip2-populate-test.rule
+C:/Src/SecondTry/out/build/x64-Debug/_deps/bzip2-subbuild/bzip2-populate-prefix/src/bzip2-populate-stamp/bzip2-populate-update.rule

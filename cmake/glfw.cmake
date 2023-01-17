@@ -6,8 +6,8 @@ FetchContent_Declare(
   glfw
  
   GIT_REPOSITORY https://github.com/glfw/glfw.git
-  GIT_TAG        3.3.6
-# GIT_TAG        master
+#  GIT_TAG        3.3.8
+ GIT_TAG        master
 )
 
 MESSAGE(STATUS "

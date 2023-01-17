@@ -1,0 +1,180 @@
+{
+	"artifacts" : 
+	[
+		{
+			"path" : "bin/SQLiteTest.exe"
+		},
+		{
+			"path" : "bin/SQLiteTest.pdb"
+		}
+	],
+	"backtrace" : 1,
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"add_executable"
+		],
+		"files" : 
+		[
+			"src/SQLiteDBTest/CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 7,
+				"parent" : 0
+			}
+		]
+	},
+	"compileGroups" : 
+	[
+		{
+			"compileCommandFragments" : 
+			[
+				{
+					"fragment" : "/EHsc /MDd /Zi /Ob0 /Od /RTC1"
+				},
+				{
+					"fragment" : "-std:c++latest"
+				}
+			],
+			"includes" : 
+			[
+				{
+					"backtrace" : 1,
+					"path" : "C:/Src/SecondTry/src/SQLiteDB/include"
+				},
+				{
+					"backtrace" : 1,
+					"path" : "C:/Src/SecondTry/out/build/x64-Debug/_deps/sqlite-src/source"
+				},
+				{
+					"backtrace" : 1,
+					"path" : "C:/Src/SecondTry/out/build/x64-Debug/_deps/fmt-src/include"
+				},
+				{
+					"backtrace" : 1,
+					"isSystem" : true,
+					"path" : "C:/Src/SecondTry/out/build/x64-Debug/_deps/googletest-src/googletest/include"
+				},
+				{
+					"backtrace" : 1,
+					"isSystem" : true,
+					"path" : "C:/Src/SecondTry/out/build/x64-Debug/_deps/googletest-src/googletest"
+				}
+			],
+			"language" : "CXX",
+			"languageStandard" : 
+			{
+				"backtraces" : 
+				[
+					1,
+					1
+				],
+				"standard" : "20"
+			},
+			"sourceIndexes" : 
+			[
+				0
+			]
+		}
+	],
+	"dependencies" : 
+	[
+		{
+			"backtrace" : 1,
+			"id" : "gtest::@1ea2dfc0605fe3ab2a3f"
+		},
+		{
+			"backtrace" : 1,
+			"id" : "fmt::@976f4f0bee90b99ecdb6"
+		},
+		{
+			"backtrace" : 1,
+			"id" : "SQLite3::@ecd7bb0b23026ef0a564"
+		},
+		{
+			"backtrace" : 1,
+			"id" : "SQLiteDB::@44ed3b78900e5d25a3ca"
+		},
+		{
+			"backtrace" : 1,
+			"id" : "GoogleTest::@31f5322d72199a13ab42"
+		}
+	],
+	"id" : "SQLiteTest::@87f0c4fd0e85c79f5d68",
+	"link" : 
+	{
+		"commandFragments" : 
+		[
+			{
+				"fragment" : "/EHsc /MDd /Zi /Ob0 /Od /RTC1",
+				"role" : "flags"
+			},
+			{
+				"fragment" : "/machine:x64 /debug /INCREMENTAL /subsystem:console",
+				"role" : "flags"
+			},
+			{
+				"backtrace" : 1,
+				"fragment" : "..\\..\\lib\\GoogleTest.lib",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 1,
+				"fragment" : "..\\..\\lib\\SQLiteDB.lib",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "..\\..\\lib\\gtest.lib",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "..\\..\\lib\\sqlite3-dbg.lib",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "..\\..\\lib\\fmtd.lib",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib",
+				"role" : "libraries"
+			}
+		],
+		"language" : "CXX"
+	},
+	"name" : "SQLiteTest",
+	"nameOnDisk" : "SQLiteTest.exe",
+	"paths" : 
+	{
+		"build" : "src/SQLiteDBTest",
+		"source" : "src/SQLiteDBTest"
+	},
+	"sourceGroups" : 
+	[
+		{
+			"name" : "Source Files",
+			"sourceIndexes" : 
+			[
+				0
+			]
+		}
+	],
+	"sources" : 
+	[
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "src/SQLiteDBTest/SQLiteTest.cpp",
+			"sourceGroupIndex" : 0
+		}
+	],
+	"type" : "EXECUTABLE"
+}

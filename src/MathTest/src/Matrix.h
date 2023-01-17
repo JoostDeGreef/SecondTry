@@ -1,6 +1,6 @@
 #pragma once
 
-#include <stdalign.h>
+//#include <stdalign.h>
 #include <algorithm>
 #include <cassert>
 #include <iostream>
@@ -119,7 +119,7 @@ private:
     Data(const size_t size)
     {
         size_t dataSize = sizeof(Shared) + sizeof(T)*size - sizeof(T);
-        m_shared = (Shared *)new (std::align_val_t(RequiredAlignment)) unsigned char [dataSize];
+        m_shared = (Shared *)new unsigned char [dataSize, RequiredAlignment];
         m_shared->m_count = 1; 
         m_shared->m_size = size;
     }
@@ -598,7 +598,7 @@ public:
       case 1:
         return m_fields[0][0];
       case 0:
-        return (T)0/(T)0;
+        return (T)0; // throw?
     }
   }
 

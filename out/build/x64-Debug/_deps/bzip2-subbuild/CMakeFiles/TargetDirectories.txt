@@ -1,0 +1,3 @@
+C:/Src/SecondTry/out/build/x64-Debug/_deps/bzip2-subbuild/CMakeFiles/bzip2-populate.dir
+C:/Src/SecondTry/out/build/x64-Debug/_deps/bzip2-subbuild/CMakeFiles/edit_cache.dir
+C:/Src/SecondTry/out/build/x64-Debug/_deps/bzip2-subbuild/CMakeFiles/rebuild_cache.dir

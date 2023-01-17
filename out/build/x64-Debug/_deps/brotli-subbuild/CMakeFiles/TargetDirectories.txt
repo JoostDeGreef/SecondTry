@@ -1,0 +1,3 @@
+C:/Src/SecondTry/out/build/x64-Debug/_deps/brotli-subbuild/CMakeFiles/brotli-populate.dir
+C:/Src/SecondTry/out/build/x64-Debug/_deps/brotli-subbuild/CMakeFiles/edit_cache.dir
+C:/Src/SecondTry/out/build/x64-Debug/_deps/brotli-subbuild/CMakeFiles/rebuild_cache.dir

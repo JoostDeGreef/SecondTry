@@ -7,21 +7,10 @@
 
 #include "fmt/core.h"
 
-// C++ 20 would allow somethng like this:
-// #include <iostream>
-// #include <string_view>
-// #include <source_location>
-// 
-// void Log(std::string_view message,
-//          const std::source_location& location = std::source_location::current())
-// {
-//     std::cout << "info:"
-//               << location.file_name() << ":"
-//               << location.line() << ":"
-//               << location.function_name() << " "
-//               << message << '\n';
-// }
-
+#include <iostream>
+#include <string_view>
+#include <source_location>
+ 
 class Logger
 {
 public:
@@ -38,8 +27,7 @@ public:
     public:
         virtual void Output(
             const Level level,
-            const std::string & file,
-            const int line,
+            const std::source_location& location,
             const std::string & message) {}
     };
 
@@ -48,8 +36,7 @@ public:
     public:
         void Output(
             const Level level,
-            const std::string & file,
-            const int line,
+            const std::source_location& location,
             const std::string & message) override;
     };
 
@@ -58,8 +45,7 @@ public:
     public:
         void Output(
             const Level level,
-            const std::string & file,
-            const int line,
+            const std::source_location& location,
             const std::string & message) override;
     };
 
@@ -76,8 +62,7 @@ public:
     template<typename ...ARGS>
     static void Output(
         const Level level,
-        const std::string & file,
-        const int line,
+        const std::source_location& location,
         const std::string & message,
         ARGS & ... args)
     {
@@ -89,7 +74,7 @@ public:
             std::string formattedMessage = fmt::format(message,args...);
             for(auto & sync:syncs)
             {
-                sync->Output(level,file,line,formattedMessage);
+                sync->Output(level,location,formattedMessage);
             }
         }
     }
@@ -102,9 +87,9 @@ private:
     std::mutex m_mutex;
 };
 
-#define Log(level,msg...) Logger::Output(level,__FILE__,__LINE__,msg);
-#define LogDebug(msg...) Log(Logger::Level::Debug,msg)
-#define LogInfo(msg...) Log(Logger::Level::Info,msg)
-#define LogWarning(msg...) Log(Logger::Level::Warning,msg)
-#define LogError(msg...) Log(Logger::Level::Error,msg)
+#define Log(level,msg,...) Logger::Output(level,std::source_location::current(), msg, __VA_ARGS__);
+#define LogDebug(msg,...) Log(Logger::Level::Debug, msg, __VA_ARGS__)
+#define LogInfo(msg,...) Log(Logger::Level::Info, msg, __VA_ARGS__)
+#define LogWarning(msg,...) Log(Logger::Level::Warning, msg, __VA_ARGS__)
+#define LogError(msg,...) Log(Logger::Level::Error, msg, __VA_ARGS__)
 

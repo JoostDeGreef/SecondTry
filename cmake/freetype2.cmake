@@ -6,7 +6,7 @@ FetchContent_Declare(
   freetype
  
   GIT_REPOSITORY https://github.com/freetype/freetype2.git
-  GIT_TAG        VER-2-11-1
+  GIT_TAG        VER-2-12-1
 # GIT_TAG        master
 )
 

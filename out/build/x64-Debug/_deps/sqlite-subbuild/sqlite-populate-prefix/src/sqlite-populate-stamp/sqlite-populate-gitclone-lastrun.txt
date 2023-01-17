@@ -1,0 +1,3 @@
+repository='https://github.com/algoritnl/sqlite-amalgamation.git'
+module=''
+tag='origin'

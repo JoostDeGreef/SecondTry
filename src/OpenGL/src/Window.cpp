@@ -486,7 +486,7 @@ void Window::WindowImp::HandleOption(const Option& option, const bool& value)
         {
             GLFWmonitor* monitor = glfwGetPrimaryMonitor();
             const GLFWvidmode* mode = glfwGetVideoMode(monitor);
-            glfwSetWindowMonitor(m_window, value ? monitor : NULL, (value ? 0 : mode->width / 4), (value ? 0 : mode->height / 4), (mode->width / (value ? 2 : 1)), (mode->height / (value ? 2 : 1)), mode->refreshRate);
+            glfwSetWindowMonitor(m_window, (value ? monitor : NULL), (value ? 0 : mode->width / 4), (value ? 0 : mode->height / 4), (mode->width / (value ? 2 : 1)), (mode->height / (value ? 2 : 1)), (value ? mode->refreshRate : 0));
         }
         break;
     case Option::HasCloseButton:

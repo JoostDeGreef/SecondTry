@@ -1,0 +1,2 @@
+#pragma code_page(65001)
+1 /* CREATEPROCESS_MANIFEST_RESOURCE_ID */ 24 /* RT_MANIFEST */ "C:/Src/SecondTry/out/build/x64-Debug/_deps/sqlite-build/CMakeFiles/SQLite3Shell.dir/embed.manifest"

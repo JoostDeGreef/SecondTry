@@ -239,6 +239,10 @@ public:
             {
                 m_object = other.m_object->AttachViewer();
             }
+            else
+            {
+                assert(false); // copying something without object? limbo?
+            }
         }
         ~ViewedPtr()
         {
@@ -494,7 +498,7 @@ protected:
     // Add a new block to the store
     auto AddBlock()
     {
-        auto raw = new (std::align_val_t(alignof(object_type_wrapper))) char[objects_per_block*sizeof(object_type_wrapper)];
+        char * raw = new char[objects_per_block*sizeof(object_type_wrapper)];
         auto block = static_cast<object_type_wrapper *>(static_cast<void *>(raw));
         m_blocks.push_back(block);
         return block;

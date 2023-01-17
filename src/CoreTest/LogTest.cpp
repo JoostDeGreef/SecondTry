@@ -13,8 +13,7 @@ public:
 
     void Output(
         const Logger::Level level,
-        const std::string & file,
-        const int line,
+        const std::source_location& location,
         const std::string & message) override
     {
         m_storage.emplace_back(message);

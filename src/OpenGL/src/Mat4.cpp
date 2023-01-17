@@ -22,9 +22,9 @@ Mat4 Mat4::Ortho(
     element_type const & zNear, 
     element_type const & zFar)
 {
-    const element_type rl = 1.0 / (right - left);
-    const element_type tb = 1.0 / (top - bottom);
-    const element_type nf = 1.0 / (zNear - zFar);
+    const element_type rl = (element_type)1.0 / (right - left);
+    const element_type tb = (element_type)1.0 / (top - bottom);
+    const element_type nf = (element_type)1.0 / (zNear - zFar);
     Mat4 res(
          2.0 * rl,              0.0,                   0.0,                   0.0,
          0.0,                   2.0 *tb,               0.0,                   0.0,
