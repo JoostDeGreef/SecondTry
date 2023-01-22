@@ -224,6 +224,7 @@ bool Window::WindowImp::Initialize()
 #endif
         // load the background image from disk before showing the window
         m_window = glfwCreateWindow(m_width, m_height, m_title.c_str(), NULL, NULL);
+//        m_window = glfwCreateWindow(m_width, m_height, m_title.c_str(), glfwGetPrimaryMonitor(), NULL);
         if (m_window == nullptr)
         {
             LogError("Could not create OpenGL window");
@@ -231,7 +232,7 @@ bool Window::WindowImp::Initialize()
         }
         glfwMakeContextCurrent(m_window);
         glfwSetWindowUserPointer(m_window, this);
-        OSSpecific::RemoveWindowDecorations(m_window);
+     // OSSpecific::RemoveWindowDecorations(m_window);
         for (std::size_t i = 0; i < m_options.size(); ++i)
         {
             if (m_options.test(i))
@@ -486,7 +487,14 @@ void Window::WindowImp::HandleOption(const Option& option, const bool& value)
         {
             GLFWmonitor* monitor = glfwGetPrimaryMonitor();
             const GLFWvidmode* mode = glfwGetVideoMode(monitor);
-            glfwSetWindowMonitor(m_window, (value ? monitor : NULL), (value ? 0 : mode->width / 4), (value ? 0 : mode->height / 4), (mode->width / (value ? 2 : 1)), (mode->height / (value ? 2 : 1)), (value ? mode->refreshRate : 0));
+            if (value)
+            {
+                glfwSetWindowMonitor(m_window, monitor, 0, 0, mode->width/2, mode->height/2, mode->refreshRate);
+            }
+            else
+            {
+                glfwSetWindowMonitor(m_window, NULL, mode->width/4, mode->height/4, mode->width, mode->height, 0);
+            }
         }
         break;
     case Option::HasCloseButton:
