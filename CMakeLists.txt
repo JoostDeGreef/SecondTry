@@ -57,5 +57,5 @@ list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure" "-V")
 enable_testing()
 
 # Include sub-projects.
-#add_subdirectory ("src")
+add_subdirectory ("src")
 

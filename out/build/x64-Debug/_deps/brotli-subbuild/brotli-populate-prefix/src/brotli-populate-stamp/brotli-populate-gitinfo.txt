@@ -1,3 +1,0 @@
-repository='https://github.com/google/brotli.git'
-module=''
-tag='origin'

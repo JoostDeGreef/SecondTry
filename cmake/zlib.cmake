@@ -11,10 +11,12 @@ FetchContent_Declare(
   GIT_TAG        v1.2.13
 # GIT_TAG        master
 
-  SOURCE_DIR zlib-build
+  SOURCE_DIR zlib-src
   BINARY_DIR zlib-build
 
-  PATCH_COMMAND  git restore . && git apply --ignore-space-change --ignore-whitespace ${CMAKE_CURRENT_SOURCE_DIR}/zlib.patch
+  PATCH_COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/zlib/CMakeLists.txt <SOURCE_DIR>/CMakeLists.txt
+
+  UPDATE_DISCONNECTED ON
 )
 
 MESSAGE(STATUS "
