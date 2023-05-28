@@ -10,8 +10,8 @@
 namespace VectorOperations
 {
   // res[:] = a[:] + b[:]
-  void Add(double * res, const double * const a, const double * const b, const size_t length);
-  void Add(float * res, const float * const a, const float * const b, const size_t length);
+  //void Add(double * res, const double * const a, const double * const b, const size_t length);
+  //void Add(float * res, const float * const a, const float * const b, const size_t length);
   template<typename T>
   void Add(T * res, const T * const a, const T * const b, const size_t length)
   {
@@ -21,8 +21,8 @@ namespace VectorOperations
     }
   }
   // res[:] = a[:] + s
-  void Add(double * res, const double * const a, const double & s, const size_t length);
-  void Add(float * res, const float * const a, const float & s, const size_t length);
+  //void Add(double * res, const double * const a, const double & s, const size_t length);
+  //void Add(float * res, const float * const a, const float & s, const size_t length);
   template<typename T>
   void Add(T * res, const T * const a, const T & s, const size_t length)
   {
@@ -33,8 +33,8 @@ namespace VectorOperations
   }
 
   // res[:] = a[:] - b[:]
-  void Subtract(double * res, const double * const a, const double * const b, const size_t length);
-  void Subtract(float * res, const float * const a, const float * const b, const size_t length);
+  //void Subtract(double * res, const double * const a, const double * const b, const size_t length);
+  //void Subtract(float * res, const float * const a, const float * const b, const size_t length);
   template<typename T>
   void Subtract(T * res, const T * const a, const T * const b, const size_t length)
   {
@@ -44,8 +44,8 @@ namespace VectorOperations
     }
   }
   // res[:] = a[:] - s
-  void Subtract(double * res, const double * const a, const double & s, const size_t length);
-  void Subtract(float * res, const float * const a, const float & s, const size_t length);
+  //void Subtract(double * res, const double * const a, const double & s, const size_t length);
+  //void Subtract(float * res, const float * const a, const float & s, const size_t length);
   template<typename T>
   void Subtract(T * res, const T * const a, const T & s, const size_t length)
   {
@@ -56,8 +56,8 @@ namespace VectorOperations
   }
 
   // res[:] += a * b[:]
-  void ScalarMultiplyAdd(double * res, const double a, const double * const b, const size_t length);
-  void ScalarMultiplyAdd(float * res, const float a, const float * const b, const size_t length);
+  //void ScalarMultiplyAdd(double * res, const double a, const double * const b, const size_t length);
+  //void ScalarMultiplyAdd(float * res, const float a, const float * const b, const size_t length);
   template<typename T>
   void ScalarMultiplyAdd(T * res, const T a, const T * const b, const size_t length)
   {
@@ -68,8 +68,8 @@ namespace VectorOperations
   }
 
   // res[:] = a[:] * s
-  void Multiply(double * res, const double * const a, const double & s, const size_t length);
-  void Multiply(float * res, const float * const a, const float & s, const size_t length);
+  //void Multiply(double * res, const double * const a, const double & s, const size_t length);
+  //void Multiply(float * res, const float * const a, const float & s, const size_t length);
   template<typename T>
   void Multiply(T * res, const T * const a, const T & s, const size_t length)
   {
@@ -80,8 +80,8 @@ namespace VectorOperations
   }
 
   // res[:] = value
-  void Fill(double * res, const size_t length, const double value);
-  void Fill(float * res, const size_t length, const float value);
+  //void Fill(double * res, const size_t length, const double value);
+  //void Fill(float * res, const size_t length, const float value);
   template<typename T>
   void Fill(T * res, const size_t length, const T value)
   {
@@ -119,7 +119,9 @@ private:
     Data(const size_t size)
     {
         size_t dataSize = sizeof(Shared) + sizeof(T)*size - sizeof(T);
-        m_shared = (Shared *)new unsigned char [dataSize, RequiredAlignment];
+        // This would be correct, but VS has a bug which prevents the usage:
+        // m_shared = (Shared *) new (std::align_val_t(RequiredAlignment)) unsigned char [dataSize];
+        m_shared = static_cast<Shared *>(operator new[](dataSize, std::align_val_t{ RequiredAlignment }));
         m_shared->m_count = 1; 
         m_shared->m_size = size;
     }
@@ -165,7 +167,9 @@ private:
     {
         if(m_shared && m_shared->m_count-- <= 0)
         {
-            delete m_shared;
+            // call aligned delete directly to work around a VS 'feature'.
+            // delete [] (unsigned char *)m_shared;
+            operator delete[](m_shared, std::align_val_t{ RequiredAlignment });
         }
     }
   private:
