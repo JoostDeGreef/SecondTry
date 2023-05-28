@@ -33,10 +33,10 @@
 *.exe
 *.out
 *.app
-/build
-/out
+build/
+out/
 
 # IDE files
-/.vs
-/.vscode
-/out/build/x64-Debug (default)
+.vs/
+.vscode/
+out/
