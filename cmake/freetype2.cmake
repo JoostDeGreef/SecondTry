@@ -8,6 +8,11 @@ FetchContent_Declare(
   GIT_REPOSITORY https://github.com/freetype/freetype2.git
   GIT_TAG        VER-2-12-1
 # GIT_TAG        master
+
+  SOURCE_DIR freetype-src
+  BINARY_DIR freetype-build
+
+  UPDATE_DISCONNECTED ON
 )
 
 MESSAGE(STATUS "

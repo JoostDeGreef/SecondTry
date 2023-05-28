@@ -9,8 +9,10 @@ FetchContent_Declare(
   GIT_TAG        v1.0.9
 # GIT_TAG        master
 
-  SOURCE_DIR brotli-build
+  SOURCE_DIR brotli-src
   BINARY_DIR brotli-build
+
+  UPDATE_DISCONNECTED ON
 )
 
 MESSAGE(STATUS "

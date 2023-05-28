@@ -13,10 +13,12 @@ FetchContent_Declare(
   #GIT_TAG        1ea1ac188ad4b9cb662e3f8314673c63df95a589 # feb 6, 2022
   GIT_TAG        2d8393924b9f3e014000c7420c7da7c3ddb74e2c # jul 19, 2022
 
-  SOURCE_DIR bzip2-build
+  SOURCE_DIR bzip2-src
   BINARY_DIR bzip2-build
 
-#  PATCH_COMMAND  git restore . && git apply --ignore-space-change --ignore-whitespace ${CMAKE_CURRENT_SOURCE_DIR}/bzip2.patch
+#  PATCH_COMMAND git apply --ignore-space-change --ignore-whitespace ${CMAKE_CURRENT_SOURCE_DIR}/bzip2.patch
+
+  UPDATE_DISCONNECTED ON
 )
 
 MESSAGE(STATUS "

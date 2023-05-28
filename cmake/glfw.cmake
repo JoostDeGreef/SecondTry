@@ -7,7 +7,12 @@ FetchContent_Declare(
  
   GIT_REPOSITORY https://github.com/glfw/glfw.git
 #  GIT_TAG        3.3.8
- GIT_TAG        master
+  GIT_TAG        master
+
+  SOURCE_DIR glfw-src
+  BINARY_DIR glfw-build
+
+  UPDATE_DISCONNECTED ON
 )
 
 MESSAGE(STATUS "

@@ -8,6 +8,11 @@ FetchContent_Declare(
   GIT_REPOSITORY https://github.com/glennrp/libpng.git
   GIT_TAG        v1.6.39
 # GIT_TAG        master
+
+  SOURCE_DIR png-src
+  BINARY_DIR png-build
+
+  UPDATE_DISCONNECTED ON
 )
 
 MESSAGE(STATUS "
@@ -38,4 +43,5 @@ set(SKIP_INSTALL_ALL ON CACHE BOOL "Don't install anything" FORCE)
 
 FetchContent_MakeAvailable(png)
 
+#include(DebugVariables)
 

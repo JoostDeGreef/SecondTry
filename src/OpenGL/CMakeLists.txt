@@ -8,6 +8,7 @@ link_libraries(Core
                fmt
                glad
                glfw
+               png_static
                freetype)
 
 if(UNIX AND NOT APPLE)
