@@ -1,9 +1,5 @@
 project(Geometry VERSION 1.0.0 DESCRIPTION "Geometry objects and functions")
 
-set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
-
-link_libraries(Core)
-
 add_library (${PROJECT_NAME}
              "src/Geometry.cpp"
              "src/Shape/Shape.cpp"
@@ -22,4 +18,5 @@ add_library (${PROJECT_NAME}
 set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION})
 
 target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
+target_link_libraries(${PROJECT_NAME} PUBLIC Core)
 

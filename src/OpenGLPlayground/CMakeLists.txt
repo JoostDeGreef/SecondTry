@@ -12,4 +12,3 @@ if (WIN32)
     set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "/ENTRY:mainCRTStartup /SUBSYSTEM:WINDOWS")
 endif()
 
-target_link_libraries(${PROJECT_NAME} zlibstatic)

@@ -13,6 +13,9 @@ include(brotli)
 include(png)
 include(freetype2)
 
+# NanoGUI is not usefull
+#include(nanogui)
+
 # local code
 
 add_subdirectory ("glad")

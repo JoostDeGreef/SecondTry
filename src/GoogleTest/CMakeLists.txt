@@ -12,5 +12,5 @@ add_library (${PROJECT_NAME}
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${gtest_SOURCE_DIR}/include)
 
-target_link_libraries(${PROJECT_NAME} INTERFACE gtest)
+target_link_libraries(${PROJECT_NAME} PUBLIC gtest)
 

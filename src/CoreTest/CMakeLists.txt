@@ -8,7 +8,7 @@ add_executable (${PROJECT_NAME}
                 "TempMemPoolTest.cpp"
                 "LogTest.cpp")
 
-target_link_libraries(${PROJECT_NAME} GoogleTest Core)
+target_link_libraries(${PROJECT_NAME} PRIVATE GoogleTest Core)
 
 add_test(NAME ${PROJECT_NAME}
          COMMAND ${PROJECT_NAME})

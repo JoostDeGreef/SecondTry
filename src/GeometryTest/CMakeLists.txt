@@ -9,7 +9,7 @@ add_executable (${PROJECT_NAME}
                 "SweeperTest.cpp"
                 "Vector2dCompareTest")
 
-target_link_libraries(${PROJECT_NAME} GoogleTest Geometry)
+target_link_libraries(${PROJECT_NAME} PRIVATE GoogleTest Geometry)
 
 add_test(NAME ${PROJECT_NAME}
          COMMAND ${PROJECT_NAME})

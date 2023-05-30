@@ -3,14 +3,6 @@ project(OpenGL VERSION 1.0.0 DESCRIPTION "OpenGL functions")
 
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
-link_libraries(Core
-               Geometry
-               fmt
-               glad
-               glfw
-               png_static
-               freetype)
-
 if(UNIX AND NOT APPLE)
     set(LINUX TRUE)
 endif()
@@ -45,4 +37,12 @@ add_library (${PROJECT_NAME}
 target_include_directories(${PROJECT_NAME}
     PUBLIC include
 	PRIVATE include/internal)
+target_link_libraries(${PROJECT_NAME}
+    PUBLIC     Core
+               Geometry
+               fmt
+               glad
+               glfw
+               png_static
+               freetype)
 

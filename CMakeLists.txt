@@ -25,6 +25,7 @@ set(CMAKE_COLOR_MAKEFILE   ON)
 # Remove 'lib' prefix for shared libraries on Windows
 if (WIN32)
   set(CMAKE_SHARED_LIBRARY_PREFIX "")
+  set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 endif ()
 
 # IF(CMAKE_COMPILER_IS_GNUCXX)

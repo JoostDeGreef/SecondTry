@@ -40,3 +40,4 @@ set(SKIP_INSTALL_ALL ON CACHE BOOL "Don't install anything" FORCE)
 
 FetchContent_MakeAvailable(freetype)
 
+target_link_libraries(freetype PUBLIC zlibstatic)
